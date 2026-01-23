@@ -1,0 +1,23 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# PHPUnit
+.phpunit.cache
+.phpunit.result.cache
+phpunit.xml.cache
+vendor/
+
+# Backups
+backups/
