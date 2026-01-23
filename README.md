@@ -2,17 +2,23 @@
 
 Core PHP 8.5 starter focused on logged-in SaaS dashboards, DreamHost shared hosting, and predictable LLM-friendly structure.
 
-## What is included
-- Front controller at `/public/index.php`
-- Custom routing via `/routes/web.php`
-- Server-rendered views with a shared layout
-- Single stylesheet at `/public/assets/css/site.css`
-- Alpine.js loaded from CDN
-
-## Next milestones
-- Config + environment bootstrap
-- Database schema + migrations
-- Auth, RBAC, and admin tools
+## Highlights
+- Front controller at `/public/index.php` with a custom router.
+- Auth: signup/login/logout, email verification, password reset, CSRF.
+- RBAC admin: roles, permissions, user role assignments.
+- Admin panel: users list and audit log.
+- Uploads for profile images and attachments in `/storage/uploads`.
+- Single stylesheet at `/public/assets/css/site.css` with enterprise baseline.
+- GitHub Actions deploy with releases and migrations.
 
 ## Local development
-Point your web server docroot to `/public`.
+1. Point your web server docroot to `/public`.
+2. Copy `.env.example` to `.env` and fill values.
+3. Run migrations: `php scripts/migrate.php`.
+4. Seed dummy data: `php scripts/seed.php`.
+
+## Tests
+Run the minimal test suite: `php tests/run.php`.
+
+## DreamHost deploy
+See `docs/installation/SETUP_GUIDE.md` for GitHub Actions setup.

@@ -1,0 +1,84 @@
+name: Deploy to DreamHost
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set release metadata
+        run: |
+          echo "RELEASE_TS=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+
+      - name: Set deploy target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            DEPLOY_ENV="${{ inputs.environment }}"
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            DEPLOY_ENV="production"
+          else
+            DEPLOY_ENV="staging"
+          fi
+
+          if [ "$DEPLOY_ENV" = "production" ]; then
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH_PROD }}"
+          else
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH_STAGING }}"
+          fi
+
+          echo "DEPLOY_ENV=$DEPLOY_ENV" >> $GITHUB_ENV
+          echo "DEPLOY_PATH=$DEPLOY_PATH" >> $GITHUB_ENV
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Prepare release directories
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "mkdir -p ${DEPLOY_PATH}/releases/${RELEASE_TS} ${DEPLOY_PATH}/shared/storage"
+
+      - name: Rsync release
+        run: |
+          rsync -az --delete \
+            --exclude ".git" \
+            --exclude ".github" \
+            --exclude "storage" \
+            --exclude ".env" \
+            ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${DEPLOY_PATH}/releases/${RELEASE_TS}/"
+
+      - name: Write shared env
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cat > ${DEPLOY_PATH}/shared/.env <<'ENVFILE'\n${{ secrets.ENV_FILE }}\nENVFILE"
+
+      - name: Link shared assets and switch release
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "ln -sfn ${DEPLOY_PATH}/shared/storage ${DEPLOY_PATH}/releases/${RELEASE_TS}/storage && \
+             ln -sfn ${DEPLOY_PATH}/shared/.env ${DEPLOY_PATH}/releases/${RELEASE_TS}/.env && \
+             php ${DEPLOY_PATH}/releases/${RELEASE_TS}/scripts/migrate.php && \
+             ln -sfn ${DEPLOY_PATH}/releases/${RELEASE_TS} ${DEPLOY_PATH}/current && \
+             bash ${DEPLOY_PATH}/releases/${RELEASE_TS}/scripts/deploy_helpers.sh cleanup ${DEPLOY_PATH}/releases 5"

@@ -29,3 +29,17 @@ Maintain a reusable Core PHP 8.5 starter for DreamHost shared hosting with predi
 ## Prompt-pack workflow
 - Follow prompt packs in order; finish the current prompt before advancing.
 - When a runbook specifies output contracts, comply for that step.
+
+## How to add a module
+1. Add routes in `routes/web.php` with middleware as needed.
+2. Add controller under `app/Controllers` and keep actions small.
+3. Add view(s) under `views/` and escape output with `e()`.
+4. Add DB tables/migrations in `app/Database/Migrations` if needed.
+5. Add tests in `tests/` and update `CHANGELOG.md`.
+
+## Never do these
+- Do not introduce a framework or add heavy dependencies.
+- Do not put secrets or `.env` files in the repo.
+- Do not serve files from `/storage` directly via `/public`.
+- Do not bypass CSRF or auth checks on POST routes.
+- Do not change the release layout (`/releases`, `/current`).

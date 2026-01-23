@@ -2,23 +2,40 @@
 
 declare(strict_types=1);
 
-$routes = require __DIR__ . '/../routes/web.php';
+require __DIR__ . '/../app/Bootstrap.php';
+require __DIR__ . '/../app/Auth/Auth.php';
+require __DIR__ . '/../app/Auth/Password.php';
+require __DIR__ . '/../app/Auth/Csrf.php';
+require __DIR__ . '/../app/Auth/Rbac.php';
+require __DIR__ . '/../app/Audit/Audit.php';
+require __DIR__ . '/../app/Uploads/Uploader.php';
+require __DIR__ . '/../app/Database/DB.php';
+require __DIR__ . '/../app/Logging/Logger.php';
+require __DIR__ . '/../app/Logging/LogRotation.php';
+require __DIR__ . '/../app/Errors/ErrorHandler.php';
+require __DIR__ . '/../app/Security/Headers.php';
+require __DIR__ . '/../app/Http/Request.php';
+require __DIR__ . '/../app/Http/Response.php';
+require __DIR__ . '/../app/Http/Router.php';
+require __DIR__ . '/../app/Http/Middleware/AuthRequired.php';
+require __DIR__ . '/../app/Http/Middleware/RoleRequired.php';
+require __DIR__ . '/../app/Http/Middleware/PermissionRequired.php';
+require __DIR__ . '/../app/Http/Middleware/RequireRole.php';
+require __DIR__ . '/../app/Http/Middleware/RequirePermission.php';
+require __DIR__ . '/../app/Mail/Mailer.php';
+require __DIR__ . '/../app/Controllers/AuthController.php';
+require __DIR__ . '/../app/Controllers/Admin/RolesController.php';
+require __DIR__ . '/../app/Controllers/Admin/PermissionsController.php';
+require __DIR__ . '/../app/Controllers/Admin/UserRolesController.php';
+require __DIR__ . '/../app/Controllers/Admin/UsersController.php';
+require __DIR__ . '/../app/Controllers/Admin/AuditLogController.php';
+require __DIR__ . '/../app/Controllers/UploadController.php';
+require __DIR__ . '/../app/View/View.php';
 
-$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-$path = rtrim($path, '/') ?: '/';
+$config = Bootstrap::init();
 
-$view = $routes[$path] ?? null;
+$router = require __DIR__ . '/../routes/web.php';
 
-http_response_code($view ? 200 : 404);
-
-$title = $view ? 'Thriftstack' : 'Not Found';
-
-ob_start();
-if ($view) {
-    require __DIR__ . '/../views/' . $view;
-} else {
-    require __DIR__ . '/../views/404.php';
-}
-$content = ob_get_clean();
-
-require __DIR__ . '/../views/layouts/app.php';
+$request = Request::capture();
+$response = $router->dispatch($request);
+$response->send();

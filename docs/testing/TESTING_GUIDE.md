@@ -3,6 +3,6 @@
 ## Philosophy
 Keep tests lightweight and focused on critical flows. Add tests whenever adding features.
 
-## Planned test harness
-- Simple PHP test runner in `/tests`.
-- Cover routing, auth, and permission checks.
+## Test harness
+- Run `php tests/run.php`.
+- Tests cover config loading, router matching, CSRF, and password hashing.
