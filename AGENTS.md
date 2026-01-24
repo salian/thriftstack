@@ -43,3 +43,4 @@ Maintain a reusable Core PHP 8.5 starter for DreamHost shared hosting with predi
 - Do not serve files from `/storage` directly via `/public`.
 - Do not bypass CSRF or auth checks on POST routes.
 - Do not change the release layout (`/releases`, `/current`).
+- Do not delete existing code or comments which are unrelated to the current task or change.
