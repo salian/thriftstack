@@ -4,3 +4,6 @@
 !/storage/logs/.gitkeep
 !/storage/cache/.gitkeep
 !/storage/uploads/.gitkeep
+
+# macOS
+.DS_Store
