@@ -19,10 +19,6 @@ final class RouterTest extends TestCase
         $request = new Request('GET', '/users/42', [], []);
         $response = $router->dispatch($request);
 
-        ob_start();
-        $response->send();
-        $body = ob_get_clean();
-
-        $this->assertEquals('user:42', $body, 'Route params not captured');
+        $this->assertEquals('user:42', $response->body(), 'Route params not captured');
     }
 }

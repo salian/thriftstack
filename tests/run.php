@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 require __DIR__ . '/TestCase.php';
 
+ob_start();
+
 $tests = [
     'ConfigTest',
     'RouterTest',
     'CsrfTest',
     'PasswordTest',
+    'WorkspaceServiceTest',
 ];
 
 $failures = 0;
@@ -31,5 +34,7 @@ foreach ($tests as $testClass) {
 echo "Assertions: {$totalAssertions}\n";
 
 echo $failures === 0 ? "All tests passed.\n" : "Failures: {$failures}\n";
+
+ob_end_flush();
 
 exit($failures === 0 ? 0 : 1);

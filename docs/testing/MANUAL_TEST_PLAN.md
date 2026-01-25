@@ -11,10 +11,10 @@
 - As Admin, visit `/admin/users` and `/admin/audit`.
 - Upload profile image and attachment from `/profile`.
 - Download attachment via `/uploads/attachment/{id}`.
+- Create a workspace, invite a member, accept invite.
+- Switch workspace context and verify role guard.
 
 ## Upcoming features (planned)
-- Create workspace, invite member, accept invite.
-- Switch workspace context and verify role guard.
 - Update user settings and preference flags.
 - Send immediate notification and view history.
 - Send batched notification and verify digest.

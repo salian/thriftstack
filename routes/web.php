@@ -6,10 +6,13 @@ $router = new Router();
 $config = $GLOBALS['config'] ?? [];
 $pdo = DB::connect($config);
 $authController = new AuthController($pdo, $config);
+$workspaceService = new WorkspaceService($pdo, new Audit($pdo));
+$workspaceController = new WorkspaceController($workspaceService);
+$workspaceInviteController = new WorkspaceInviteController($workspaceService, $workspaceController, $config);
 
 $router
-    ->get('/', static function (Request $request) {
-        return View::render('home', ['title' => 'ThriftStack']);
+    ->get('/', static function (Request $request) use ($config) {
+        return View::render('home', ['title' => $config['app']['name'] ?? 'ThriftStack']);
     })
     ->setName('home');
 
@@ -76,6 +79,51 @@ $router
     })
     ->middleware(new AuthRequired())
     ->setName('dashboard');
+
+$router
+    ->get('/workspaces', static function (Request $request) use ($workspaceController) {
+        return $workspaceController->index($request);
+    })
+    ->middleware(new AuthRequired())
+    ->setName('workspaces');
+
+$router
+    ->post('/workspaces', static function (Request $request) use ($workspaceController) {
+        return $workspaceController->create($request);
+    })
+    ->middleware(new AuthRequired());
+
+$router
+    ->post('/workspaces/switch', static function (Request $request) use ($workspaceController) {
+        return $workspaceController->switch($request);
+    })
+    ->middleware(new AuthRequired());
+
+$router
+    ->post('/workspaces/members/role', static function (Request $request) use ($workspaceController) {
+        return $workspaceController->updateMemberRole($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Admin'));
+
+$router
+    ->post('/workspaces/invites', static function (Request $request) use ($workspaceInviteController) {
+        return $workspaceInviteController->create($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Admin'));
+
+$router
+    ->get('/workspaces/invites/accept', static function (Request $request) use ($workspaceInviteController) {
+        return $workspaceInviteController->showAccept($request);
+    })
+    ->setName('workspaces.invites.accept');
+
+$router
+    ->post('/workspaces/invites/accept', static function (Request $request) use ($workspaceInviteController) {
+        return $workspaceInviteController->accept($request);
+    })
+    ->middleware(new AuthRequired());
 
 $router->get('/privacy', static function () {
     return View::render('legal/privacy', ['title' => 'Privacy Policy']);

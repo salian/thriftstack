@@ -43,4 +43,9 @@ final class Response
         }
         echo $this->body;
     }
+
+    public function body(): string
+    {
+        return $this->body;
+    }
 }
