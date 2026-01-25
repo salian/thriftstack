@@ -11,6 +11,8 @@ $workspaceController = new WorkspaceController($workspaceService);
 $workspaceInviteController = new WorkspaceInviteController($workspaceService, $workspaceController, $config);
 $settingsService = new SettingsService($pdo);
 $settingsController = new SettingsController($pdo, $settingsService);
+$notificationService = new NotificationService($pdo, $config);
+$notificationsController = new NotificationsController($notificationService);
 
 $router
     ->get('/', static function (Request $request) use ($config) {
@@ -83,6 +85,21 @@ $router
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspace($pdo))
     ->setName('dashboard');
+
+$router
+    ->get('/notifications', static function (Request $request) use ($notificationsController) {
+        return $notificationsController->index($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo))
+    ->setName('notifications');
+
+$router
+    ->post('/notifications/read', static function (Request $request) use ($notificationsController) {
+        return $notificationsController->markRead($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo));
 
 $router
     ->get('/settings', static function (Request $request) use ($settingsController) {

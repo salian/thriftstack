@@ -13,6 +13,7 @@ $tests = [
     'PasswordTest',
     'WorkspaceServiceTest',
     'SettingsServiceTest',
+    'NotificationServiceTest',
 ];
 
 $failures = 0;
