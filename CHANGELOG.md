@@ -20,3 +20,4 @@
 - Add CI workflow for PHP linting and tests.
 - Add Apache rewrite rules for front controller routing.
 - Make CI PHP lint fallback when `rg` is unavailable.
+- Add AI stars logo in header and favicon.

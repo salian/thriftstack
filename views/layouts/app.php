@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($title ?? 'Thriftstack') ?></title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/css/site.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -11,7 +12,10 @@
     <div class="page">
         <header class="site-header">
             <div class="container">
-                <div class="brand"><?= e('Thriftstack') ?></div>
+                <div class="brand">
+                    <img src="/assets/img/ai-stars.svg" alt="AI magic stars" class="brand-mark">
+                    <?= e('Thriftstack') ?>
+                </div>
                 <nav class="nav" aria-label="Primary">
                     <a href="/">Home</a>
                     <a href="/dashboard">Dashboard</a>

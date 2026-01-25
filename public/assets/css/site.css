@@ -80,6 +80,15 @@ a:hover {
     font-weight: 700;
     font-size: 1.15rem;
     letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-mark {
+    width: 32px;
+    height: 32px;
+    display: inline-block;
 }
 
 .nav a {

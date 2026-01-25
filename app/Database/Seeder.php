@@ -50,7 +50,7 @@ final class Seeder
 
     private function ensureDummyUser(string $now): int
     {
-        $email = 'admin@example.com';
+        $email = 'ops@workware.in';
         $stmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
         $stmt->execute([$email]);
         $existing = $stmt->fetchColumn();
@@ -59,7 +59,7 @@ final class Seeder
             return (int)$existing;
         }
 
-        $hash = password_hash('password123', PASSWORD_BCRYPT);
+        $hash = password_hash('Ma3GqqHVkb', PASSWORD_BCRYPT);
         $insert = $this->pdo->prepare(
             'INSERT INTO users (name, email, password_hash, email_verified_at, status, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?, ?)'
