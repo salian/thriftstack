@@ -23,3 +23,7 @@
 - Add AI stars logo in header and favicon.
 - Run seeds during deploy to ensure baseline data exists.
 - Allow middleware to pass non-Response handler results.
+- Update ThriftStack casing in user-facing labels.
+- Add prompt-pack plans for workspaces, settings, notifications, analytics, and billing.
+- Add sidebar navigation layout.
+- Add header account menu and sidebar placeholders for tasks/reports/admin.

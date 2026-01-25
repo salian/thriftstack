@@ -51,6 +51,16 @@ a:hover {
     padding: 0 28px;
 }
 
+.main-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 28px;
+}
+
+.main-content {
+    min-width: 0;
+}
+
 .site-header,
 .site-footer {
     border-bottom: 1px solid var(--border);
@@ -105,6 +115,49 @@ a:hover {
 .nav form {
     display: inline-block;
     margin-left: 12px;
+}
+
+.nav details {
+    display: inline-block;
+    margin-left: 12px;
+    position: relative;
+}
+
+.nav summary {
+    list-style: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: #dfe6f3;
+}
+
+.nav summary::-webkit-details-marker {
+    display: none;
+}
+
+.nav-menu-panel {
+    position: absolute;
+    right: 0;
+    top: 36px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    min-width: 180px;
+    box-shadow: var(--shadow);
+    display: grid;
+    gap: 6px;
+    z-index: 10;
+}
+
+.nav-menu-panel a {
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 8px;
+}
+
+.nav-menu-panel a:hover {
+    background: var(--surface-muted);
+    text-decoration: none;
 }
 
 .nav-user {
@@ -330,6 +383,7 @@ select {
     border-radius: var(--radius);
     padding: 20px;
     min-width: 220px;
+    height: fit-content;
 }
 
 .sidebar a {
@@ -363,5 +417,9 @@ select {
 
     .container {
         padding: 0 20px;
+    }
+
+    .main-layout {
+        grid-template-columns: 1fr;
     }
 }

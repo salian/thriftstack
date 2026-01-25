@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= e($title ?? 'Thriftstack') ?></title>
+    <title><?= e($title ?? 'ThriftStack') ?></title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/css/site.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -14,7 +14,7 @@
             <div class="container">
                 <div class="brand">
                     <img src="/assets/img/ai-stars.svg" alt="AI magic stars" class="brand-mark">
-                    <?= e('Thriftstack') ?>
+                    <?= e('ThriftStack') ?>
                 </div>
                 <nav class="nav" aria-label="Primary">
                     <a href="/">Home</a>
@@ -25,6 +25,16 @@
                             <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
                             <button type="submit" class="button button-ghost">Logout</button>
                         </form>
+                        <details class="nav-menu">
+                            <summary>Account</summary>
+                            <div class="nav-menu-panel">
+                                <a href="/workspaces">Workspaces</a>
+                                <a href="/settings">Settings</a>
+                                <a href="/notifications">Notifications</a>
+                                <a href="/billing">Billing</a>
+                                <a href="/profile">Profile</a>
+                            </div>
+                        </details>
                         <a href="/uploads">Uploads</a>
                         <?php if ((Auth::user()['role'] ?? null) === 'Admin') : ?>
                             <a href="/admin/users">Admin</a>
@@ -36,8 +46,17 @@
                 </nav>
             </div>
         </header>
-        <main class="container">
-            <?= $content ?>
+        <main class="container main-layout">
+            <aside class="sidebar" aria-label="Primary sidebar">
+                <a href="/tasks">Tasks</a>
+                <a href="/reports">Reports</a>
+                <?php if (Auth::check()) : ?>
+                    <a href="/admin/users">Admin</a>
+                <?php endif; ?>
+            </aside>
+            <div class="main-content">
+                <?= $content ?>
+            </div>
         </main>
         <footer class="site-footer">
             <div class="container">

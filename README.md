@@ -1,4 +1,4 @@
-# Thriftstack
+# ThriftStack
 
 Core PHP 8.5 starter focused on logged-in SaaS dashboards, DreamHost shared hosting, and predictable LLM-friendly structure.
 

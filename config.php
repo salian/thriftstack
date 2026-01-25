@@ -45,7 +45,7 @@ return [
         'pass' => $env('THRIFTSTACK_DB_PASS', ''),
     ],
     'mail' => [
-        'from_name' => $env('THRIFTSTACK_MAIL_FROM_NAME', 'Thriftstack'),
+        'from_name' => $env('THRIFTSTACK_MAIL_FROM_NAME', 'ThriftStack'),
         'from_email' => $env('THRIFTSTACK_MAIL_FROM_EMAIL', 'no-reply@example.com'),
     ],
     'security' => [

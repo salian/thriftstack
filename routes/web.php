@@ -9,7 +9,7 @@ $authController = new AuthController($pdo, $config);
 
 $router
     ->get('/', static function (Request $request) {
-        return View::render('home', ['title' => 'Thriftstack']);
+        return View::render('home', ['title' => 'ThriftStack']);
     })
     ->setName('home');
 

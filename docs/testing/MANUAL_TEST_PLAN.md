@@ -11,3 +11,12 @@
 - As Admin, visit `/admin/users` and `/admin/audit`.
 - Upload profile image and attachment from `/uploads`.
 - Download attachment via `/uploads/attachment/{id}`.
+
+## Upcoming features (planned)
+- Create workspace, invite member, accept invite.
+- Switch workspace context and verify role guard.
+- Update user settings and preference flags.
+- Send immediate notification and view history.
+- Send batched notification and verify digest.
+- Visit analytics placeholder page.
+- Verify subscription trial start and webhook handling.
