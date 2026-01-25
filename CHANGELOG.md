@@ -27,3 +27,7 @@
 - Add prompt-pack plans for workspaces, settings, notifications, analytics, and billing.
 - Add sidebar navigation layout.
 - Add header account menu and sidebar placeholders for tasks/reports/admin.
+- Move dashboard link from header to sidebar.
+- Restyle account menu with avatar initials and dropdown indicator.
+- Move logout into account menu and add global file input styling.
+- Add divider before logout in account menu.

@@ -160,10 +160,87 @@ a:hover {
     text-decoration: none;
 }
 
+.nav-menu-form button {
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.nav-menu-form button:hover {
+    background: var(--surface-muted);
+}
+
+.nav-menu-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 4px;
+}
+
 .nav-user {
     margin-left: 16px;
     color: #c6d1e6;
     font-weight: 600;
+}
+
+.nav-user-menu summary {
+    list-style: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: #dfe6f3;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+
+.nav-user-menu summary::-webkit-details-marker {
+    display: none;
+}
+
+.nav-user-menu[open] summary {
+    background: rgba(223, 230, 243, 0.12);
+    border-color: rgba(223, 230, 243, 0.35);
+}
+
+.nav-user-name {
+    color: #c6d1e6;
+}
+
+.avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(223, 230, 243, 0.2);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.nav-chevron {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #c6d1e6;
+}
+
+.nav-user-menu[open] .nav-chevron {
+    border-top-color: #ffffff;
+}
+
+.nav-user-menu .nav-menu-panel {
+    top: calc(100% + 8px);
 }
 
 .hero {
@@ -292,6 +369,14 @@ select {
 .form input[type="file"] {
     padding: 10px;
     background: #fff;
+}
+
+input[type="file"] {
+    padding: 10px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 0.95rem;
 }
 
 .auth {

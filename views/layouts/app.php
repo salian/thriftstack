@@ -18,21 +18,41 @@
                 </div>
                 <nav class="nav" aria-label="Primary">
                     <a href="/">Home</a>
-                    <a href="/dashboard">Dashboard</a>
                     <?php if (Auth::check()) : ?>
-                        <span class="nav-user">Hi, <?= e(Auth::user()['name'] ?? 'User') ?></span>
-                        <form method="post" action="/logout">
-                            <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
-                            <button type="submit" class="button button-ghost">Logout</button>
-                        </form>
-                        <details class="nav-menu">
-                            <summary>Account</summary>
+                        <?php
+                        $userName = Auth::user()['name'] ?? 'User';
+                        $parts = preg_split('/\s+/', trim($userName));
+                        $initials = '';
+                        foreach ($parts as $part) {
+                            if ($part === '') {
+                                continue;
+                            }
+                            $initials .= strtoupper($part[0]);
+                            if (strlen($initials) >= 2) {
+                                break;
+                            }
+                        }
+                        if ($initials === '') {
+                            $initials = 'U';
+                        }
+                        ?>
+                        <details class="nav-user-menu">
+                            <summary>
+                                <span class="avatar"><?= e($initials) ?></span>
+                                <span class="nav-user-name"><?= e($userName) ?></span>
+                                <span class="nav-chevron"></span>
+                            </summary>
                             <div class="nav-menu-panel">
                                 <a href="/workspaces">Workspaces</a>
                                 <a href="/settings">Settings</a>
                                 <a href="/notifications">Notifications</a>
                                 <a href="/billing">Billing</a>
                                 <a href="/profile">Profile</a>
+                                <div class="nav-menu-divider"></div>
+                                <form method="post" action="/logout" class="nav-menu-form">
+                                    <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+                                    <button type="submit">Logout</button>
+                                </form>
                             </div>
                         </details>
                         <a href="/uploads">Uploads</a>
@@ -48,6 +68,7 @@
         </header>
         <main class="container main-layout">
             <aside class="sidebar" aria-label="Primary sidebar">
+                <a href="/dashboard">Dashboard</a>
                 <a href="/tasks">Tasks</a>
                 <a href="/reports">Reports</a>
                 <?php if (Auth::check()) : ?>
