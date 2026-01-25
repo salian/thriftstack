@@ -15,3 +15,4 @@
 - Add GitHub Actions deploy workflow for DreamHost releases.
 - Prefix environment variables with `THRIFTSTACK_`.
 - Add migration failure context to error output.
+- Guard migration commits when DDL ends transactions.

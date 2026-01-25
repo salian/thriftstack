@@ -36,7 +36,9 @@ final class Migrator
                 $callable($this->pdo);
                 $stmt = $this->pdo->prepare('INSERT INTO migrations (filename, applied_at) VALUES (?, NOW())');
                 $stmt->execute([$name]);
-                $this->pdo->commit();
+                if ($this->pdo->inTransaction()) {
+                    $this->pdo->commit();
+                }
                 $count++;
             } catch (Throwable $e) {
                 if ($this->pdo->inTransaction()) {
