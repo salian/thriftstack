@@ -11,13 +11,13 @@ $router
     ->get('/', static function (Request $request) {
         return View::render('home', ['title' => 'Thriftstack']);
     })
-    ->name('home');
+    ->setName('home');
 
 $router
     ->get('/login', static function (Request $request) use ($authController) {
         return $authController->showLogin($request);
     })
-    ->name('login');
+    ->setName('login');
 
 $router
     ->post('/login', static function (Request $request) use ($authController) {
@@ -29,13 +29,13 @@ $router
         return $authController->logout($request);
     })
     ->middleware(new AuthRequired())
-    ->name('logout');
+    ->setName('logout');
 
 $router
     ->get('/signup', static function (Request $request) use ($authController) {
         return $authController->showSignup($request);
     })
-    ->name('signup');
+    ->setName('signup');
 
 $router
     ->post('/signup', static function (Request $request) use ($authController) {
@@ -46,13 +46,13 @@ $router
     ->get('/verify', static function (Request $request) use ($authController) {
         return $authController->verify($request);
     })
-    ->name('verify');
+    ->setName('verify');
 
 $router
     ->get('/forgot', static function (Request $request) use ($authController) {
         return $authController->showForgot($request);
     })
-    ->name('forgot');
+    ->setName('forgot');
 
 $router
     ->post('/forgot', static function (Request $request) use ($authController) {
@@ -63,7 +63,7 @@ $router
     ->get('/reset', static function (Request $request) use ($authController) {
         return $authController->showReset($request);
     })
-    ->name('reset');
+    ->setName('reset');
 
 $router
     ->post('/reset', static function (Request $request) use ($authController) {
@@ -75,7 +75,7 @@ $router
         return View::render('dashboard', ['title' => 'Dashboard']);
     })
     ->middleware(new AuthRequired())
-    ->name('dashboard');
+    ->setName('dashboard');
 
 $rolesController = new RolesController($pdo);
 $permissionsController = new PermissionsController($pdo);
@@ -89,7 +89,7 @@ $router
         return $uploadController->show($request);
     })
     ->middleware(new AuthRequired())
-    ->name('uploads');
+    ->setName('uploads');
 
 $router
     ->post('/uploads/profile', static function (Request $request) use ($uploadController) {
@@ -108,7 +108,7 @@ $router
         return $uploadController->download($request);
     })
     ->middleware(new AuthRequired())
-    ->name('uploads.download');
+    ->setName('uploads.download');
 
 $router
     ->get('/admin/users', static function (Request $request) use ($usersController) {
@@ -116,7 +116,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequirePermission('users.manage'))
-    ->name('admin.users');
+    ->setName('admin.users');
 
 $router
     ->get('/admin/roles', static function (Request $request) use ($rolesController) {
@@ -124,7 +124,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireRole('Admin'))
-    ->name('admin.roles');
+    ->setName('admin.roles');
 
 $router
     ->post('/admin/roles', static function (Request $request) use ($rolesController) {
@@ -146,7 +146,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireRole('Admin'))
-    ->name('admin.permissions');
+    ->setName('admin.permissions');
 
 $router
     ->post('/admin/permissions', static function (Request $request) use ($permissionsController) {
@@ -161,7 +161,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireRole('Admin'))
-    ->name('admin.user_roles');
+    ->setName('admin.user_roles');
 
 $router
     ->post('/admin/user-roles', static function (Request $request) use ($userRolesController) {
@@ -176,6 +176,6 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequirePermission('audit.view'))
-    ->name('admin.audit');
+    ->setName('admin.audit');
 
 return $router;

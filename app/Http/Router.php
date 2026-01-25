@@ -98,7 +98,7 @@ final class Route
         $this->handler = $handler;
     }
 
-    public function name(string $name): self
+    public function setName(string $name): self
     {
         $this->name = $name;
         return $this;
