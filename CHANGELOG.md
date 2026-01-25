@@ -18,3 +18,4 @@
 - Guard migration commits when DDL ends transactions.
 - Fix route naming API to avoid duplicate method names.
 - Add CI workflow for PHP linting and tests.
+- Add Apache rewrite rules for front controller routing.
