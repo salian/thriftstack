@@ -5,6 +5,7 @@ Core PHP 8.5 starter focused on logged-in SaaS dashboards, DreamHost shared host
 ## Highlights
 - Front controller at `/public/index.php` with a custom router.
 - Auth: signup/login/logout, email verification, password reset, CSRF.
+- Workspaces: multi-workspace memberships with invites and per-workspace roles.
 - RBAC admin: roles, permissions, user role assignments.
 - Admin panel: users list and audit log.
 - Uploads for profile images and attachments in `/storage/uploads`.

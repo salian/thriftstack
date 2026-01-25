@@ -52,8 +52,19 @@ final class WorkspaceController
         }
 
         $this->service->setCurrentWorkspace($workspaceId);
+        $workspace = $this->service->getWorkspace($workspaceId);
+        $workspaceName = $workspace['name'] ?? 'workspace';
+        $_SESSION['flash'] = [
+            'type' => 'success',
+            'message' => 'Switched to ' . $workspaceName . '.',
+        ];
 
-        return Response::redirect('/workspaces');
+        $returnTo = (string)$request->input('return_to', '');
+        if ($returnTo === '' || !str_starts_with($returnTo, '/')) {
+            $returnTo = '/workspaces';
+        }
+
+        return Response::redirect($returnTo);
     }
 
     public function updateMemberRole(Request $request): Response

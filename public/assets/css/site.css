@@ -558,6 +558,15 @@ input[type="file"]::-webkit-file-upload-button:hover {
     border: 1px solid var(--border);
 }
 
+.flash {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.flash.is-hidden {
+    opacity: 0;
+    transform: translateY(-6px);
+}
+
 .alert-error {
     background: #fdecec;
     color: #7a1c1c;
@@ -639,6 +648,32 @@ input[type="file"]::-webkit-file-upload-button:hover {
     margin-bottom: 12px;
     padding: 12px 12px 8px;
     height: 56px;
+}
+
+.sidebar-workspace {
+    margin: 8px 0 16px;
+    display: grid;
+    gap: 8px;
+}
+
+.sidebar-workspace .form-inline {
+    gap: 8px;
+}
+
+.sidebar-workspace select {
+    min-width: 0;
+    flex: 1;
+}
+
+.sidebar-workspace-link {
+    font-size: 0.85rem;
+    color: var(--muted);
+    padding: 0 2px;
+}
+
+.sidebar-workspace-link:hover {
+    color: var(--text);
+    text-decoration: none;
 }
 
 .sidebar-scroll {

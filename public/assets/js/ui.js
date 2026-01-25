@@ -109,3 +109,34 @@
     }
   });
 })();
+
+(() => {
+  document.addEventListener('change', (event) => {
+    const select = event.target.closest('[data-auto-submit]');
+    if (!select) {
+      return;
+    }
+    const form = select.closest('form');
+    if (form) {
+      if (select.value === '__create__') {
+        const target = select.getAttribute('data-create-url') || '/workspaces';
+        window.location.href = target;
+        return;
+      }
+      form.submit();
+    }
+  });
+})();
+
+(() => {
+  const flash = document.querySelector('[data-flash]');
+  if (!flash) {
+    return;
+  }
+  setTimeout(() => {
+    flash.classList.add('is-hidden');
+    setTimeout(() => {
+      flash.remove();
+    }, 300);
+  }, 3000);
+})();

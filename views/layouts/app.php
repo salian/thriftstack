@@ -24,6 +24,25 @@
                     </svg>
                     <span class="brand-text"><?= e((string)config('app.name', 'ThriftStack')) ?></span>
                 </a>
+                <?php
+                $workspaceService = new WorkspaceService(DB::connect($GLOBALS['config'] ?? []));
+                $workspaceList = $workspaceService->listForUser((int)(Auth::user()['id'] ?? 0));
+                $currentWorkspaceId = $workspaceService->currentWorkspaceId();
+                ?>
+                <div class="sidebar-workspace">
+                    <form method="post" action="/workspaces/switch" class="form-inline">
+                        <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+                        <input type="hidden" name="return_to" value="<?= e($_SERVER['REQUEST_URI'] ?? '/workspaces') ?>">
+                        <select name="workspace_id" aria-label="Switch workspace" data-auto-submit data-create-url="/workspaces">
+                            <?php foreach ($workspaceList as $workspace) : ?>
+                                <option value="<?= e((string)$workspace['id']) ?>" <?= ($currentWorkspaceId == $workspace['id']) ? 'selected' : '' ?>>
+                                    <?= e($workspace['name'] ?? '') ?>
+                                </option>
+                            <?php endforeach; ?>
+                            <option value="__create__">+ Create workspace</option>
+                        </select>
+                    </form>
+                </div>
                 <div class="sidebar-scroll">
                     <nav class="sidebar-nav" aria-label="Sidebar">
                         <a href="/dashboard" aria-label="Dashboard" data-tooltip="Dashboard">
@@ -128,6 +147,17 @@
                 </div>
             </header>
             <main class="content-inner main-content">
+                <?php
+                $flash = $_SESSION['flash'] ?? null;
+                if ($flash) {
+                    unset($_SESSION['flash']);
+                }
+                ?>
+                <?php if (!empty($flash['message'])) : ?>
+                    <div class="alert alert-success flash" data-flash>
+                        <?= e((string)$flash['message']) ?>
+                    </div>
+                <?php endif; ?>
                 <?= $content ?>
             </main>
             <footer class="site-footer">
