@@ -215,6 +215,10 @@ ul {
     padding-right: 44px;
 }
 
+select {
+    appearance: none;
+}
+
 .form input:focus,
 .form select:focus {
     outline: 2px solid rgba(43, 90, 149, 0.3);
