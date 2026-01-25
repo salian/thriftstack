@@ -9,7 +9,7 @@
 - Request a password reset and complete reset flow.
 - Visit `/dashboard` only when authenticated.
 - As Admin, visit `/admin/users` and `/admin/audit`.
-- Upload profile image and attachment from `/uploads`.
+- Upload profile image and attachment from `/profile`.
 - Download attachment via `/uploads/attachment/{id}`.
 
 ## Upcoming features (planned)

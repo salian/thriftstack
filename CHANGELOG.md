@@ -33,3 +33,7 @@
 - Add divider before logout in account menu.
 - Make brand link to dashboard and remove Home from header.
 - Move Admin link into account menu below Profile.
+- Add optional SQLite support for local development with driver config and migrations.
+- Make seeds SQLite-compatible by switching to INSERT OR IGNORE.
+- Rename uploads page to profile and relabel uploads section as My Uploads.
+- Add My Uploads list to profile page.

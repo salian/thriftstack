@@ -5,10 +5,13 @@ declare(strict_types=1);
 final class Seeder
 {
     private PDO $pdo;
+    private string $insertIgnore;
 
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
+        $driver = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $this->insertIgnore = $driver === 'sqlite' ? 'INSERT OR IGNORE' : 'INSERT IGNORE';
     }
 
     public function run(): void
@@ -22,7 +25,7 @@ final class Seeder
         ];
 
         $roleStmt = $this->pdo->prepare(
-            'INSERT IGNORE INTO roles (name, description, created_at) VALUES (?, ?, ?)'
+            $this->insertIgnore . ' INTO roles (name, description, created_at) VALUES (?, ?, ?)'
         );
         foreach ($roles as [$name, $description]) {
             $roleStmt->execute([$name, $description, $now]);
@@ -37,7 +40,7 @@ final class Seeder
         ];
 
         $permStmt = $this->pdo->prepare(
-            'INSERT IGNORE INTO permissions (name, description, created_at) VALUES (?, ?, ?)'
+            $this->insertIgnore . ' INTO permissions (name, description, created_at) VALUES (?, ?, ?)'
         );
         foreach ($permissions as [$name, $description]) {
             $permStmt->execute([$name, $description, $now]);
@@ -84,7 +87,9 @@ final class Seeder
             return;
         }
 
-        $stmt = $this->pdo->prepare('INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)');
+        $stmt = $this->pdo->prepare(
+            $this->insertIgnore . ' INTO user_roles (user_id, role_id) VALUES (?, ?)'
+        );
         $stmt->execute([$userId, $roleId]);
     }
 
@@ -97,7 +102,7 @@ final class Seeder
 
         $perms = $this->pdo->query('SELECT id FROM permissions')->fetchAll(PDO::FETCH_COLUMN);
         $stmt = $this->pdo->prepare(
-            'INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)'
+            $this->insertIgnore . ' INTO role_permissions (role_id, permission_id) VALUES (?, ?)'
         );
 
         foreach ($perms as $permissionId) {

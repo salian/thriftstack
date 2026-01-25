@@ -111,7 +111,7 @@ final class Rbac
     public function createRole(string $name, string $description): void
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO roles (name, description, created_at) VALUES (?, ?, NOW())'
+            'INSERT INTO roles (name, description, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)'
         );
         $stmt->execute([$name, $description]);
         (new Audit($this->pdo))->log('rbac.role.created', null, ['name' => $name]);
@@ -120,7 +120,7 @@ final class Rbac
     public function createPermission(string $name, string $description): void
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO permissions (name, description, created_at) VALUES (?, ?, NOW())'
+            'INSERT INTO permissions (name, description, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)'
         );
         $stmt->execute([$name, $description]);
         (new Audit($this->pdo))->log('rbac.permission.created', null, ['name' => $name]);

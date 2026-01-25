@@ -17,10 +17,12 @@ final class UploadController
 
     public function show(Request $request): Response
     {
-        return Response::html(View::render('uploads/index', [
-            'title' => 'Uploads',
+        $userId = (int)($request->session('user')['id'] ?? 0);
+        return Response::html(View::render('profile/index', [
+            'title' => 'Profile',
             'message' => null,
             'error' => null,
+            'uploads' => $this->fetchUploads($userId),
         ]));
     }
 
@@ -35,19 +37,21 @@ final class UploadController
         $result = $uploader->uploadProfile($_FILES['profile'] ?? [], $userId);
 
         if (!$result['ok']) {
-            return Response::html(View::render('uploads/index', [
-                'title' => 'Uploads',
+            return Response::html(View::render('profile/index', [
+                'title' => 'Profile',
                 'message' => null,
                 'error' => $result['error'],
+                'uploads' => $this->fetchUploads($userId),
             ]), 422);
         }
 
         $this->audit->log('uploads.profile.created', $userId, ['upload_id' => $result['id']]);
 
-        return Response::html(View::render('uploads/index', [
-            'title' => 'Uploads',
+        return Response::html(View::render('profile/index', [
+            'title' => 'Profile',
             'message' => 'Profile image uploaded.',
             'error' => null,
+            'uploads' => $this->fetchUploads($userId),
         ]));
     }
 
@@ -62,19 +66,21 @@ final class UploadController
         $result = $uploader->uploadAttachment($_FILES['attachment'] ?? [], $userId);
 
         if (!$result['ok']) {
-            return Response::html(View::render('uploads/index', [
-                'title' => 'Uploads',
+            return Response::html(View::render('profile/index', [
+                'title' => 'Profile',
                 'message' => null,
                 'error' => $result['error'],
+                'uploads' => $this->fetchUploads($userId),
             ]), 422);
         }
 
         $this->audit->log('uploads.attachment.created', $userId, ['upload_id' => $result['id']]);
 
-        return Response::html(View::render('uploads/index', [
-            'title' => 'Uploads',
-            'message' => 'Attachment uploaded.',
+        return Response::html(View::render('profile/index', [
+            'title' => 'Profile',
+            'message' => 'Upload saved to My Uploads.',
             'error' => null,
+            'uploads' => $this->fetchUploads($userId),
         ]));
     }
 
@@ -113,5 +119,23 @@ final class UploadController
         ];
 
         return new Response((string)file_get_contents($path), 200, $headers);
+    }
+
+    private function fetchUploads(int $userId): array
+    {
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $stmt = $this->pdo->prepare(
+            'SELECT id, type, original_name, created_at
+             FROM uploads
+             WHERE user_id = ?
+             ORDER BY created_at DESC
+             LIMIT 15'
+        );
+        $stmt->execute([$userId]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 }

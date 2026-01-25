@@ -333,7 +333,7 @@ final class AuthController
 
         $stmt = $this->pdo->prepare(
             'INSERT INTO email_verifications (user_id, token_hash, expires_at, created_at)
-             VALUES (?, ?, ?, NOW())'
+             VALUES (?, ?, ?, CURRENT_TIMESTAMP)'
         );
         $stmt->execute([$userId, $tokenHash, $expires]);
 
@@ -348,7 +348,7 @@ final class AuthController
 
         $stmt = $this->pdo->prepare(
             'INSERT INTO password_resets (user_id, token_hash, expires_at, created_at)
-             VALUES (?, ?, ?, NOW())'
+             VALUES (?, ?, ?, CURRENT_TIMESTAMP)'
         );
         $stmt->execute([$userId, $tokenHash, $expires]);
 

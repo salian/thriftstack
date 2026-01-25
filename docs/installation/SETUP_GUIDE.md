@@ -4,8 +4,10 @@
 1. Point your web server document root to `/public`.
 2. Ensure PHP 8.5 and required extensions are installed.
 3. Create a MySQL database and update `.env` with `THRIFTSTACK_`-prefixed credentials.
-4. Run migrations: `php scripts/migrate.php`.
-5. Seed dummy data: `php scripts/seed.php`.
+4. If you do not have MySQL locally, set `THRIFTSTACK_DB_DRIVER=sqlite` and
+   `THRIFTSTACK_DB_PATH=storage/database.sqlite`.
+5. Run migrations: `php scripts/migrate.php`.
+6. Seed dummy data: `php scripts/seed.php`.
 
 ## DreamHost
 ### GitHub Actions deploy

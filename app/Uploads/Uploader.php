@@ -78,7 +78,7 @@ final class Uploader
 
         $stmt = $this->pdo->prepare(
             'INSERT INTO uploads (user_id, type, original_name, path, mime_type, size, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, NOW())'
+             VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)'
         );
         $stmt->execute([$userId, $type, $originalName, $relativePath, $mime, $size]);
 

@@ -39,10 +39,12 @@ return [
         'key' => $env('THRIFTSTACK_APP_KEY', ''),
     ],
     'db' => [
+        'driver' => $env('THRIFTSTACK_DB_DRIVER', 'mysql'),
         'host' => $env('THRIFTSTACK_DB_HOST', '127.0.0.1'),
         'name' => $env('THRIFTSTACK_DB_NAME', ''),
         'user' => $env('THRIFTSTACK_DB_USER', ''),
         'pass' => $env('THRIFTSTACK_DB_PASS', ''),
+        'path' => $env('THRIFTSTACK_DB_PATH', __DIR__ . '/storage/database.sqlite'),
     ],
     'mail' => [
         'from_name' => $env('THRIFTSTACK_MAIL_FROM_NAME', 'ThriftStack'),

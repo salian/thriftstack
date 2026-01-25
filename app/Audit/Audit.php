@@ -16,7 +16,7 @@ final class Audit
         $payload = $metadata ? json_encode($metadata, JSON_UNESCAPED_SLASHES) : null;
 
         $stmt = $this->pdo->prepare(
-            'INSERT INTO audit_logs (user_id, action, metadata, created_at) VALUES (?, ?, ?, NOW())'
+            'INSERT INTO audit_logs (user_id, action, metadata, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)'
         );
         $stmt->execute([$userId, $action, $payload]);
     }

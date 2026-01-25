@@ -13,7 +13,7 @@ Implement uploads.
 ## Create/update
 - /app/Uploads/Uploader.php
 - /app/Controllers/UploadController.php
-- /views/uploads/*.php
+- /views/profile/*.php (profile + uploads)
 - /routes/web.php
 
 ## Deliverable

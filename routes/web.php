@@ -85,8 +85,15 @@ $auditController = new AuditLogController($pdo);
 $uploadController = new UploadController($pdo, __DIR__ . '/../storage');
 
 $router
-    ->get('/uploads', static function (Request $request) use ($uploadController) {
+    ->get('/profile', static function (Request $request) use ($uploadController) {
         return $uploadController->show($request);
+    })
+    ->middleware(new AuthRequired())
+    ->setName('profile');
+
+$router
+    ->get('/uploads', static function () {
+        return Response::redirect('/profile');
     })
     ->middleware(new AuthRequired())
     ->setName('uploads');

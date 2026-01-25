@@ -58,7 +58,6 @@
                                 </form>
                             </div>
                         </details>
-                        <a href="/uploads">Uploads</a>
                     <?php else : ?>
                         <a href="/login">Login</a>
                         <a href="/signup">Sign up</a>

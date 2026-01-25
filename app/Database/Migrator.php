@@ -34,7 +34,7 @@ final class Migrator
             $this->pdo->beginTransaction();
             try {
                 $callable($this->pdo);
-                $stmt = $this->pdo->prepare('INSERT INTO migrations (filename, applied_at) VALUES (?, NOW())');
+                $stmt = $this->pdo->prepare('INSERT INTO migrations (filename, applied_at) VALUES (?, CURRENT_TIMESTAMP)');
                 $stmt->execute([$name]);
                 if ($this->pdo->inTransaction()) {
                     $this->pdo->commit();
@@ -68,6 +68,19 @@ final class Migrator
 
     private function ensureMigrationsTable(): void
     {
+        $driver = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        if ($driver === 'sqlite') {
+            $sql = <<<SQL
+CREATE TABLE IF NOT EXISTS migrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename TEXT NOT NULL UNIQUE,
+    applied_at TEXT NOT NULL
+);
+SQL;
+            $this->pdo->exec($sql);
+            return;
+        }
+
         $sql = <<<SQL
 CREATE TABLE IF NOT EXISTS migrations (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

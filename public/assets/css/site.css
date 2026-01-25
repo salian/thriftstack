@@ -154,6 +154,10 @@ a:hover {
     color: var(--text);
     padding: 8px 10px;
     border-radius: 8px;
+    margin-left: 0;
+    font-weight: 600;
+    line-height: 1.2;
+    display: block;
 }
 
 .nav-menu-panel a:hover {
@@ -169,8 +173,14 @@ a:hover {
     color: var(--text);
     padding: 8px 10px;
     border-radius: 8px;
+    font: inherit;
     font-weight: 600;
+    line-height: 1.2;
     cursor: pointer;
+}
+
+.nav .nav-menu-form {
+    margin-left: 0;
 }
 
 .nav-menu-form button:hover {

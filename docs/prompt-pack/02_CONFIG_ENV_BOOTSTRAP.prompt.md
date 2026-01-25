@@ -24,6 +24,7 @@ Implement configuration and environment loading.
 - APP_DEBUG (true/false)
 - APP_URL
 - DB_HOST, DB_NAME, DB_USER, DB_PASS
+- DB_DRIVER, DB_PATH
 - MAIL_FROM_NAME, MAIL_FROM_EMAIL
 - SECURITY_SHOW_ERRORS_IN_PROD (true/false)
 - SECURITY_SHOW_ERRORS_IN_PROD_FOR_ADMIN_ONLY (true/false)

@@ -42,6 +42,7 @@ Target PHP version: **PHP 8.5**
 
 Assume these extensions exist:
 - `pdo_mysql`
+- `pdo_sqlite` (optional for local development)
 - `openssl`
 - `mbstring`
 - `curl`
@@ -50,7 +51,7 @@ Assume these extensions exist:
 ---
 
 ## 4) Database
-Database: **MySQL for local and production**
+Database: **MySQL for production, SQLite optional for local development**
 
 Must include:
 - SQL + script to initialize database schema
