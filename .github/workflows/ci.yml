@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - staging
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: PHP version
+        run: php -v
+
+      - name: PHP lint
+        run: |
+          files=$(rg --files -g "*.php")
+          if [ -z "$files" ]; then
+            echo "No PHP files found."
+            exit 0
+          fi
+          echo "$files" | xargs -n 1 php -l
+
+      - name: Run tests
+        run: php tests/run.php

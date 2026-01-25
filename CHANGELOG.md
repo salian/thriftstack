@@ -17,3 +17,4 @@
 - Add migration failure context to error output.
 - Guard migration commits when DDL ends transactions.
 - Fix route naming API to avoid duplicate method names.
+- Add CI workflow for PHP linting and tests.
