@@ -22,3 +22,4 @@
 - Make CI PHP lint fallback when `rg` is unavailable.
 - Add AI stars logo in header and favicon.
 - Run seeds during deploy to ensure baseline data exists.
+- Allow middleware to pass non-Response handler results.

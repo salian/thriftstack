@@ -12,7 +12,7 @@ final class RoleRequired
         $this->roles = $roles;
     }
 
-    public function handle(Request $request, callable $next): Response
+    public function handle(Request $request, callable $next)
     {
         $user = $request->session('user');
         $role = is_array($user) ? ($user['role'] ?? null) : null;

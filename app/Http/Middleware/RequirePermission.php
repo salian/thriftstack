@@ -11,7 +11,7 @@ final class RequirePermission
         $this->permission = $permission;
     }
 
-    public function handle(Request $request, callable $next): Response
+    public function handle(Request $request, callable $next)
     {
         $user = $request->session('user');
         $permissions = is_array($user) ? ($user['permissions'] ?? []) : [];

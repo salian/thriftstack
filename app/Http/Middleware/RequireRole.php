@@ -11,7 +11,7 @@ final class RequireRole
         $this->role = $role;
     }
 
-    public function handle(Request $request, callable $next): Response
+    public function handle(Request $request, callable $next)
     {
         $user = $request->session('user');
         $role = is_array($user) ? ($user['role'] ?? null) : null;
