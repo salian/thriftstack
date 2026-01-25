@@ -204,6 +204,48 @@ final class WorkspaceService
         return $token;
     }
 
+    public function resendInvite(int $inviteId, int $workspaceId, int $actorId): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id, email, role, accepted_at FROM workspace_invites WHERE id = ? AND workspace_id = ? LIMIT 1'
+        );
+        $stmt->execute([$inviteId, $workspaceId]);
+        $invite = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$invite || !empty($invite['accepted_at'])) {
+            return null;
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $tokenHash = hash('sha256', $token);
+        $now = new DateTimeImmutable('now');
+        $expires = $now->modify('+7 days');
+
+        $update = $this->pdo->prepare(
+            'UPDATE workspace_invites
+             SET token_hash = ?, expires_at = ?, created_at = ?, accepted_at = NULL
+             WHERE id = ?'
+        );
+        $update->execute([
+            $tokenHash,
+            $expires->format('Y-m-d H:i:s'),
+            $now->format('Y-m-d H:i:s'),
+            (int)$invite['id'],
+        ]);
+
+        $this->audit->log('workspaces.invite.resent', $actorId, [
+            'workspace_id' => $workspaceId,
+            'invite_id' => (int)$invite['id'],
+            'email' => $invite['email'] ?? '',
+            'role' => $invite['role'] ?? '',
+        ]);
+
+        return [
+            'token' => $token,
+            'email' => $invite['email'] ?? '',
+            'role' => $invite['role'] ?? '',
+        ];
+    }
+
     public function lookupInvite(string $token): ?array
     {
         $tokenHash = hash('sha256', $token);

@@ -157,6 +157,13 @@ $router
     })
     ->middleware(new AuthRequired());
 
+$router
+    ->post('/teams/invites/resend', static function (Request $request) use ($workspaceInviteController) {
+        return $workspaceInviteController->resend($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Admin'));
+
 $router->get('/privacy', static function () {
     return View::render('legal/privacy', ['title' => 'Privacy Policy']);
 });

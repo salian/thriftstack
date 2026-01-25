@@ -146,4 +146,43 @@ final class WorkspaceInviteController
             'requiresLogin' => false,
         ]));
     }
+
+    public function resend(Request $request): Response
+    {
+        if (!Csrf::validate($request->input('_token'))) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+
+        $userId = (int)($request->session('user')['id'] ?? 0);
+        $workspaceId = $this->service->currentWorkspaceId() ?? 0;
+        if ($workspaceId <= 0) {
+            return $this->workspaceController->renderIndex($userId, null, 'Select a workspace first.', null);
+        }
+
+        $inviteId = (int)$request->input('invite_id', 0);
+        if ($inviteId <= 0) {
+            return $this->workspaceController->renderIndex($userId, null, 'Invite not found.', null);
+        }
+
+        $result = $this->service->resendInvite($inviteId, $workspaceId, $userId);
+        if (!$result) {
+            return $this->workspaceController->renderIndex($userId, null, 'Invite cannot be resent.', null);
+        }
+
+        $baseUrl = rtrim((string)($this->config['app']['url'] ?? ''), '/');
+        $link = $baseUrl . '/teams/invites/accept?token=' . urlencode($result['token']);
+
+        $subject = 'Workspace invitation';
+        $body = "You have been invited to join a workspace on "
+            . ($this->config['app']['name'] ?? 'ThriftStack')
+            . ".\n\nAccept the invite:\n{$link}\n\nIf you did not request this, ignore this email.";
+        $this->mailer->send((string)$result['email'], $subject, $body);
+
+        return $this->workspaceController->renderIndex(
+            $userId,
+            'Invite resent.',
+            null,
+            $link
+        );
+    }
 }

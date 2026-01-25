@@ -146,11 +146,17 @@
                                     <?php endif; ?>
                                     <tr class="is-muted">
                                         <td><span class="badge">Invited</span></td>
-                                        <td><?= e($invite['email'] ?? '') ?></td>
+                                        <td class="is-italic"><?= e($invite['email'] ?? '') ?></td>
                                         <td><?= e($invite['role'] ?? '') ?></td>
-                                        <td>Invited</td>
+                                        <td></td>
                                         <?php if (!empty($canManage)) : ?>
-                                            <td></td>
+                                            <td>
+                                                <form method="post" action="/teams/invites/resend">
+                                                    <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+                                                    <input type="hidden" name="invite_id" value="<?= e((string)$invite['id']) ?>">
+                                                    <button type="submit" class="button button-ghost">Resend</button>
+                                                </form>
+                                            </td>
                                         <?php endif; ?>
                                     </tr>
                                 <?php endforeach; ?>
@@ -207,6 +213,9 @@
                                 <th>Role</th>
                                 <th>Status</th>
                                 <th>Expires</th>
+                                <?php if (!empty($canManage)) : ?>
+                                    <th>Action</th>
+                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -216,6 +225,17 @@
                                     <td><?= e($invite['role'] ?? '') ?></td>
                                     <td><?= !empty($invite['accepted_at']) ? 'Accepted' : 'Pending' ?></td>
                                     <td><?= e($invite['expires_at'] ?? '') ?></td>
+                                    <?php if (!empty($canManage)) : ?>
+                                        <td>
+                                            <?php if (empty($invite['accepted_at'])) : ?>
+                                                <form method="post" action="/teams/invites/resend">
+                                                    <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+                                                    <input type="hidden" name="invite_id" value="<?= e((string)$invite['id']) ?>">
+                                                    <button type="submit" class="button button-ghost">Resend</button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </td>
+                                    <?php endif; ?>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

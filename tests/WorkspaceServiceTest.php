@@ -37,6 +37,12 @@ final class WorkspaceServiceTest extends TestCase
         $this->assertTrue((bool)$result['ok'], 'Invite not accepted');
         $this->assertEquals('Member', $service->membershipRole(2, $workspaceId), 'Member role missing');
 
+        $token2 = $service->createInvite($workspaceId, 'member2@example.com', 'Member', 1);
+        $this->assertNotEmpty($token2, 'Second invite token missing');
+        $inviteRow = $pdo->query('SELECT id FROM workspace_invites ORDER BY id DESC LIMIT 1')->fetch(PDO::FETCH_ASSOC);
+        $resent = $service->resendInvite((int)($inviteRow['id'] ?? 0), $workspaceId, 1);
+        $this->assertTrue(!empty($resent['token']), 'Resend invite failed');
+
         $pdo->exec("INSERT INTO users (name, email) VALUES ('Solo', 'solo@example.com')");
         $defaultWorkspaceId = $service->ensureWorkspaceForUser(3, 'Solo User');
         $this->assertTrue($defaultWorkspaceId > 0, 'Default workspace not created');

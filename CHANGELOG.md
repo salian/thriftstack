@@ -64,3 +64,4 @@
 - Store workspace IDs on audit logs for faster scoped queries.
 - Add Workspaces/Team Members tabs on the Workspaces page.
 - Rename Workspaces page to Teams and move it to `/teams`.
+- Add resend invite action for pending team invites.

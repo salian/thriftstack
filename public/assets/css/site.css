@@ -750,6 +750,10 @@ input[type="file"]::-webkit-file-upload-button:hover {
     background: rgba(123, 139, 162, 0.2);
 }
 
+.table tr.is-muted td.is-italic {
+    font-style: italic;
+}
+
 .tabs {
     display: inline-flex;
     gap: 10px;
