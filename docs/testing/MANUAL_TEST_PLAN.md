@@ -14,10 +14,10 @@
 - Create a workspace, invite a member, accept invite.
 - Switch workspace context and verify role guard.
 - Update profile name from `/profile` and notification preferences from `/settings`.
+- Send an in-app notification and view `/notifications`.
+- Queue a batched notification and run `php scripts/notifications_dispatch.php`.
 
 ## Upcoming features (planned)
 - Update user settings and preference flags.
-- Send immediate notification and view history.
-- Send batched notification and verify digest.
 - Visit analytics placeholder page.
 - Verify subscription trial start and webhook handling.

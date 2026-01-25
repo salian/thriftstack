@@ -5,12 +5,12 @@ declare(strict_types=1);
 final class NotificationDispatcher
 {
     private Mailer $mailer;
-    private ?callable $sender;
+    private ?Closure $sender;
 
     public function __construct(array $config, ?Mailer $mailer = null, ?callable $sender = null)
     {
         $this->mailer = $mailer ?? new Mailer($config);
-        $this->sender = $sender;
+        $this->sender = $sender ? Closure::fromCallable($sender) : null;
     }
 
     public function sendEmail(string $to, string $subject, string $body): bool

@@ -8,6 +8,7 @@ Core PHP 8.5 starter focused on logged-in SaaS dashboards, DreamHost shared host
 - Workspaces: multi-workspace memberships with invites and per-workspace roles.
 - RBAC admin: roles, permissions, user role assignments.
 - Admin panel: users list and audit log.
+- Notifications: in-app history and email digests.
 - Uploads for profile images and attachments in `/storage/uploads`.
 - Single stylesheet at `/public/assets/css/site.css` with enterprise baseline.
 - GitHub Actions deploy with releases and migrations.

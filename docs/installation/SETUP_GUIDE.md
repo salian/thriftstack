@@ -23,3 +23,5 @@
    - `${DEPLOY_PATH}/shared/storage`
 3. Push to `main` for production or `staging` for staging.
 4. Migrations run automatically during deployment.
+5. Add a cron job to send notification digests (example daily run):
+   - `0 9 * * * /usr/bin/php ${DEPLOY_PATH}/current/scripts/notifications_dispatch.php`
