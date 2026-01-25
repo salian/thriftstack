@@ -8,73 +8,74 @@
     <link rel="stylesheet" href="/assets/css/site.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script defer src="/assets/js/theme.js"></script>
+    <script defer src="/assets/js/ui.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body>
-    <div class="page" x-data="{
-            sidebarCollapsed: false,
-            theme: document.documentElement.getAttribute('data-theme') || 'light',
-            toggleTheme() {
-                this.theme = this.theme === 'dark' ? 'light' : 'dark';
-                document.documentElement.setAttribute('data-theme', this.theme);
-                localStorage.setItem('thriftstack_theme', this.theme);
-            }
-        }" :class="sidebarCollapsed ? 'sidebar-collapsed' : ''">
-        <aside class="sidebar" aria-label="Primary sidebar">
-            <a class="brand sidebar-brand" href="/dashboard" aria-label="ThriftStack">
-                <img src="/assets/img/ai-stars.svg" alt="AI magic stars" class="brand-mark">
-                <span class="brand-text"><?= e('ThriftStack') ?></span>
-            </a>
-            <nav class="sidebar-nav" aria-label="Sidebar">
-                <a href="/dashboard" aria-label="Dashboard" data-tooltip="Dashboard">
-                    <i class="fa-solid fa-gauge sidebar-icon" aria-hidden="true"></i>
-                    <span class="sidebar-label">Dashboard</span>
+    <div class="page <?= Auth::check() ? 'has-sidebar' : '' ?>">
+        <?php if (Auth::check()) : ?>
+            <aside class="sidebar" aria-label="Primary sidebar">
+                <a class="brand sidebar-brand" href="/dashboard" aria-label="ThriftStack">
+                    <svg class="brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.73 1.73 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.73 1.73 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.73 1.73 0 0 0 3.407 2.31zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z"/>
+                    </svg>
+                    <span class="brand-text"><?= e('ThriftStack') ?></span>
                 </a>
-                <a href="/tasks" aria-label="Tasks" data-tooltip="Tasks">
-                    <i class="fa-solid fa-list-check sidebar-icon" aria-hidden="true"></i>
-                    <span class="sidebar-label">Tasks</span>
-                </a>
-                <a href="/reports" aria-label="Reports" data-tooltip="Reports">
-                    <i class="fa-solid fa-chart-column sidebar-icon" aria-hidden="true"></i>
-                    <span class="sidebar-label">Reports</span>
-                </a>
-                <?php if (Auth::check()) : ?>
+                <nav class="sidebar-nav" aria-label="Sidebar">
+                    <a href="/dashboard" aria-label="Dashboard" data-tooltip="Dashboard">
+                        <i class="fa-solid fa-gauge sidebar-icon" aria-hidden="true"></i>
+                        <span class="sidebar-label">Dashboard</span>
+                    </a>
+                    <a href="/tasks" aria-label="Tasks" data-tooltip="Tasks">
+                        <i class="fa-solid fa-list-check sidebar-icon" aria-hidden="true"></i>
+                        <span class="sidebar-label">Tasks</span>
+                    </a>
+                    <a href="/reports" aria-label="Reports" data-tooltip="Reports">
+                        <i class="fa-solid fa-chart-column sidebar-icon" aria-hidden="true"></i>
+                        <span class="sidebar-label">Reports</span>
+                    </a>
                     <a href="/admin/users" aria-label="Admin" data-tooltip="Admin">
                         <i class="fa-solid fa-shield-halved sidebar-icon" aria-hidden="true"></i>
                         <span class="sidebar-label">Admin</span>
                     </a>
-                <?php endif; ?>
-                <div class="sidebar-divider"></div>
-                <a href="/settings" aria-label="Settings" data-tooltip="Settings">
-                    <i class="fa-solid fa-gear sidebar-icon" aria-hidden="true"></i>
-                    <span class="sidebar-label">Settings</span>
-                </a>
-                <a href="/support" aria-label="Support" data-tooltip="Support">
-                    <i class="fa-solid fa-life-ring sidebar-icon" aria-hidden="true"></i>
-                    <span class="sidebar-label">Support</span>
-                </a>
-                <button type="button" class="theme-toggle" @click="toggleTheme" data-tooltip="Theme" aria-label="Toggle theme">
-                    <i class="fa-solid fa-moon sidebar-icon" aria-hidden="true"></i>
-                    <span class="sidebar-label" x-text="theme === 'dark' ? 'Light mode' : 'Dark mode'"></span>
-                    <span class="toggle-switch" aria-hidden="true">
-                        <span class="toggle-knob" :class="theme === 'dark' ? 'is-on' : ''"></span>
-                    </span>
-                    <i class="fa-solid fa-sun sidebar-icon" aria-hidden="true"></i>
-                </button>
-            </nav>
-        </aside>
+                    <div class="sidebar-divider"></div>
+                    <a href="/settings" aria-label="Settings" data-tooltip="Settings">
+                        <i class="fa-solid fa-gear sidebar-icon" aria-hidden="true"></i>
+                        <span class="sidebar-label">Settings</span>
+                    </a>
+                    <a href="/support" aria-label="Support" data-tooltip="Support">
+                        <i class="fa-solid fa-life-ring sidebar-icon" aria-hidden="true"></i>
+                        <span class="sidebar-label">Support</span>
+                    </a>
+                    <button type="button" class="theme-toggle" data-theme-toggle data-tooltip="Theme" aria-label="Toggle theme">
+                        <i class="fa-solid fa-moon sidebar-icon" aria-hidden="true"></i>
+                        <span class="sidebar-label" data-theme-label>Dark mode</span>
+                        <span class="toggle-switch" aria-hidden="true">
+                            <span class="toggle-knob"></span>
+                        </span>
+                        <i class="fa-solid fa-sun sidebar-icon" aria-hidden="true"></i>
+                    </button>
+                </nav>
+            </aside>
+        <?php endif; ?>
         <div class="content-area">
             <header class="site-header">
                 <div class="content-inner">
-                    <div class="header-controls">
-                        <button type="button" class="icon-button" @click="sidebarCollapsed = !sidebarCollapsed"
-                            :aria-pressed="sidebarCollapsed.toString()" aria-label="Toggle sidebar">
-                            <i class="fa-solid fa-angles-left" x-show="!sidebarCollapsed" aria-hidden="true"></i>
-                            <i class="fa-solid fa-angles-right" x-show="sidebarCollapsed" aria-hidden="true"></i>
-                        </button>
-                    </div>
+                    <?php if (Auth::check()) : ?>
+                        <div class="header-controls">
+                            <button type="button" class="icon-button" data-sidebar-toggle aria-pressed="false"
+                                aria-label="Toggle sidebar">
+                                <i class="fa-solid fa-angles-left icon-collapse" aria-hidden="true"></i>
+                                <i class="fa-solid fa-angles-right icon-expand" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    <?php endif; ?>
                     <nav class="nav" aria-label="Primary">
                         <?php if (Auth::check()) : ?>
+                            <a href="/notifications" class="nav-icon" aria-label="Notifications">
+                                <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                                <span class="nav-icon-dot" aria-hidden="true"></span>
+                            </a>
                             <?php
                             $userName = Auth::user()['name'] ?? 'User';
                             $parts = preg_split('/\s+/', trim($userName));

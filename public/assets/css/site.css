@@ -67,11 +67,14 @@ a:hover {
 
 .page {
     min-height: 100vh;
+}
+
+.page.has-sidebar {
     display: grid;
     grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
 }
 
-.page.sidebar-collapsed {
+.page.has-sidebar.sidebar-collapsed {
     grid-template-columns: 76px minmax(0, 1fr);
 }
 
@@ -139,6 +142,7 @@ a:hover {
     height: 32px;
     display: inline-block;
     color: var(--brand-mark);
+    fill: currentColor;
 }
 
 .brand-text {
@@ -154,6 +158,40 @@ a:hover {
 .nav a:hover {
     color: var(--header-link-hover);
     text-decoration: none;
+}
+
+.nav-icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-left: 12px;
+    color: var(--header-link);
+}
+
+.nav-icon:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--header-link-hover);
+    text-decoration: none;
+}
+
+.nav-icon-dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff5f57;
+    border: 2px solid #1b2432;
+}
+
+[data-theme="dark"] .nav-icon-dot {
+    border-color: #0f1622;
 }
 
 .nav form {
@@ -531,7 +569,7 @@ input[type="file"] {
 }
 
 .sidebar-brand {
-    color: var(--primary-dark);
+    color: var(--brand-mark);
     margin-bottom: 18px;
 }
 
@@ -587,6 +625,14 @@ input[type="file"] {
 
 .icon-button:hover {
     background: var(--surface-muted);
+}
+
+.icon-collapse {
+    display: inline-block;
+}
+
+.icon-expand {
+    display: none;
 }
 
 .theme-toggle {
@@ -647,7 +693,7 @@ input[type="file"] {
     background: #dbe7ff;
 }
 
-.toggle-knob.is-on {
+[data-theme="dark"] .toggle-knob {
     transform: translateX(22px);
 }
 
@@ -707,12 +753,20 @@ input[type="file"] {
     justify-content: center;
 }
 
+.page.sidebar-collapsed .icon-collapse {
+    display: none;
+}
+
+.page.sidebar-collapsed .icon-expand {
+    display: inline-block;
+}
+
 @media (max-width: 768px) {
-    .page {
+    .page.has-sidebar {
         grid-template-columns: 1fr;
     }
 
-    .page.sidebar-collapsed {
+    .page.has-sidebar.sidebar-collapsed {
         grid-template-columns: 1fr;
     }
 

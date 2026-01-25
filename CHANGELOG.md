@@ -43,3 +43,8 @@
 - Style sidebar theme toggle as a switch control.
 - Allow CDN fonts/styles in CSP and load theme bootstrap script externally.
 - Make brand logo color follow theme variables.
+- Make theme toggle work without Alpine.
+- Hide sidebar and collapse toggle when logged out.
+- Inline brand SVG so it inherits theme color.
+- Make sidebar collapse toggle work without Alpine and persist state.
+- Add notifications bell with unread dot in header.
