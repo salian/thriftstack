@@ -16,14 +16,14 @@
     --space-md: 18px;
     --space-lg: 28px;
     --space-xl: 40px;
-    --sidebar-width: 240px;
+    --sidebar-width: 220px;
     --header-bg: linear-gradient(120deg, #1b2432, #28364a);
     --header-text: #f7f9fc;
     --header-link: #dfe6f3;
     --header-link-hover: #ffffff;
     --header-muted: #c6d1e6;
     --brand-mark: var(--primary-dark);
-    font-family: "Source Sans 3", "Avenir Next", "Noto Sans", sans-serif;
+    font-family: "Inter", "Avenir Next", "Noto Sans", sans-serif;
 }
 
 [data-theme="dark"] {
@@ -151,8 +151,9 @@ a:hover {
 
 .nav a {
     margin-left: 16px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--header-link);
+    line-height: 1.2;
 }
 
 .nav a:hover {
@@ -208,8 +209,9 @@ a:hover {
 .nav summary {
     list-style: none;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--header-link);
+    line-height: 1.2;
 }
 
 .nav summary::-webkit-details-marker {
@@ -223,7 +225,7 @@ a:hover {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 10px;
+    padding: 8px;
     min-width: 180px;
     box-shadow: var(--shadow);
     display: grid;
@@ -233,10 +235,10 @@ a:hover {
 
 .nav-menu-panel a {
     color: var(--text);
-    padding: 8px 10px;
+    padding: 6px 8px;
     border-radius: 8px;
     margin-left: 0;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1.2;
     display: block;
 }
@@ -252,7 +254,7 @@ a:hover {
     border: none;
     background: transparent;
     color: var(--text);
-    padding: 8px 10px;
+    padding: 6px 8px;
     border-radius: 8px;
     font: inherit;
     font-weight: 600;
@@ -283,12 +285,13 @@ a:hover {
 .nav-user-menu summary {
     list-style: none;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--header-link);
+    line-height: 1.2;
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 6px 10px;
+    padding: 5px 8px;
     border-radius: 20px;
     border: 1px solid transparent;
 }
@@ -338,11 +341,11 @@ a:hover {
 }
 
 .hero {
-    padding: 72px 0 48px;
+    padding: 48px 0 36px;
 }
 
 .hero h1 {
-    font-size: clamp(2.2rem, 2.6vw, 3rem);
+    font-size: clamp(1.9rem, 2.2vw, 2.6rem);
     margin-bottom: 12px;
 }
 
@@ -592,10 +595,11 @@ input[type="file"] {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: 10px;
     color: var(--muted);
-    font-weight: 600;
+    font-weight: 500;
+    line-height: 1.2;
 }
 
 .sidebar a.sidebar-brand {
@@ -659,12 +663,13 @@ input[type="file"] {
 .theme-toggle {
     display: flex;
     align-items: center;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: 10px;
     border: none;
     background: transparent;
     color: var(--muted);
-    font-weight: 600;
+    font-weight: 500;
+    line-height: 1.2;
     cursor: pointer;
     text-align: left;
     min-height: 40px;

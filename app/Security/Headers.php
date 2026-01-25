@@ -8,9 +8,9 @@ final class Headers
     {
         $csp = "default-src 'self'; "
             . "script-src 'self' https://cdn.jsdelivr.net; "
-            . "style-src 'self' https://cdnjs.cloudflare.com; "
+            . "style-src 'self' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
             . "img-src 'self' data:; "
-            . "font-src 'self' https://cdnjs.cloudflare.com; "
+            . "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
             . "connect-src 'self'; "
             . "frame-ancestors 'none'; "
             . "base-uri 'self'; "

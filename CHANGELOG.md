@@ -50,3 +50,4 @@
 - Render sidebar tooltips via JS so they aren't clipped.
 - Add notifications bell with unread dot in header.
 - Improve theme toggle alignment in sidebar.
+- Switch global font to Inter.
