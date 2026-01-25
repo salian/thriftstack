@@ -37,3 +37,9 @@
 - Make seeds SQLite-compatible by switching to INSERT OR IGNORE.
 - Rename uploads page to profile and relabel uploads section as My Uploads.
 - Add My Uploads list to profile page.
+- Switch to full-width layout with sidebar-based brand and full-height sidebar.
+- Add sidebar icons and collapsible sidebar toggle.
+- Add sidebar separators, theme toggle, and tooltips for collapsed mode.
+- Style sidebar theme toggle as a switch control.
+- Allow CDN fonts/styles in CSP and load theme bootstrap script externally.
+- Make brand logo color follow theme variables.
