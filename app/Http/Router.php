@@ -86,7 +86,8 @@ final class Route
 {
     private string $method;
     private string $path;
-    private callable $handler;
+    /** @var callable */
+    private $handler;
     private ?string $name = null;
     private array $middleware = [];
 
