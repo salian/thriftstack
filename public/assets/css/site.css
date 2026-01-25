@@ -221,8 +221,9 @@ a:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(223, 230, 243, 0.2);
-    color: #ffffff;
+    background: #dfe6f3;
+    color: #1f2e45;
+    border: 1px solid rgba(255, 255, 255, 0.4);
     font-size: 0.75rem;
     font-weight: 700;
 }
