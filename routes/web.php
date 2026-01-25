@@ -77,6 +77,18 @@ $router
     ->middleware(new AuthRequired())
     ->setName('dashboard');
 
+$router->get('/privacy', static function () {
+    return View::render('legal/privacy', ['title' => 'Privacy Policy']);
+});
+
+$router->get('/terms', static function () {
+    return View::render('legal/terms', ['title' => 'Terms of Service']);
+});
+
+$router->get('/support', static function () {
+    return View::render('support', ['title' => 'Support']);
+});
+
 $rolesController = new RolesController($pdo);
 $permissionsController = new PermissionsController($pdo);
 $userRolesController = new UserRolesController($pdo);

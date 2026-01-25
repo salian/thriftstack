@@ -32,6 +32,7 @@ $env = static function (string $key, $default = null) {
 
 return [
     'app' => [
+        'name' => $env('THRIFTSTACK_APP_NAME', 'ThriftStack'),
         'env' => $env('THRIFTSTACK_APP_ENV', 'local'),
         'debug' => filter_var($env('THRIFTSTACK_APP_DEBUG', 'false'), FILTER_VALIDATE_BOOLEAN),
         'url' => $env('THRIFTSTACK_APP_URL', 'http://localhost'),

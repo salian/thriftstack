@@ -10,7 +10,7 @@ final class Mailer
     public function __construct(array $config)
     {
         $mail = $config['mail'] ?? [];
-        $this->fromName = $mail['from_name'] ?? 'ThriftStack';
+        $this->fromName = $mail['from_name'] ?? ($config['app']['name'] ?? 'ThriftStack');
         $this->fromEmail = $mail['from_email'] ?? 'no-reply@example.com';
     }
 

@@ -75,3 +75,37 @@
     }
   });
 })();
+
+(() => {
+  const menus = Array.from(document.querySelectorAll('.nav-user-menu'));
+  if (menus.length === 0) {
+    return;
+  }
+
+  document.addEventListener('click', (event) => {
+    for (const menu of menus) {
+      if (!menu.hasAttribute('open')) {
+        continue;
+      }
+      const link = event.target.closest('a');
+      if (link && menu.contains(link)) {
+        menu.removeAttribute('open');
+        continue;
+      }
+      if (!menu.contains(event.target)) {
+        menu.removeAttribute('open');
+      }
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') {
+      return;
+    }
+    for (const menu of menus) {
+      if (menu.hasAttribute('open')) {
+        menu.removeAttribute('open');
+      }
+    }
+  });
+})();

@@ -51,3 +51,5 @@
 - Add notifications bell with unread dot in header.
 - Improve theme toggle alignment in sidebar.
 - Switch global font to Inter.
+- Add configurable app name for visible branding.
+- Add privacy, terms, and support pages.

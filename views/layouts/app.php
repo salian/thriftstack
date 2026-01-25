@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= e($title ?? 'ThriftStack') ?></title>
+    <title><?= e($title ?? (string)config('app.name', 'ThriftStack')) ?></title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,11 +18,11 @@
     <div class="page <?= Auth::check() ? 'has-sidebar' : '' ?>">
         <?php if (Auth::check()) : ?>
             <aside class="sidebar" aria-label="Primary sidebar">
-                <a class="brand sidebar-brand" href="/dashboard" aria-label="ThriftStack">
+                <a class="brand sidebar-brand" href="/dashboard" aria-label="<?= e((string)config('app.name', 'ThriftStack')) ?>">
                     <svg class="brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
                         <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.73 1.73 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.73 1.73 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.73 1.73 0 0 0 3.407 2.31zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z"/>
                     </svg>
-                    <span class="brand-text"><?= e('ThriftStack') ?></span>
+                    <span class="brand-text"><?= e((string)config('app.name', 'ThriftStack')) ?></span>
                 </a>
                 <div class="sidebar-scroll">
                     <nav class="sidebar-nav" aria-label="Sidebar">
@@ -132,7 +132,14 @@
             </main>
             <footer class="site-footer">
                 <div class="content-inner">
-                    <span>Starter skeleton ready.</span>
+                    <div class="footer-content">
+                        <span>© <?= e(date('Y')) ?> <?= e((string)config('app.name', 'ThriftStack')) ?>. All rights reserved.</span>
+                        <div class="footer-links">
+                            <a href="/privacy">Privacy</a>
+                            <a href="/terms">Terms</a>
+                            <a href="/support">Support</a>
+                        </div>
+                    </div>
                 </div>
             </footer>
         </div>

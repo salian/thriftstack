@@ -42,3 +42,21 @@ if (!function_exists('sanitize_string')) {
         return trim(strip_tags($value));
     }
 }
+
+if (!function_exists('config')) {
+    function config(string $key, $default = null)
+    {
+        $config = $GLOBALS['config'] ?? [];
+        $segments = explode('.', $key);
+        $value = $config;
+
+        foreach ($segments as $segment) {
+            if (!is_array($value) || !array_key_exists($segment, $value)) {
+                return $default;
+            }
+            $value = $value[$segment];
+        }
+
+        return $value;
+    }
+}
