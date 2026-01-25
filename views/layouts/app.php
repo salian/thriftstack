@@ -12,12 +12,11 @@
     <div class="page">
         <header class="site-header">
             <div class="container">
-                <div class="brand">
+                <a class="brand" href="/dashboard">
                     <img src="/assets/img/ai-stars.svg" alt="AI magic stars" class="brand-mark">
                     <?= e('ThriftStack') ?>
-                </div>
+                </a>
                 <nav class="nav" aria-label="Primary">
-                    <a href="/">Home</a>
                     <?php if (Auth::check()) : ?>
                         <?php
                         $userName = Auth::user()['name'] ?? 'User';
@@ -48,6 +47,10 @@
                                 <a href="/notifications">Notifications</a>
                                 <a href="/billing">Billing</a>
                                 <a href="/profile">Profile</a>
+                                <?php if ((Auth::user()['role'] ?? null) === 'Admin') : ?>
+                                    <div class="nav-menu-divider"></div>
+                                    <a href="/admin/users">Admin</a>
+                                <?php endif; ?>
                                 <div class="nav-menu-divider"></div>
                                 <form method="post" action="/logout" class="nav-menu-form">
                                     <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
@@ -56,9 +59,6 @@
                             </div>
                         </details>
                         <a href="/uploads">Uploads</a>
-                        <?php if ((Auth::user()['role'] ?? null) === 'Admin') : ?>
-                            <a href="/admin/users">Admin</a>
-                        <?php endif; ?>
                     <?php else : ?>
                         <a href="/login">Login</a>
                         <a href="/signup">Sign up</a>

@@ -31,3 +31,5 @@
 - Restyle account menu with avatar initials and dropdown indicator.
 - Move logout into account menu and add global file input styling.
 - Add divider before logout in account menu.
+- Make brand link to dashboard and remove Home from header.
+- Move Admin link into account menu below Profile.
