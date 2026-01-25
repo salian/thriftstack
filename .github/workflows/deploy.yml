@@ -80,5 +80,6 @@ jobs:
             "ln -sfn ${DEPLOY_PATH}/shared/storage ${DEPLOY_PATH}/releases/${RELEASE_TS}/storage && \
              ln -sfn ${DEPLOY_PATH}/shared/.env ${DEPLOY_PATH}/releases/${RELEASE_TS}/.env && \
              php ${DEPLOY_PATH}/releases/${RELEASE_TS}/scripts/migrate.php && \
+             php ${DEPLOY_PATH}/releases/${RELEASE_TS}/scripts/seed.php && \
              ln -sfn ${DEPLOY_PATH}/releases/${RELEASE_TS} ${DEPLOY_PATH}/current && \
              bash ${DEPLOY_PATH}/releases/${RELEASE_TS}/scripts/deploy_helpers.sh cleanup ${DEPLOY_PATH}/releases 5"
