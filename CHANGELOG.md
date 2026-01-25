@@ -62,3 +62,5 @@
 - Create or attach a workspace on signup/login and enforce workspace-required routes.
 - Prefill invited email on signup and enforce matching invite addresses.
 - Store workspace IDs on audit logs for faster scoped queries.
+- Add Workspaces/Team Members tabs on the Workspaces page.
+- Rename Workspaces page to Teams and move it to `/teams`.

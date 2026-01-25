@@ -741,6 +741,48 @@ input[type="file"]::-webkit-file-upload-button:hover {
     font-weight: 700;
 }
 
+.table tr.is-muted td {
+    background: rgba(123, 139, 162, 0.12);
+    color: var(--muted);
+}
+
+[data-theme="dark"] .table tr.is-muted td {
+    background: rgba(123, 139, 162, 0.2);
+}
+
+.tabs {
+    display: inline-flex;
+    gap: 10px;
+    padding: 6px;
+    border-radius: 999px;
+    background: var(--surface-muted);
+    margin: 16px 0 24px;
+}
+
+.tab-button {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.tab-button.is-active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.is-active {
+    display: block;
+}
+
 .workspace-name-cell {
     display: inline-flex;
     align-items: center;

@@ -61,7 +61,7 @@ final class WorkspaceController
 
         $returnTo = (string)$request->input('return_to', '');
         if ($returnTo === '' || !str_starts_with($returnTo, '/')) {
-            $returnTo = '/workspaces';
+            $returnTo = '/teams';
         }
 
         return Response::redirect($returnTo);
@@ -122,7 +122,7 @@ final class WorkspaceController
 
         $returnTo = (string)$request->input('return_to', '');
         if ($returnTo === '' || !str_starts_with($returnTo, '/')) {
-            $returnTo = '/workspaces';
+            $returnTo = '/teams';
         }
 
         $_SESSION['flash'] = [
@@ -155,7 +155,7 @@ final class WorkspaceController
         $canManage = $currentRole !== null && $this->service->isRoleAtLeast($currentRole, 'Admin');
 
         return Response::html(View::render('workspaces/index', [
-            'title' => 'Workspaces',
+            'title' => 'Teams',
             'message' => $message,
             'error' => $error,
             'inviteLink' => $inviteLink,

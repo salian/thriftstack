@@ -119,7 +119,7 @@
     const form = select.closest('form');
     if (form) {
       if (select.value === '__create__') {
-        const target = select.getAttribute('data-create-url') || '/workspaces';
+        const target = select.getAttribute('data-create-url') || '/teams';
         window.location.href = target + '?open=create-workspace';
         return;
       }
@@ -312,6 +312,61 @@
       if (input && document.activeElement === input) {
         event.preventDefault();
         closeActive(true);
+      }
+    }
+  });
+})();
+
+(() => {
+  const containers = document.querySelectorAll('[data-tabs]');
+  if (containers.length === 0) {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const preferredTab = params.get('open') === 'create-workspace' ? 'workspaces' : null;
+
+  containers.forEach((container) => {
+    const buttons = Array.from(container.querySelectorAll('[data-tab-button]'));
+    if (buttons.length === 0) {
+      return;
+    }
+
+    const panels = buttons
+      .map((button) => {
+        const name = button.getAttribute('data-tab-button');
+        if (!name) {
+          return null;
+        }
+        return document.querySelector(`[data-tab-panel="${name}"]`);
+      })
+      .filter(Boolean);
+
+    const activate = (selected) => {
+      buttons.forEach((button) => {
+        const active = button === selected;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      panels.forEach((panel) => {
+        const active = panel && selected.getAttribute('data-tab-button') === panel.getAttribute('data-tab-panel');
+        if (panel) {
+          panel.classList.toggle('is-active', active);
+          panel.hidden = !active;
+        }
+      });
+    };
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => activate(button));
+    });
+
+    if (preferredTab) {
+      const preferredButton = buttons.find(
+        (button) => button.getAttribute('data-tab-button') === preferredTab
+      );
+      if (preferredButton) {
+        activate(preferredButton);
       }
     }
   });

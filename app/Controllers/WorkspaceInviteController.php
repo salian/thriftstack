@@ -43,7 +43,7 @@ final class WorkspaceInviteController
 
         $token = $this->service->createInvite($workspaceId, $email, $role, $userId);
         $baseUrl = rtrim((string)($this->config['app']['url'] ?? ''), '/');
-        $link = $baseUrl . '/workspaces/invites/accept?token=' . urlencode($token);
+        $link = $baseUrl . '/teams/invites/accept?token=' . urlencode($token);
 
         $subject = 'Workspace invitation';
         $body = "You have been invited to join a workspace on "

@@ -1,5 +1,5 @@
 <section class="page-section">
-    <h1>Workspace invite</h1>
+    <h1>Team invite</h1>
 
     <?php if (!empty($message)) : ?>
         <div class="alert alert-success"><?= e($message) ?></div>
@@ -25,12 +25,12 @@
             <a href="/signup<?= !empty($token) ? '?invite=' . urlencode($token) : '' ?>" class="button button-ghost">Create account</a>
         </div>
     <?php elseif (!empty($token) && empty($error)) : ?>
-        <form method="post" action="/workspaces/invites/accept" class="form">
+        <form method="post" action="/teams/invites/accept" class="form">
             <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
             <input type="hidden" name="token" value="<?= e($token) ?>">
             <button type="submit" class="button">Accept invite</button>
         </form>
     <?php else : ?>
-        <a href="/workspaces" class="button">Back to workspaces</a>
+        <a href="/teams" class="button">Back to teams</a>
     <?php endif; ?>
 </section>

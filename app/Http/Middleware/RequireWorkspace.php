@@ -24,13 +24,13 @@ final class RequireWorkspace
         $workspace = $service->ensureCurrentWorkspace($userId);
 
         if (!$workspace) {
-            return Response::redirect('/workspaces');
+            return Response::redirect('/teams');
         }
 
         $workspaceId = (int)$workspace['id'];
         $role = $service->membershipRole($userId, $workspaceId);
         if ($role === null) {
-            return Response::redirect('/workspaces');
+            return Response::redirect('/teams');
         }
 
         if ($this->role !== null && !$service->isRoleAtLeast($role, $this->role)) {

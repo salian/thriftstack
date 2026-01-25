@@ -30,10 +30,10 @@
                 $currentWorkspaceId = $workspaceService->currentWorkspaceId();
                 ?>
                 <div class="sidebar-workspace">
-                    <form method="post" action="/workspaces/switch" class="form-inline">
+                    <form method="post" action="/teams/switch" class="form-inline">
                         <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
-                        <input type="hidden" name="return_to" value="<?= e($_SERVER['REQUEST_URI'] ?? '/workspaces') ?>">
-                        <select name="workspace_id" aria-label="Switch workspace" data-auto-submit data-create-url="/workspaces">
+                        <input type="hidden" name="return_to" value="<?= e($_SERVER['REQUEST_URI'] ?? '/teams') ?>">
+                        <select name="workspace_id" aria-label="Switch workspace" data-auto-submit data-create-url="/teams">
                             <?php foreach ($workspaceList as $workspace) : ?>
                                 <option value="<?= e((string)$workspace['id']) ?>" <?= ($currentWorkspaceId == $workspace['id']) ? 'selected' : '' ?>>
                                     <?= e($workspace['name'] ?? '') ?>
@@ -123,7 +123,7 @@
                                     <span class="nav-chevron"></span>
                                 </summary>
                                 <div class="nav-menu-panel">
-                                    <a href="/workspaces">Workspaces</a>
+                                    <a href="/teams">Teams</a>
                                     <a href="/settings">Settings</a>
                                     <a href="/notifications">Notifications</a>
                                     <a href="/billing">Billing</a>

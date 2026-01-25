@@ -24,6 +24,7 @@ $router
     })
     ->setName('login');
 
+
 $router
     ->post('/login', static function (Request $request) use ($authController) {
         return $authController->login($request);
@@ -106,52 +107,52 @@ $router
     ->middleware(new RequireWorkspace($pdo));
 
 $router
-    ->get('/workspaces', static function (Request $request) use ($workspaceController) {
+    ->get('/teams', static function (Request $request) use ($workspaceController) {
         return $workspaceController->index($request);
     })
     ->middleware(new AuthRequired())
-    ->setName('workspaces');
+    ->setName('teams');
 
 $router
-    ->post('/workspaces', static function (Request $request) use ($workspaceController) {
+    ->post('/teams', static function (Request $request) use ($workspaceController) {
         return $workspaceController->create($request);
     })
     ->middleware(new AuthRequired());
 
 $router
-    ->post('/workspaces/switch', static function (Request $request) use ($workspaceController) {
+    ->post('/teams/switch', static function (Request $request) use ($workspaceController) {
         return $workspaceController->switch($request);
     })
     ->middleware(new AuthRequired());
 
 $router
-    ->post('/workspaces/update', static function (Request $request) use ($workspaceController) {
+    ->post('/teams/update', static function (Request $request) use ($workspaceController) {
         return $workspaceController->updateName($request);
     })
     ->middleware(new AuthRequired());
 
 $router
-    ->post('/workspaces/members/role', static function (Request $request) use ($workspaceController) {
+    ->post('/teams/members/role', static function (Request $request) use ($workspaceController) {
         return $workspaceController->updateMemberRole($request);
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspace($pdo, 'Admin'));
 
 $router
-    ->post('/workspaces/invites', static function (Request $request) use ($workspaceInviteController) {
+    ->post('/teams/invites', static function (Request $request) use ($workspaceInviteController) {
         return $workspaceInviteController->create($request);
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspace($pdo, 'Admin'));
 
 $router
-    ->get('/workspaces/invites/accept', static function (Request $request) use ($workspaceInviteController) {
+    ->get('/teams/invites/accept', static function (Request $request) use ($workspaceInviteController) {
         return $workspaceInviteController->showAccept($request);
     })
-    ->setName('workspaces.invites.accept');
+    ->setName('teams.invites.accept');
 
 $router
-    ->post('/workspaces/invites/accept', static function (Request $request) use ($workspaceInviteController) {
+    ->post('/teams/invites/accept', static function (Request $request) use ($workspaceInviteController) {
         return $workspaceInviteController->accept($request);
     })
     ->middleware(new AuthRequired());
