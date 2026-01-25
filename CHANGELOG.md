@@ -14,3 +14,4 @@
 - Add minimal test harness and core tests.
 - Add GitHub Actions deploy workflow for DreamHost releases.
 - Prefix environment variables with `THRIFTSTACK_`.
+- Add migration failure context to error output.

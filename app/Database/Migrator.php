@@ -39,8 +39,12 @@ final class Migrator
                 $this->pdo->commit();
                 $count++;
             } catch (Throwable $e) {
-                $this->pdo->rollBack();
-                throw $e;
+                if ($this->pdo->inTransaction()) {
+                    $this->pdo->rollBack();
+                }
+                $message = sprintf('Migration failed: %s | %s', $name, $e->getMessage());
+                error_log($message);
+                throw new RuntimeException($message, 0, $e);
             }
         }
 
