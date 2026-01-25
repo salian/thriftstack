@@ -16,7 +16,7 @@ final class WorkspaceServiceTest extends TestCase
         $pdo->exec('PRAGMA foreign_keys = ON');
 
         $pdo->exec('CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT)');
-        $pdo->exec('CREATE TABLE audit_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, action TEXT, metadata TEXT, created_at TEXT)');
+        $pdo->exec('CREATE TABLE audit_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, workspace_id INTEGER, action TEXT, metadata TEXT, created_at TEXT)');
         $pdo->exec('CREATE TABLE workspaces (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, created_by INTEGER, created_at TEXT)');
         $pdo->exec('CREATE TABLE workspace_memberships (user_id INTEGER, workspace_id INTEGER, role TEXT, created_at TEXT, PRIMARY KEY (user_id, workspace_id))');
         $pdo->exec('CREATE TABLE workspace_invites (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace_id INTEGER, email TEXT, role TEXT, token_hash TEXT, expires_at TEXT, created_at TEXT, accepted_at TEXT)');
@@ -36,5 +36,10 @@ final class WorkspaceServiceTest extends TestCase
         $result = $service->acceptInvite($token, 2);
         $this->assertTrue((bool)$result['ok'], 'Invite not accepted');
         $this->assertEquals('Member', $service->membershipRole(2, $workspaceId), 'Member role missing');
+
+        $pdo->exec("INSERT INTO users (name, email) VALUES ('Solo', 'solo@example.com')");
+        $defaultWorkspaceId = $service->ensureWorkspaceForUser(3, 'Solo User');
+        $this->assertTrue($defaultWorkspaceId > 0, 'Default workspace not created');
+        $this->assertEquals('Owner', $service->membershipRole(3, $defaultWorkspaceId), 'Default workspace membership missing');
     }
 }

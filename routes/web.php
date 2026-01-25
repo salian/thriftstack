@@ -80,6 +80,7 @@ $router
         return View::render('dashboard', ['title' => 'Dashboard']);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo))
     ->setName('dashboard');
 
 $router
@@ -87,19 +88,22 @@ $router
         return $settingsController->index($request);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo))
     ->setName('settings');
 
 $router
-    ->post('/settings/profile', static function (Request $request) use ($settingsController) {
+    ->post('/profile/update', static function (Request $request) use ($settingsController) {
         return $settingsController->updateProfile($request);
     })
-    ->middleware(new AuthRequired());
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo));
 
 $router
     ->post('/settings/preferences', static function (Request $request) use ($settingsController) {
         return $settingsController->updatePreferences($request);
     })
-    ->middleware(new AuthRequired());
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo));
 
 $router
     ->get('/workspaces', static function (Request $request) use ($workspaceController) {
@@ -117,6 +121,12 @@ $router
 $router
     ->post('/workspaces/switch', static function (Request $request) use ($workspaceController) {
         return $workspaceController->switch($request);
+    })
+    ->middleware(new AuthRequired());
+
+$router
+    ->post('/workspaces/update', static function (Request $request) use ($workspaceController) {
+        return $workspaceController->updateName($request);
     })
     ->middleware(new AuthRequired());
 
@@ -170,6 +180,7 @@ $router
         return $uploadController->show($request);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo))
     ->setName('profile');
 
 $router
@@ -177,25 +188,29 @@ $router
         return Response::redirect('/profile');
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo))
     ->setName('uploads');
 
 $router
     ->post('/uploads/profile', static function (Request $request) use ($uploadController) {
         return $uploadController->uploadProfile($request);
     })
-    ->middleware(new AuthRequired());
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo));
 
 $router
     ->post('/uploads/attachment', static function (Request $request) use ($uploadController) {
         return $uploadController->uploadAttachment($request);
     })
-    ->middleware(new AuthRequired());
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo));
 
 $router
     ->get('/uploads/attachment/{id}', static function (Request $request) use ($uploadController) {
         return $uploadController->download($request);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo))
     ->setName('uploads.download');
 
 $router
@@ -203,6 +218,7 @@ $router
         return $usersController->index($request);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Admin'))
     ->middleware(new RequirePermission('users.manage'))
     ->setName('admin.users');
 
@@ -211,6 +227,7 @@ $router
         return $rolesController->index($request);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Admin'))
     ->middleware(new RequireRole('Admin'))
     ->setName('admin.roles');
 
@@ -219,6 +236,7 @@ $router
         return $rolesController->create($request);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Admin'))
     ->middleware(new RequireRole('Admin'));
 
 $router
@@ -226,6 +244,7 @@ $router
         return $rolesController->updatePermissions($request);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Admin'))
     ->middleware(new RequireRole('Admin'));
 
 $router
@@ -233,6 +252,7 @@ $router
         return $permissionsController->index($request);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Admin'))
     ->middleware(new RequireRole('Admin'))
     ->setName('admin.permissions');
 
@@ -241,6 +261,7 @@ $router
         return $permissionsController->create($request);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Admin'))
     ->middleware(new RequireRole('Admin'));
 
 $router
@@ -248,6 +269,7 @@ $router
         return $userRolesController->index($request);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Admin'))
     ->middleware(new RequireRole('Admin'))
     ->setName('admin.user_roles');
 
@@ -256,6 +278,7 @@ $router
         return $userRolesController->assign($request);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Admin'))
     ->middleware(new RequireRole('Admin'));
 
 $router
@@ -263,6 +286,7 @@ $router
         return $auditController->index($request);
     })
     ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Admin'))
     ->middleware(new RequirePermission('audit.view'))
     ->setName('admin.audit');
 

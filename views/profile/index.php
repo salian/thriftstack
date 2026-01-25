@@ -10,6 +10,22 @@
     <?php endif; ?>
 
     <div class="card">
+        <h2>Profile details</h2>
+        <form method="post" action="/profile/update" class="form">
+            <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+            <label>
+                <span>Name</span>
+                <input type="text" name="name" value="<?= e($user['name'] ?? '') ?>" required>
+            </label>
+            <label>
+                <span>Email</span>
+                <input type="email" value="<?= e($user['email'] ?? '') ?>" disabled>
+            </label>
+            <button type="submit" class="button">Save profile</button>
+        </form>
+    </div>
+
+    <div class="card">
         <h2>Profile image</h2>
         <form method="post" action="/uploads/profile" enctype="multipart/form-data" class="form">
             <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">

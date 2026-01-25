@@ -95,6 +95,44 @@ final class WorkspaceController
         return $this->renderIndex($userId, 'Member role updated.', null, null);
     }
 
+    public function updateName(Request $request): Response
+    {
+        if (!Csrf::validate($request->input('_token'))) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+
+        $userId = (int)($request->session('user')['id'] ?? 0);
+        $workspaceId = (int)$request->input('workspace_id', 0);
+        $name = trim((string)$request->input('name', ''));
+
+        if ($workspaceId <= 0 || $name === '') {
+            return $this->renderIndex($userId, null, 'Workspace name is required.', null);
+        }
+
+        if (strlen($name) < 2 || strlen($name) > 120) {
+            return $this->renderIndex($userId, null, 'Workspace name must be 2 to 120 characters.', null);
+        }
+
+        $role = $this->service->membershipRole($userId, $workspaceId);
+        if ($role === null || !$this->service->isRoleAtLeast($role, 'Admin')) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+
+        $this->service->updateWorkspaceName($workspaceId, $name, $userId);
+
+        $returnTo = (string)$request->input('return_to', '');
+        if ($returnTo === '' || !str_starts_with($returnTo, '/')) {
+            $returnTo = '/workspaces';
+        }
+
+        $_SESSION['flash'] = [
+            'type' => 'success',
+            'message' => 'Workspace name updated.',
+        ];
+
+        return Response::redirect($returnTo);
+    }
+
     public function renderIndex(
         int $userId,
         ?string $message,

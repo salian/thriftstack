@@ -16,7 +16,8 @@ final class WorkspaceService
     public function listForUser(int $userId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT w.id, w.name, w.created_by, w.created_at, m.role
+            'SELECT w.id, w.name, w.created_by, w.created_at, m.role,
+                (SELECT COUNT(*) FROM workspace_memberships wm2 WHERE wm2.workspace_id = w.id) AS member_count
              FROM workspaces w
              JOIN workspace_memberships m ON m.workspace_id = w.id
              WHERE m.user_id = ?
@@ -44,6 +45,37 @@ final class WorkspaceService
         $this->audit->log('workspaces.created', $userId, ['workspace_id' => $workspaceId]);
 
         return $workspaceId;
+    }
+
+    public function updateWorkspaceName(int $workspaceId, string $name, int $actorId): bool
+    {
+        $stmt = $this->pdo->prepare('UPDATE workspaces SET name = ? WHERE id = ?');
+        $stmt->execute([$name, $workspaceId]);
+
+        if ($stmt->rowCount() > 0) {
+            $this->audit->log('workspaces.updated', $actorId, [
+                'workspace_id' => $workspaceId,
+                'name' => $name,
+            ]);
+            return true;
+        }
+
+        return false;
+    }
+
+    public function ensureWorkspaceForUser(int $userId, string $userName): int
+    {
+        $workspaces = $this->listForUser($userId);
+        if (empty($workspaces)) {
+            return $this->createWorkspace($this->defaultWorkspaceName($userName), $userId);
+        }
+
+        $current = $this->ensureCurrentWorkspace($userId);
+        if ($current) {
+            return (int)$current['id'];
+        }
+
+        return (int)$workspaces[0]['id'];
     }
 
     public function ensureCurrentWorkspace(int $userId): ?array
@@ -236,5 +268,15 @@ final class WorkspaceService
         ];
 
         return ($weights[$role] ?? 0) >= ($weights[$required] ?? 0);
+    }
+
+    private function defaultWorkspaceName(string $userName): string
+    {
+        $userName = trim($userName);
+        if ($userName === '') {
+            return 'My Workspace';
+        }
+
+        return $userName . "'s Workspace";
     }
 }

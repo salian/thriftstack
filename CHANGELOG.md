@@ -55,3 +55,10 @@
 - Add privacy, terms, and support pages.
 - Add workspaces, memberships, and invite flow with workspace roles.
 - Add user settings with profile updates and notification preferences.
+- Move profile editing into the profile page.
+- Scope admin users list to the current workspace.
+- Allow inline workspace renaming with audit logging.
+- Filter audit logs to workspaces where the admin has access.
+- Create or attach a workspace on signup/login and enforce workspace-required routes.
+- Prefill invited email on signup and enforce matching invite addresses.
+- Store workspace IDs on audit logs for faster scoped queries.

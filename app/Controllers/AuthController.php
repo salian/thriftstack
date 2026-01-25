@@ -19,17 +19,31 @@ final class AuthController
 
     public function showLogin(Request $request): Response
     {
+        $inviteToken = (string)$request->query('invite', '');
         return Response::html(View::render('auth/login', [
             'title' => 'Login',
             'error' => null,
+            'inviteToken' => $inviteToken,
         ]));
     }
 
     public function showSignup(Request $request): Response
     {
+        $inviteToken = (string)$request->query('invite', '');
+        $inviteEmail = null;
+        if ($inviteToken !== '') {
+            $invite = $this->validInvite($inviteToken);
+            if ($invite) {
+                $inviteEmail = $invite['email'] ?? null;
+            } else {
+                $inviteToken = '';
+            }
+        }
         return Response::html(View::render('auth/signup', [
             'title' => 'Create account',
             'error' => null,
+            'inviteToken' => $inviteToken,
+            'inviteEmail' => $inviteEmail,
         ]));
     }
 
@@ -39,11 +53,12 @@ final class AuthController
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
         }
 
+        $inviteToken = trim((string)$request->input('invite', ''));
         $email = trim((string)$request->input('email', ''));
         $password = (string)$request->input('password', '');
 
         if ($email === '' || $password === '') {
-            return $this->loginError('Email and password are required.');
+            return $this->loginError('Email and password are required.', $inviteToken);
         }
 
         $stmt = $this->pdo->prepare('SELECT * FROM users WHERE email = ? LIMIT 1');
@@ -52,7 +67,7 @@ final class AuthController
 
         if (!$user || !Password::verify($password, $user['password_hash'])) {
             $this->audit->log('auth.login.failed', null, ['email' => $email]);
-            return $this->loginError('Invalid credentials.');
+            return $this->loginError('Invalid credentials.', $inviteToken);
         }
 
         $requireVerified = filter_var(
@@ -62,12 +77,13 @@ final class AuthController
 
         if ($requireVerified && empty($user['email_verified_at'])) {
             $this->audit->log('auth.login.blocked', (int)$user['id'], ['reason' => 'email_unverified']);
-            return $this->loginError('Please verify your email before logging in.');
+            return $this->loginError('Please verify your email before logging in.', $inviteToken);
         }
 
         $sessionUser = $this->buildSessionUser((int)$user['id']);
         Auth::login($sessionUser);
         $this->audit->log('auth.login.success', (int)$user['id']);
+        $this->ensureWorkspaceAccess((int)$user['id'], (string)($user['name'] ?? ''), $inviteToken);
 
         return Response::redirect('/dashboard');
     }
@@ -90,26 +106,39 @@ final class AuthController
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
         }
 
+        $inviteToken = trim((string)$request->input('invite', ''));
         $name = trim((string)$request->input('name', ''));
         $email = trim((string)$request->input('email', ''));
         $password = (string)$request->input('password', '');
+        $inviteEmail = null;
+        if ($inviteToken !== '') {
+            $invite = $this->validInvite($inviteToken);
+            if (!$invite) {
+                return $this->signupError('Invite is invalid or expired.', '', null);
+            }
+            $inviteEmail = strtolower(trim((string)($invite['email'] ?? '')));
+            if ($inviteEmail !== '' && strtolower($email) !== $inviteEmail) {
+                return $this->signupError('Please use the invited email address.', $inviteToken, $inviteEmail);
+            }
+            $email = $invite['email'] ?? $email;
+        }
 
         if ($name === '' || $email === '' || $password === '') {
-            return $this->signupError('All fields are required.');
+            return $this->signupError('All fields are required.', $inviteToken, $inviteEmail);
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return $this->signupError('Please provide a valid email address.');
+            return $this->signupError('Please provide a valid email address.', $inviteToken, $inviteEmail);
         }
 
         if (strlen($password) < 8) {
-            return $this->signupError('Password must be at least 8 characters.');
+            return $this->signupError('Password must be at least 8 characters.', $inviteToken, $inviteEmail);
         }
 
         $exists = $this->pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
         $exists->execute([$email]);
         if ($exists->fetchColumn()) {
-            return $this->signupError('An account with that email already exists.');
+            return $this->signupError('An account with that email already exists.', $inviteToken, $inviteEmail);
         }
 
         $now = date('Y-m-d H:i:s');
@@ -120,6 +149,8 @@ final class AuthController
         );
         $insert->execute([$name, $email, $hash, 'active', $now, $now]);
         $userId = (int)$this->pdo->lastInsertId();
+
+        $this->ensureWorkspaceAccess($userId, $name, $inviteToken);
 
         $token = $this->createEmailVerificationToken($userId);
         $this->sendVerificationEmail($email, $token);
@@ -271,20 +302,53 @@ final class AuthController
         ]));
     }
 
-    private function loginError(string $message): Response
+    private function loginError(string $message, string $inviteToken = ''): Response
     {
         return Response::html(View::render('auth/login', [
             'title' => 'Login',
             'error' => $message,
+            'inviteToken' => $inviteToken,
         ]), 422);
     }
 
-    private function signupError(string $message): Response
+    private function signupError(string $message, string $inviteToken = '', ?string $inviteEmail = null): Response
     {
         return Response::html(View::render('auth/signup', [
             'title' => 'Create account',
             'error' => $message,
+            'inviteToken' => $inviteToken,
+            'inviteEmail' => $inviteEmail,
         ]), 422);
+    }
+
+    private function ensureWorkspaceAccess(int $userId, string $userName, string $inviteToken): void
+    {
+        $service = new WorkspaceService($this->pdo, $this->audit);
+        if ($inviteToken !== '') {
+            $result = $service->acceptInvite($inviteToken, $userId);
+            if (!empty($result['ok'])) {
+                return;
+            }
+        }
+
+        $service->ensureWorkspaceForUser($userId, $userName);
+    }
+
+    private function validInvite(string $inviteToken): ?array
+    {
+        $service = new WorkspaceService($this->pdo, $this->audit);
+        $invite = $service->lookupInvite($inviteToken);
+        if (!$invite) {
+            return null;
+        }
+        if (!empty($invite['accepted_at'])) {
+            return null;
+        }
+        if (strtotime((string)$invite['expires_at']) < time()) {
+            return null;
+        }
+
+        return $invite;
     }
 
     private function buildSessionUser(int $userId): array

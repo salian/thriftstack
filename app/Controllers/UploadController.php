@@ -23,6 +23,7 @@ final class UploadController
             'message' => null,
             'error' => null,
             'uploads' => $this->fetchUploads($userId),
+            'user' => $request->session('user') ?? [],
         ]));
     }
 
@@ -42,6 +43,7 @@ final class UploadController
                 'message' => null,
                 'error' => $result['error'],
                 'uploads' => $this->fetchUploads($userId),
+                'user' => $request->session('user') ?? [],
             ]), 422);
         }
 
@@ -52,6 +54,7 @@ final class UploadController
             'message' => 'Profile image uploaded.',
             'error' => null,
             'uploads' => $this->fetchUploads($userId),
+            'user' => $request->session('user') ?? [],
         ]));
     }
 
@@ -71,6 +74,7 @@ final class UploadController
                 'message' => null,
                 'error' => $result['error'],
                 'uploads' => $this->fetchUploads($userId),
+                'user' => $request->session('user') ?? [],
             ]), 422);
         }
 
@@ -81,6 +85,7 @@ final class UploadController
             'message' => 'Upload saved to My Uploads.',
             'error' => null,
             'uploads' => $this->fetchUploads($userId),
+            'user' => $request->session('user') ?? [],
         ]));
     }
 

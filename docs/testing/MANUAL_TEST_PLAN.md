@@ -13,7 +13,7 @@
 - Download attachment via `/uploads/attachment/{id}`.
 - Create a workspace, invite a member, accept invite.
 - Switch workspace context and verify role guard.
-- Update profile name and notification preferences from `/settings`.
+- Update profile name from `/profile` and notification preferences from `/settings`.
 
 ## Upcoming features (planned)
 - Update user settings and preference flags.

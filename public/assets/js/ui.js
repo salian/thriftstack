@@ -120,11 +120,43 @@
     if (form) {
       if (select.value === '__create__') {
         const target = select.getAttribute('data-create-url') || '/workspaces';
-        window.location.href = target;
+        window.location.href = target + '?open=create-workspace';
         return;
       }
       form.submit();
     }
+  });
+})();
+
+(() => {
+  const inputs = document.querySelectorAll('[data-auto-search]');
+  if (inputs.length === 0) {
+    return;
+  }
+  let timer = null;
+  const scheduleSubmit = (input) => {
+    const form = input.closest('form');
+    if (!form) {
+      return;
+    }
+    const status = form.querySelector('[data-search-status]');
+    const value = input.value.trim();
+    if (value.length > 2 || value.length === 0) {
+      if (status) {
+        status.textContent = 'Searching...';
+        status.classList.add('is-visible');
+      }
+      form.submit();
+    }
+  };
+
+  inputs.forEach((input) => {
+    input.addEventListener('input', () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+      timer = setTimeout(() => scheduleSubmit(input), 350);
+    });
   });
 })();
 
@@ -139,4 +171,148 @@
       flash.remove();
     }, 300);
   }, 3000);
+})();
+
+(() => {
+  const openButtons = document.querySelectorAll('[data-modal-open]');
+  if (openButtons.length === 0) {
+    return;
+  }
+
+  openButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const targetId = button.getAttribute('data-modal-open');
+      const modal = targetId ? document.getElementById(targetId) : null;
+      if (modal && typeof modal.showModal === 'function') {
+        modal.showModal();
+      }
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    const closeButton = event.target.closest('[data-modal-close]');
+    if (closeButton) {
+      const modal = closeButton.closest('dialog');
+      if (modal) {
+        modal.close();
+      }
+    }
+  });
+})();
+
+(() => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('open') !== 'create-workspace') {
+    return;
+  }
+  const modal = document.getElementById('workspace-create');
+  if (modal && typeof modal.showModal === 'function') {
+    modal.showModal();
+  }
+})();
+
+(() => {
+  const editButtons = document.querySelectorAll('[data-workspace-edit]');
+  if (editButtons.length === 0) {
+    return;
+  }
+
+  let activeForm = null;
+  let activeCell = null;
+
+  const closeActive = (submit) => {
+    if (!activeForm) {
+      return;
+    }
+    const input = activeForm.querySelector('[data-workspace-input]');
+    const original = activeForm.dataset.original || (input ? input.value : '');
+    if (input && (input.value.trim() === '' || !submit)) {
+      input.value = original;
+    }
+    activeForm.classList.remove('is-editing');
+    if (activeCell) {
+      activeCell.classList.remove('is-hidden');
+    }
+    const formToSubmit = activeForm;
+    activeForm = null;
+    activeCell = null;
+    if (submit && input) {
+      formToSubmit.submit();
+    }
+  };
+
+  editButtons.forEach((button) => {
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      const id = button.getAttribute('data-workspace-edit');
+      const form = id ? document.querySelector(`[data-workspace-form="${id}"]`) : null;
+      const cell = id ? document.querySelector(`[data-workspace-row="${id}"]`) : null;
+      if (!form) {
+        return;
+      }
+      if (activeForm && activeForm !== form) {
+        closeActive(true);
+        return;
+      }
+      if (form.classList.contains('is-editing')) {
+        return;
+      }
+      const input = form.querySelector('[data-workspace-input]');
+      if (!input) {
+        return;
+      }
+      form.dataset.original = input.value;
+      form.classList.add('is-editing');
+      if (cell) {
+        cell.classList.add('is-hidden');
+      }
+      activeForm = form;
+      activeCell = cell;
+      setTimeout(() => {
+        input.focus();
+        input.select();
+      }, 0);
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!activeForm) {
+      return;
+    }
+    if (activeForm.contains(event.target)) {
+      return;
+    }
+    if (activeCell && activeCell.contains(event.target)) {
+      return;
+    }
+    closeActive(true);
+  });
+
+  document.addEventListener('focusin', (event) => {
+    if (!activeForm) {
+      return;
+    }
+    if (activeForm.contains(event.target)) {
+      return;
+    }
+    closeActive(true);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (!activeForm) {
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeActive(false);
+      return;
+    }
+    if (event.key === 'Enter') {
+      const input = activeForm.querySelector('[data-workspace-input]');
+      if (input && document.activeElement === input) {
+        event.preventDefault();
+        closeActive(true);
+      }
+    }
+  });
 })();

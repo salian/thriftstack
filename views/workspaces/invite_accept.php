@@ -19,8 +19,11 @@
     <?php endif; ?>
 
     <?php if (!empty($requiresLogin)) : ?>
-        <p>Please log in to accept this invite.</p>
-        <a href="/login" class="button">Login</a>
+        <p>Please log in or create an account to accept this invite.</p>
+        <div class="form-inline">
+            <a href="/login<?= !empty($token) ? '?invite=' . urlencode($token) : '' ?>" class="button">Login</a>
+            <a href="/signup<?= !empty($token) ? '?invite=' . urlencode($token) : '' ?>" class="button button-ghost">Create account</a>
+        </div>
     <?php elseif (!empty($token) && empty($error)) : ?>
         <form method="post" action="/workspaces/invites/accept" class="form">
             <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">

@@ -8,6 +8,9 @@
 
     <form method="post" action="/login" class="form">
         <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+        <?php if (!empty($inviteToken)) : ?>
+            <input type="hidden" name="invite" value="<?= e($inviteToken) ?>">
+        <?php endif; ?>
         <label>
             <span>Email</span>
             <input type="email" name="email" autocomplete="email" required>
@@ -20,7 +23,7 @@
     </form>
 
     <div class="auth-links">
-        <a href="/signup">Create an account</a>
+        <a href="/signup<?= !empty($inviteToken) ? '?invite=' . urlencode($inviteToken) : '' ?>">Create an account</a>
         <a href="/forgot">Forgot password?</a>
     </div>
 </section>

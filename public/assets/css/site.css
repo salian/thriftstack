@@ -384,6 +384,10 @@ a:hover {
     margin-bottom: 12px;
 }
 
+h2 {
+    margin: 0;
+}
+
 .card {
     margin-top: 28px;
     padding: 24px;
@@ -483,6 +487,7 @@ select {
     height: 44px;
     line-height: 1.4;
     color: var(--text);
+    background-color: var(--surface);
 }
 
 .form input:focus,
@@ -496,6 +501,28 @@ select {
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
+}
+
+.form-inline select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #5b6b7c 50%),
+        linear-gradient(135deg, #5b6b7c 50%, transparent 50%),
+        linear-gradient(to right, #d5dee9, #d5dee9);
+    background-position: calc(100% - 18px) 50%,
+        calc(100% - 13px) 50%,
+        calc(100% - 2.5rem) 50%;
+    background-size: 6px 6px, 6px 6px, 1px 1.4em;
+    background-repeat: no-repeat;
+    background-color: var(--surface);
+    padding-right: 44px;
+    padding-left: 16px;
+    height: 44px;
+    line-height: 1.4;
+    color: var(--text);
+    border-radius: 10px;
+    border: 1px solid var(--border);
 }
 
 .form input[type="file"] {
@@ -588,6 +615,118 @@ input[type="file"]::-webkit-file-upload-button:hover {
     margin-top: 16px;
 }
 
+.table-toolbar {
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.table-search-status {
+    font-size: 0.85rem;
+    color: var(--muted);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.table-search-status.is-visible {
+    opacity: 1;
+}
+
+.table-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    font-size: 0.9rem;
+    color: var(--muted);
+}
+
+.table-pagination-links {
+    display: inline-flex;
+    gap: 12px;
+}
+
+.pagination-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: var(--button-radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--primary);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.pagination-link:hover {
+    text-decoration: none;
+    color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.pagination-link[disabled] {
+    background: var(--surface-muted);
+    color: var(--muted);
+    cursor: not-allowed;
+    border-color: var(--border);
+}
+
+.table-pagination-links a:hover {
+    text-decoration: none;
+    color: var(--primary-dark);
+}
+
+.modal {
+    border: none;
+    padding: 0;
+    border-radius: var(--radius);
+    width: min(520px, 90vw);
+    box-shadow: var(--shadow);
+}
+
+.modal::backdrop {
+    background: rgba(10, 18, 30, 0.5);
+}
+
+.modal-content {
+    background: var(--surface);
+    padding: 24px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.modal-header .icon-button {
+    margin-top: -6px;
+    margin-right: -6px;
+}
+
+.modal-subtitle {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+}
+
 .table th,
 .table td {
     text-align: left;
@@ -600,6 +739,41 @@ input[type="file"]::-webkit-file-upload-button:hover {
     background: var(--surface-muted);
     color: var(--muted);
     font-weight: 700;
+}
+
+.workspace-name-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.workspace-name-cell.is-hidden {
+    display: none;
+}
+
+.workspace-edit {
+    width: 32px;
+    height: 32px;
+}
+
+.workspace-edit-form {
+    display: none;
+    margin: 0;
+}
+
+.workspace-edit-form.is-editing {
+    display: block;
+}
+
+.workspace-name-input {
+    width: 100%;
+    max-width: 260px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 1rem;
+    background: var(--surface);
+    color: var(--text);
 }
 
 .checkbox-grid {
@@ -747,6 +921,15 @@ input[type="file"]::-webkit-file-upload-button:hover {
 }
 
 .icon-button:hover {
+    background: var(--surface-muted);
+}
+
+.modal-header .icon-button {
+    border: none;
+    background: transparent;
+}
+
+.modal-header .icon-button:hover {
     background: var(--surface-muted);
 }
 
@@ -974,4 +1157,23 @@ input[type="file"]::-webkit-file-upload-button:hover {
     :root {
         --sidebar-width: 280px;
     }
+}
+.table-toolbar input[type="search"] {
+    min-width: 240px;
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 1rem;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.table-toolbar select {
+    min-width: 200px;
+    padding: 10px 44px 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 1rem;
 }
