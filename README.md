@@ -13,7 +13,7 @@ Core PHP 8.5 starter focused on logged-in SaaS dashboards, DreamHost shared host
 
 ## Local development
 1. Point your web server docroot to `/public`.
-2. Copy `.env.example` to `.env` and fill values.
+2. Copy `.env.example` to `.env` and fill `THRIFTSTACK_`-prefixed values.
 3. Run migrations: `php scripts/migrate.php`.
 4. Seed dummy data: `php scripts/seed.php`.
 

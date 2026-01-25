@@ -32,33 +32,33 @@ $env = static function (string $key, $default = null) {
 
 return [
     'app' => [
-        'env' => $env('APP_ENV', 'local'),
-        'debug' => filter_var($env('APP_DEBUG', 'false'), FILTER_VALIDATE_BOOLEAN),
-        'url' => $env('APP_URL', 'http://localhost'),
-        'timezone' => $env('APP_TIMEZONE', 'UTC'),
-        'key' => $env('APP_KEY', ''),
+        'env' => $env('THRIFTSTACK_APP_ENV', 'local'),
+        'debug' => filter_var($env('THRIFTSTACK_APP_DEBUG', 'false'), FILTER_VALIDATE_BOOLEAN),
+        'url' => $env('THRIFTSTACK_APP_URL', 'http://localhost'),
+        'timezone' => $env('THRIFTSTACK_APP_TIMEZONE', 'UTC'),
+        'key' => $env('THRIFTSTACK_APP_KEY', ''),
     ],
     'db' => [
-        'host' => $env('DB_HOST', '127.0.0.1'),
-        'name' => $env('DB_NAME', ''),
-        'user' => $env('DB_USER', ''),
-        'pass' => $env('DB_PASS', ''),
+        'host' => $env('THRIFTSTACK_DB_HOST', '127.0.0.1'),
+        'name' => $env('THRIFTSTACK_DB_NAME', ''),
+        'user' => $env('THRIFTSTACK_DB_USER', ''),
+        'pass' => $env('THRIFTSTACK_DB_PASS', ''),
     ],
     'mail' => [
-        'from_name' => $env('MAIL_FROM_NAME', 'Thriftstack'),
-        'from_email' => $env('MAIL_FROM_EMAIL', 'no-reply@example.com'),
+        'from_name' => $env('THRIFTSTACK_MAIL_FROM_NAME', 'Thriftstack'),
+        'from_email' => $env('THRIFTSTACK_MAIL_FROM_EMAIL', 'no-reply@example.com'),
     ],
     'security' => [
         'show_errors_in_prod' => filter_var(
-            $env('SECURITY_SHOW_ERRORS_IN_PROD', 'false'),
+            $env('THRIFTSTACK_SECURITY_SHOW_ERRORS_IN_PROD', 'false'),
             FILTER_VALIDATE_BOOLEAN
         ),
         'show_errors_in_prod_for_admin_only' => filter_var(
-            $env('SECURITY_SHOW_ERRORS_IN_PROD_FOR_ADMIN_ONLY', 'false'),
+            $env('THRIFTSTACK_SECURITY_SHOW_ERRORS_IN_PROD_FOR_ADMIN_ONLY', 'false'),
             FILTER_VALIDATE_BOOLEAN
         ),
     ],
     'auth' => [
-        'require_verified' => filter_var($env('AUTH_REQUIRE_VERIFIED', 'true'), FILTER_VALIDATE_BOOLEAN),
+        'require_verified' => filter_var($env('THRIFTSTACK_AUTH_REQUIRE_VERIFIED', 'true'), FILTER_VALIDATE_BOOLEAN),
     ],
 ];

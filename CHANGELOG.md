@@ -13,3 +13,4 @@
 - Add security headers and baseline input helpers.
 - Add minimal test harness and core tests.
 - Add GitHub Actions deploy workflow for DreamHost releases.
+- Prefix environment variables with `THRIFTSTACK_`.
