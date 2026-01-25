@@ -216,6 +216,7 @@ select {
     background-size: 6px 6px, 6px 6px, 1px 1.4em;
     background-repeat: no-repeat;
     padding-right: 44px;
+    padding-left: 16px;
     min-width: 140px;
     height: 40px;
     line-height: 1.2;
