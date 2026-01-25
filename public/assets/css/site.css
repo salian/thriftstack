@@ -22,7 +22,7 @@
     --header-link: #dfe6f3;
     --header-link-hover: #ffffff;
     --header-muted: #c6d1e6;
-    --brand-mark: #2b5a95;
+    --brand-mark: var(--primary-dark);
     font-family: "Source Sans 3", "Avenir Next", "Noto Sans", sans-serif;
 }
 
@@ -116,7 +116,7 @@ a:hover {
 .site-footer .content-inner {
     display: flex;
     align-items: center;
-    height: 68px;
+    height: 56px;
 }
 
 .site-header .content-inner {
@@ -129,7 +129,7 @@ a:hover {
 
 .brand {
     font-weight: 700;
-    font-size: 1.15rem;
+    font-size: 1.5rem;
     letter-spacing: 0.5px;
     display: flex;
     align-items: center;
@@ -559,7 +559,7 @@ input[type="file"] {
 .sidebar {
     background: var(--surface);
     border: 1px solid var(--border);
-    padding: 24px 20px;
+    padding: 6px 20px;
     width: var(--sidebar-width);
     align-self: start;
     position: sticky;
@@ -571,7 +571,9 @@ input[type="file"] {
 
 .sidebar-brand {
     color: var(--brand-mark);
-    margin-bottom: 18px;
+    margin-bottom: 12px;
+    padding: 12px 12px 8px;
+    height: 56px;
 }
 
 .sidebar-scroll {
@@ -596,17 +598,28 @@ input[type="file"] {
     font-weight: 600;
 }
 
+.sidebar a.sidebar-brand {
+    color: var(--brand-mark);
+}
+
 .sidebar a:hover {
     background: var(--surface-muted);
     color: var(--primary-dark);
     text-decoration: none;
 }
 
+.sidebar a.sidebar-brand:hover {
+    background: transparent;
+    color: var(--brand-mark);
+}
+
+
 .sidebar-divider {
     height: 1px;
     background: var(--border);
     margin: 10px 6px;
 }
+
 
 .sidebar-icon {
     width: 18px;
