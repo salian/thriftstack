@@ -54,3 +54,4 @@
 - Add configurable app name for visible branding.
 - Add privacy, terms, and support pages.
 - Add workspaces, memberships, and invite flow with workspace roles.
+- Add user settings with profile updates and notification preferences.

@@ -160,7 +160,7 @@ a:hover {
 }
 
 .brand {
-    font-weight: 700;
+    font-weight: 800;
     font-size: 1.5rem;
     letter-spacing: 0.5px;
     display: flex;
@@ -179,6 +179,7 @@ a:hover {
 
 .brand-text {
     white-space: nowrap;
+    font-weight: 800;
 }
 
 .nav a {
@@ -456,7 +457,7 @@ ul {
 
 .form input,
 .form select {
-    padding: 12px 14px;
+    padding: 10px 14px;
     border-radius: 10px;
     border: 1px solid var(--border);
     font-size: 1rem;
@@ -479,8 +480,8 @@ select {
     padding-right: 44px;
     padding-left: 16px;
     min-width: 140px;
-    height: 40px;
-    line-height: 1.2;
+    height: 44px;
+    line-height: 1.4;
     color: var(--text);
 }
 

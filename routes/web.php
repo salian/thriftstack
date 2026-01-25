@@ -9,6 +9,8 @@ $authController = new AuthController($pdo, $config);
 $workspaceService = new WorkspaceService($pdo, new Audit($pdo));
 $workspaceController = new WorkspaceController($workspaceService);
 $workspaceInviteController = new WorkspaceInviteController($workspaceService, $workspaceController, $config);
+$settingsService = new SettingsService($pdo);
+$settingsController = new SettingsController($pdo, $settingsService);
 
 $router
     ->get('/', static function (Request $request) use ($config) {
@@ -79,6 +81,25 @@ $router
     })
     ->middleware(new AuthRequired())
     ->setName('dashboard');
+
+$router
+    ->get('/settings', static function (Request $request) use ($settingsController) {
+        return $settingsController->index($request);
+    })
+    ->middleware(new AuthRequired())
+    ->setName('settings');
+
+$router
+    ->post('/settings/profile', static function (Request $request) use ($settingsController) {
+        return $settingsController->updateProfile($request);
+    })
+    ->middleware(new AuthRequired());
+
+$router
+    ->post('/settings/preferences', static function (Request $request) use ($settingsController) {
+        return $settingsController->updatePreferences($request);
+    })
+    ->middleware(new AuthRequired());
 
 $router
     ->get('/workspaces', static function (Request $request) use ($workspaceController) {

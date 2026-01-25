@@ -12,6 +12,7 @@ $tests = [
     'CsrfTest',
     'PasswordTest',
     'WorkspaceServiceTest',
+    'SettingsServiceTest',
 ];
 
 $failures = 0;
