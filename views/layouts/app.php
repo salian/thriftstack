@@ -21,41 +21,42 @@
                     </svg>
                     <span class="brand-text"><?= e('ThriftStack') ?></span>
                 </a>
-                <nav class="sidebar-nav" aria-label="Sidebar">
-                    <a href="/dashboard" aria-label="Dashboard" data-tooltip="Dashboard">
-                        <i class="fa-solid fa-gauge sidebar-icon" aria-hidden="true"></i>
-                        <span class="sidebar-label">Dashboard</span>
-                    </a>
-                    <a href="/tasks" aria-label="Tasks" data-tooltip="Tasks">
-                        <i class="fa-solid fa-list-check sidebar-icon" aria-hidden="true"></i>
-                        <span class="sidebar-label">Tasks</span>
-                    </a>
-                    <a href="/reports" aria-label="Reports" data-tooltip="Reports">
-                        <i class="fa-solid fa-chart-column sidebar-icon" aria-hidden="true"></i>
-                        <span class="sidebar-label">Reports</span>
-                    </a>
-                    <a href="/admin/users" aria-label="Admin" data-tooltip="Admin">
-                        <i class="fa-solid fa-shield-halved sidebar-icon" aria-hidden="true"></i>
-                        <span class="sidebar-label">Admin</span>
-                    </a>
-                    <div class="sidebar-divider"></div>
-                    <a href="/settings" aria-label="Settings" data-tooltip="Settings">
-                        <i class="fa-solid fa-gear sidebar-icon" aria-hidden="true"></i>
-                        <span class="sidebar-label">Settings</span>
-                    </a>
-                    <a href="/support" aria-label="Support" data-tooltip="Support">
-                        <i class="fa-solid fa-life-ring sidebar-icon" aria-hidden="true"></i>
-                        <span class="sidebar-label">Support</span>
-                    </a>
+                <div class="sidebar-scroll">
+                    <nav class="sidebar-nav" aria-label="Sidebar">
+                        <a href="/dashboard" aria-label="Dashboard" data-tooltip="Dashboard">
+                            <i class="fa-solid fa-gauge sidebar-icon" aria-hidden="true"></i>
+                            <span class="sidebar-label">Dashboard</span>
+                        </a>
+                        <a href="/tasks" aria-label="Tasks" data-tooltip="Tasks">
+                            <i class="fa-solid fa-list-check sidebar-icon" aria-hidden="true"></i>
+                            <span class="sidebar-label">Tasks</span>
+                        </a>
+                        <a href="/reports" aria-label="Reports" data-tooltip="Reports">
+                            <i class="fa-solid fa-chart-column sidebar-icon" aria-hidden="true"></i>
+                            <span class="sidebar-label">Reports</span>
+                        </a>
+                        <a href="/admin/users" aria-label="Admin" data-tooltip="Admin">
+                            <i class="fa-solid fa-shield-halved sidebar-icon" aria-hidden="true"></i>
+                            <span class="sidebar-label">Admin</span>
+                        </a>
+                        <div class="sidebar-divider"></div>
+                        <a href="/settings" aria-label="Settings" data-tooltip="Settings">
+                            <i class="fa-solid fa-gear sidebar-icon" aria-hidden="true"></i>
+                            <span class="sidebar-label">Settings</span>
+                        </a>
+                        <a href="/support" aria-label="Support" data-tooltip="Support">
+                            <i class="fa-solid fa-life-ring sidebar-icon" aria-hidden="true"></i>
+                            <span class="sidebar-label">Support</span>
+                        </a>
                     <button type="button" class="theme-toggle" data-theme-toggle data-tooltip="Theme" aria-label="Toggle theme">
-                        <i class="fa-solid fa-moon sidebar-icon" aria-hidden="true"></i>
-                        <span class="sidebar-label" data-theme-label>Dark mode</span>
                         <span class="toggle-switch" aria-hidden="true">
+                            <i class="fa-solid fa-moon toggle-icon toggle-icon-left" aria-hidden="true"></i>
                             <span class="toggle-knob"></span>
+                            <i class="fa-solid fa-sun toggle-icon toggle-icon-right" aria-hidden="true"></i>
                         </span>
-                        <i class="fa-solid fa-sun sidebar-icon" aria-hidden="true"></i>
                     </button>
-                </nav>
+                    </nav>
+                </div>
             </aside>
         <?php endif; ?>
         <div class="content-area">

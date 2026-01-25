@@ -47,4 +47,6 @@
 - Hide sidebar and collapse toggle when logged out.
 - Inline brand SVG so it inherits theme color.
 - Make sidebar collapse toggle work without Alpine and persist state.
+- Render sidebar tooltips via JS so they aren't clipped.
 - Add notifications bell with unread dot in header.
+- Improve theme toggle alignment in sidebar.
