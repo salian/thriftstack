@@ -78,7 +78,7 @@ Auth system is required and must include:
 
 ### Roles
 Default roles:
-- `Admin`
+- `Super Admin`
 - `Staff`
 - `User`
 
@@ -88,7 +88,7 @@ Default roles:
   - assigning roles to users
   - permissions grouped by feature/module
   - middleware/guards in routing layer
-- Admin can manage roles/permissions.
+- Super Admin can manage roles/permissions.
 
 ---
 
@@ -168,7 +168,7 @@ Debug mode:
 - In production: hide errors by default
 - Must support config to show errors in production:
   - globally OR
-  - only for Admin users
+  - only for Super Admin users
 
 ---
 
@@ -185,9 +185,9 @@ Email sending:
 Must include:
 
 ### Admin panel skeleton
-- User list page
-- Audit log page
-- Basic admin navigation shell
+- Workspace admin: user list + audit log
+- Super admin: roles, permissions, user role assignment
+- Separate navigation shells for workspace vs super admin
 
 ### File uploads module
 - Profile image upload

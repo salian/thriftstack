@@ -43,6 +43,9 @@
                         </select>
                     </form>
                 </div>
+                <a class="sidebar-workspace-toggle" href="/teams?tab=workspaces" aria-label="Switch workspace" data-tooltip="Switch Workspace">
+                    <i class="fa-solid fa-building-user sidebar-icon" aria-hidden="true"></i>
+                </a>
                 <div class="sidebar-scroll">
                     <nav class="sidebar-nav" aria-label="Sidebar">
                         <a href="/dashboard" aria-label="Dashboard" data-tooltip="Dashboard">
@@ -57,7 +60,7 @@
                             <i class="fa-solid fa-chart-column sidebar-icon" aria-hidden="true"></i>
                             <span class="sidebar-label">Reports</span>
                         </a>
-                        <a href="/admin/users" aria-label="Admin" data-tooltip="Admin">
+                        <a href="/workspace-admin/users" aria-label="Admin" data-tooltip="Admin">
                             <i class="fa-solid fa-shield-halved sidebar-icon" aria-hidden="true"></i>
                             <span class="sidebar-label">Admin</span>
                         </a>
@@ -95,6 +98,9 @@
                     <?php endif; ?>
                     <nav class="nav" aria-label="Primary">
                         <?php if (Auth::check()) : ?>
+                            <?php if ((Auth::user()['role'] ?? null) === 'Super Admin') : ?>
+                                <a href="/super-admin/roles">Super Admin</a>
+                            <?php endif; ?>
                             <a href="/notifications" class="nav-icon" aria-label="Notifications">
                                 <i class="fa-solid fa-bell" aria-hidden="true"></i>
                                 <span class="nav-icon-dot" aria-hidden="true"></span>
@@ -128,9 +134,10 @@
                                     <a href="/notifications">Notifications</a>
                                     <a href="/billing">Billing</a>
                                     <a href="/profile">Profile</a>
-                                    <?php if ((Auth::user()['role'] ?? null) === 'Admin') : ?>
+                                    <?php if ((Auth::user()['role'] ?? null) === 'Super Admin') : ?>
                                         <div class="nav-menu-divider"></div>
-                                        <a href="/admin/users">Admin</a>
+                                        <a href="/workspace-admin/users">Workspace Admin</a>
+                                        <a href="/super-admin/roles">Super Admin</a>
                                     <?php endif; ?>
                                     <div class="nav-menu-divider"></div>
                                     <form method="post" action="/logout" class="nav-menu-form">

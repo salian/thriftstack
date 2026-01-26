@@ -117,6 +117,13 @@ $router
     ->middleware(new RequireWorkspace($pdo));
 
 $router
+    ->post('/profile/password', static function (Request $request) use ($uploadController) {
+        return $uploadController->updatePassword($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo));
+
+$router
     ->post('/settings/preferences', static function (Request $request) use ($settingsController) {
         return $settingsController->updatePreferences($request);
     })
@@ -153,14 +160,14 @@ $router
         return $workspaceController->updateMemberRole($request);
     })
     ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Admin'));
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'));
 
 $router
     ->post('/teams/invites', static function (Request $request) use ($workspaceInviteController) {
         return $workspaceInviteController->create($request);
     })
     ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Admin'));
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'));
 
 $router
     ->get('/teams/invites/accept', static function (Request $request) use ($workspaceInviteController) {
@@ -179,7 +186,7 @@ $router
         return $workspaceInviteController->resend($request);
     })
     ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Admin'));
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'));
 
 $router->get('/privacy', static function () {
     return View::render('legal/privacy', ['title' => 'Privacy Policy']);
@@ -239,80 +246,80 @@ $router
     ->setName('uploads.download');
 
 $router
-    ->get('/admin/users', static function (Request $request) use ($usersController) {
+    ->get('/workspace-admin/users', static function (Request $request) use ($usersController) {
         return $usersController->index($request);
     })
     ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Admin'))
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
     ->middleware(new RequirePermission('users.manage'))
-    ->setName('admin.users');
+    ->setName('workspace_admin.users');
 
 $router
-    ->get('/admin/roles', static function (Request $request) use ($rolesController) {
+    ->get('/super-admin/roles', static function (Request $request) use ($rolesController) {
         return $rolesController->index($request);
     })
     ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Admin'))
-    ->middleware(new RequireRole('Admin'))
-    ->setName('admin.roles');
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
+    ->middleware(new RequireRole('Super Admin'))
+    ->setName('super_admin.roles');
 
 $router
-    ->post('/admin/roles', static function (Request $request) use ($rolesController) {
+    ->post('/super-admin/roles', static function (Request $request) use ($rolesController) {
         return $rolesController->create($request);
     })
     ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Admin'))
-    ->middleware(new RequireRole('Admin'));
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
+    ->middleware(new RequireRole('Super Admin'));
 
 $router
-    ->post('/admin/roles/permissions', static function (Request $request) use ($rolesController) {
+    ->post('/super-admin/roles/permissions', static function (Request $request) use ($rolesController) {
         return $rolesController->updatePermissions($request);
     })
     ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Admin'))
-    ->middleware(new RequireRole('Admin'));
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
+    ->middleware(new RequireRole('Super Admin'));
 
 $router
-    ->get('/admin/permissions', static function (Request $request) use ($permissionsController) {
+    ->get('/super-admin/permissions', static function (Request $request) use ($permissionsController) {
         return $permissionsController->index($request);
     })
     ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Admin'))
-    ->middleware(new RequireRole('Admin'))
-    ->setName('admin.permissions');
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
+    ->middleware(new RequireRole('Super Admin'))
+    ->setName('super_admin.permissions');
 
 $router
-    ->post('/admin/permissions', static function (Request $request) use ($permissionsController) {
+    ->post('/super-admin/permissions', static function (Request $request) use ($permissionsController) {
         return $permissionsController->create($request);
     })
     ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Admin'))
-    ->middleware(new RequireRole('Admin'));
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
+    ->middleware(new RequireRole('Super Admin'));
 
 $router
-    ->get('/admin/user-roles', static function (Request $request) use ($userRolesController) {
+    ->get('/super-admin/user-roles', static function (Request $request) use ($userRolesController) {
         return $userRolesController->index($request);
     })
     ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Admin'))
-    ->middleware(new RequireRole('Admin'))
-    ->setName('admin.user_roles');
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
+    ->middleware(new RequireRole('Super Admin'))
+    ->setName('super_admin.user_roles');
 
 $router
-    ->post('/admin/user-roles', static function (Request $request) use ($userRolesController) {
+    ->post('/super-admin/user-roles', static function (Request $request) use ($userRolesController) {
         return $userRolesController->assign($request);
     })
     ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Admin'))
-    ->middleware(new RequireRole('Admin'));
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
+    ->middleware(new RequireRole('Super Admin'));
 
 $router
-    ->get('/admin/audit', static function (Request $request) use ($auditController) {
+    ->get('/workspace-admin/audit', static function (Request $request) use ($auditController) {
         return $auditController->index($request);
     })
     ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Admin'))
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
     ->middleware(new RequirePermission('audit.view'))
-    ->setName('admin.audit');
+    ->setName('workspace_admin.audit');
 
 return $router;

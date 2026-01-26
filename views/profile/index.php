@@ -26,6 +26,26 @@
     </div>
 
     <div class="card">
+        <h2>Change password</h2>
+        <form method="post" action="/profile/password" class="form">
+            <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+            <label>
+                <span>Current password</span>
+                <input type="password" name="current_password" autocomplete="current-password" required>
+            </label>
+            <label>
+                <span>New password</span>
+                <input type="password" name="new_password" autocomplete="new-password" required>
+            </label>
+            <label>
+                <span>Confirm new password</span>
+                <input type="password" name="confirm_password" autocomplete="new-password" required>
+            </label>
+            <button type="submit" class="button">Update password</button>
+        </form>
+    </div>
+
+    <div class="card">
         <h2>Profile image</h2>
         <form method="post" action="/uploads/profile" enctype="multipart/form-data" class="form">
             <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">

@@ -3,13 +3,13 @@
 Implement RBAC.
 
 ## Requirements
-- Default roles: Admin, Staff, User.
+- Default roles: Super Admin, Staff, User.
 - Permissions table and role_permissions pivot.
 - user_roles pivot.
 - Middleware helpers:
-  - requireRole('Admin')
+  - requireRole('Super Admin')
   - requirePermission('users.view') etc.
-- Add Admin-only pages to manage:
+- Add Super Admin-only pages to manage:
   - roles
   - permissions
   - user role assignments

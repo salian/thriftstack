@@ -324,7 +324,12 @@
   }
 
   const params = new URLSearchParams(window.location.search);
-  const preferredTab = params.get('open') === 'create-workspace' ? 'workspaces' : null;
+  let preferredTab = null;
+  if (params.get('tab') === 'workspaces') {
+    preferredTab = 'workspaces';
+  } else if (params.get('open') === 'create-workspace') {
+    preferredTab = 'workspaces';
+  }
 
   containers.forEach((container) => {
     const buttons = Array.from(container.querySelectorAll('[data-tab-button]'));

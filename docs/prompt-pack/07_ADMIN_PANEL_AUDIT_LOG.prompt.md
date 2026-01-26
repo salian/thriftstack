@@ -1,11 +1,11 @@
-# 07_ADMIN_PANEL_AUDIT_LOG — Admin UI + audit logging
+# 07_ADMIN_PANEL_AUDIT_LOG — Super Admin UI + audit logging
 
-Implement admin shell and audit log.
+Implement workspace admin shell and audit log.
 
 ## Requirements
-- Admin layout/nav section.
-- Users list page (Admin+Staff maybe).
-- Audit log table page (Admin only).
+- Super Admin layout/nav section.
+- Users list page (Super Admin+Staff maybe).
+- Audit log table page (Super Admin only).
 - Audit events:
   - login success/fail
   - signup

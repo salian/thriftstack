@@ -68,3 +68,8 @@
 - Add in-app and email notifications with batched digest dispatch.
 - Add date range and action filters for audit logs.
 - Add pagination to the audit log table.
+- Rename workspace Admin role to Workspace Admin and global Admin role to Super Admin.
+- Rename workspace Owner/Member roles to Workspace Owner/Workspace Member.
+- Split admin routes into `/workspace-admin` and `/super-admin`.
+- Move roles/permissions/user role assignment to Super Admin navigation.
+- Add password change form to the profile page.

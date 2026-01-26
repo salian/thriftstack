@@ -4,9 +4,9 @@ Add workspaces (organizations) with per-workspace roles and invite flow.
 
 ## Requirements
 - Workspaces are named containers; users can belong to multiple workspaces.
-- Per-workspace roles: Owner, Admin, Member.
+- Per-workspace roles: Workspace Owner, Workspace Admin, Workspace Member.
 - Invite flow:
-  - Admin/Owner can invite by email.
+- Workspace Admin/Workspace Owner can invite by email.
   - Token stored hashed in DB with expiry.
   - Accept invite creates membership.
 - Workspace context stored in session and switchable.

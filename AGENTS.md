@@ -16,7 +16,7 @@ Maintain a reusable Core PHP 8.5 starter for DreamHost shared hosting with predi
 - DreamHost release layout: `/releases/<timestamp>/` with `/current` symlink and webroot `/current/public/`.
 - MySQL via PDO; migrations must run automatically in CD.
 - Auth: signup/login/logout, email verification, password reset via DreamHost `mail()`.
-- Session auth + CSRF; roles Admin/Staff/User; RBAC with permissions.
+- Session auth + CSRF; roles Super Admin/Staff/User; workspace roles Workspace Owner/Workspace Admin/Workspace Member; RBAC with permissions.
 - Admin panel skeleton (users + audit log) and uploads stored under `/storage`.
 - Log to PHP error log and `/storage/logs/app.log` with rotation and >30-day cleanup.
 - Debug: show locally, hide in prod by default; allow admin-only or global override.

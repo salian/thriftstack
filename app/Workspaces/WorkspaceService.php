@@ -39,7 +39,7 @@ final class WorkspaceService
         $memberStmt = $this->pdo->prepare(
             'INSERT INTO workspace_memberships (user_id, workspace_id, role, created_at) VALUES (?, ?, ?, ?)'
         );
-        $memberStmt->execute([$userId, $workspaceId, 'Owner', $now]);
+        $memberStmt->execute([$userId, $workspaceId, 'Workspace Owner', $now]);
 
         $this->setCurrentWorkspace($workspaceId);
         $this->audit->log('workspaces.created', $userId, ['workspace_id' => $workspaceId]);
@@ -305,8 +305,11 @@ final class WorkspaceService
     {
         $weights = [
             'Member' => 1,
+            'Workspace Member' => 1,
             'Admin' => 2,
+            'Workspace Admin' => 2,
             'Owner' => 3,
+            'Workspace Owner' => 3,
         ];
 
         return ($weights[$role] ?? 0) >= ($weights[$required] ?? 0);

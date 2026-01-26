@@ -13,7 +13,7 @@ Implement logging and debug behavior.
   - hide in production
   - config flags:
     - show errors globally in prod
-    - OR only for Admin users
+    - OR only for Super Admin users
 
 ## Create/update
 - /app/Logging/Logger.php

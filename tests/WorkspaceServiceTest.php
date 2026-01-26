@@ -28,16 +28,16 @@ final class WorkspaceServiceTest extends TestCase
         $workspaceId = $service->createWorkspace('Acme', 1);
 
         $this->assertTrue($workspaceId > 0, 'Workspace not created');
-        $this->assertEquals('Owner', $service->membershipRole(1, $workspaceId), 'Owner role missing');
+        $this->assertEquals('Workspace Owner', $service->membershipRole(1, $workspaceId), 'Owner role missing');
 
-        $token = $service->createInvite($workspaceId, 'member@example.com', 'Member', 1);
+        $token = $service->createInvite($workspaceId, 'member@example.com', 'Workspace Member', 1);
         $this->assertNotEmpty($token, 'Invite token missing');
 
         $result = $service->acceptInvite($token, 2);
         $this->assertTrue((bool)$result['ok'], 'Invite not accepted');
-        $this->assertEquals('Member', $service->membershipRole(2, $workspaceId), 'Member role missing');
+        $this->assertEquals('Workspace Member', $service->membershipRole(2, $workspaceId), 'Member role missing');
 
-        $token2 = $service->createInvite($workspaceId, 'member2@example.com', 'Member', 1);
+        $token2 = $service->createInvite($workspaceId, 'member2@example.com', 'Workspace Member', 1);
         $this->assertNotEmpty($token2, 'Second invite token missing');
         $inviteRow = $pdo->query('SELECT id FROM workspace_invites ORDER BY id DESC LIMIT 1')->fetch(PDO::FETCH_ASSOC);
         $resent = $service->resendInvite((int)($inviteRow['id'] ?? 0), $workspaceId, 1);
@@ -46,6 +46,6 @@ final class WorkspaceServiceTest extends TestCase
         $pdo->exec("INSERT INTO users (name, email) VALUES ('Solo', 'solo@example.com')");
         $defaultWorkspaceId = $service->ensureWorkspaceForUser(3, 'Solo User');
         $this->assertTrue($defaultWorkspaceId > 0, 'Default workspace not created');
-        $this->assertEquals('Owner', $service->membershipRole(3, $defaultWorkspaceId), 'Default workspace membership missing');
+        $this->assertEquals('Workspace Owner', $service->membershipRole(3, $defaultWorkspaceId), 'Default workspace membership missing');
     }
 }

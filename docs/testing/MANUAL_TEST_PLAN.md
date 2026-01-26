@@ -8,7 +8,8 @@
 - Create a user, verify email flow works, then log in.
 - Request a password reset and complete reset flow.
 - Visit `/dashboard` only when authenticated.
-- As Admin, visit `/admin/users` and `/admin/audit`.
+- As Workspace Admin, visit `/workspace-admin/users` and `/workspace-admin/audit`.
+- As Super Admin, visit `/super-admin/roles`, `/super-admin/permissions`, and `/super-admin/user-roles`.
 - Upload profile image and attachment from `/profile`.
 - Download attachment via `/uploads/attachment/{id}`.
 - Create a workspace, invite a member, accept invite.

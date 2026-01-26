@@ -2,7 +2,7 @@
     <h1>User Roles</h1>
     <p>Assign roles to users.</p>
 
-    <?php require __DIR__ . '/../nav.php'; ?>
+    <?php require __DIR__ . '/../super_nav.php'; ?>
 
     <div class="card">
         <table class="table">
@@ -21,7 +21,7 @@
                         <td><?= e($user['email']) ?></td>
                         <td><?= e($rolesByUser[(int)$user['id']] ?? 'Unassigned') ?></td>
                         <td>
-                            <form method="post" action="/admin/user-roles" class="form-inline">
+                            <form method="post" action="/super-admin/user-roles" class="form-inline">
                                 <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
                                 <input type="hidden" name="user_id" value="<?= e((string)$user['id']) ?>">
                                 <select name="role_id" required>

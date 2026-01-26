@@ -18,13 +18,7 @@ final class UploadController
     public function show(Request $request): Response
     {
         $userId = (int)($request->session('user')['id'] ?? 0);
-        return Response::html(View::render('profile/index', [
-            'title' => 'Profile',
-            'message' => null,
-            'error' => null,
-            'uploads' => $this->fetchUploads($userId),
-            'user' => $request->session('user') ?? [],
-        ]));
+        return $this->renderProfile($userId, null, null);
     }
 
     public function uploadProfile(Request $request): Response
@@ -38,24 +32,12 @@ final class UploadController
         $result = $uploader->uploadProfile($_FILES['profile'] ?? [], $userId);
 
         if (!$result['ok']) {
-            return Response::html(View::render('profile/index', [
-                'title' => 'Profile',
-                'message' => null,
-                'error' => $result['error'],
-                'uploads' => $this->fetchUploads($userId),
-                'user' => $request->session('user') ?? [],
-            ]), 422);
+            return $this->renderProfile($userId, null, $result['error'], 422);
         }
 
         $this->audit->log('uploads.profile.created', $userId, ['upload_id' => $result['id']]);
 
-        return Response::html(View::render('profile/index', [
-            'title' => 'Profile',
-            'message' => 'Profile image uploaded.',
-            'error' => null,
-            'uploads' => $this->fetchUploads($userId),
-            'user' => $request->session('user') ?? [],
-        ]));
+        return $this->renderProfile($userId, 'Profile image uploaded.', null);
     }
 
     public function uploadAttachment(Request $request): Response
@@ -69,24 +51,53 @@ final class UploadController
         $result = $uploader->uploadAttachment($_FILES['attachment'] ?? [], $userId);
 
         if (!$result['ok']) {
-            return Response::html(View::render('profile/index', [
-                'title' => 'Profile',
-                'message' => null,
-                'error' => $result['error'],
-                'uploads' => $this->fetchUploads($userId),
-                'user' => $request->session('user') ?? [],
-            ]), 422);
+            return $this->renderProfile($userId, null, $result['error'], 422);
         }
 
         $this->audit->log('uploads.attachment.created', $userId, ['upload_id' => $result['id']]);
 
-        return Response::html(View::render('profile/index', [
-            'title' => 'Profile',
-            'message' => 'Upload saved to My Uploads.',
-            'error' => null,
-            'uploads' => $this->fetchUploads($userId),
-            'user' => $request->session('user') ?? [],
-        ]));
+        return $this->renderProfile($userId, 'Upload saved to My Uploads.', null);
+    }
+
+    public function updatePassword(Request $request): Response
+    {
+        if (!Csrf::validate($request->input('_token'))) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+
+        $userId = (int)($request->session('user')['id'] ?? 0);
+        $current = (string)$request->input('current_password', '');
+        $newPassword = (string)$request->input('new_password', '');
+        $confirm = (string)$request->input('confirm_password', '');
+
+        if ($current === '' || $newPassword === '' || $confirm === '') {
+            return $this->renderProfile($userId, null, 'All password fields are required.', 422);
+        }
+
+        if (strlen($newPassword) < 8) {
+            return $this->renderProfile($userId, null, 'New password must be at least 8 characters.', 422);
+        }
+
+        if ($newPassword !== $confirm) {
+            return $this->renderProfile($userId, null, 'New passwords do not match.', 422);
+        }
+
+        $stmt = $this->pdo->prepare('SELECT password_hash FROM users WHERE id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $hash = $stmt->fetchColumn();
+
+        if (!$hash || !Password::verify($current, (string)$hash)) {
+            return $this->renderProfile($userId, null, 'Current password is incorrect.', 422);
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $newHash = Password::hash($newPassword);
+        $update = $this->pdo->prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?');
+        $update->execute([$newHash, $now, $userId]);
+
+        $this->audit->log('auth.password.changed', $userId);
+
+        return $this->renderProfile($userId, 'Password updated.', null);
     }
 
     public function download(Request $request): Response
@@ -109,7 +120,7 @@ final class UploadController
             return Response::notFound(View::render('404', ['title' => 'Not Found']));
         }
 
-        if ((int)$upload['user_id'] !== $userId && (Auth::user()['role'] ?? null) !== 'Admin') {
+        if ((int)$upload['user_id'] !== $userId && (Auth::user()['role'] ?? null) !== 'Super Admin') {
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
         }
 
@@ -142,5 +153,16 @@ final class UploadController
         $stmt->execute([$userId]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    private function renderProfile(int $userId, ?string $message, ?string $error, int $status = 200): Response
+    {
+        return Response::html(View::render('profile/index', [
+            'title' => 'Profile',
+            'message' => $message,
+            'error' => $error,
+            'uploads' => $this->fetchUploads($userId),
+            'user' => $_SESSION['user'] ?? [],
+        ]), $status);
     }
 }

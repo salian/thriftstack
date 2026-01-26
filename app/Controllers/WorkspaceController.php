@@ -76,13 +76,13 @@ final class WorkspaceController
         $userId = (int)($request->session('user')['id'] ?? 0);
         $workspaceId = $this->service->currentWorkspaceId() ?? 0;
         $memberId = (int)$request->input('member_id', 0);
-        $role = (string)$request->input('role', 'Member');
+        $role = (string)$request->input('role', 'Workspace Member');
 
         if ($workspaceId <= 0 || $memberId <= 0) {
             return $this->renderIndex($userId, null, 'Unable to update member role.', null);
         }
 
-        $allowedRoles = ['Owner', 'Admin', 'Member'];
+        $allowedRoles = ['Workspace Owner', 'Workspace Admin', 'Workspace Member'];
         if (!in_array($role, $allowedRoles, true)) {
             return $this->renderIndex($userId, null, 'Invalid role selected.', null);
         }
@@ -114,7 +114,7 @@ final class WorkspaceController
         }
 
         $role = $this->service->membershipRole($userId, $workspaceId);
-        if ($role === null || !$this->service->isRoleAtLeast($role, 'Admin')) {
+        if ($role === null || !$this->service->isRoleAtLeast($role, 'Workspace Admin')) {
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
         }
 
@@ -151,8 +151,8 @@ final class WorkspaceController
             $invites = $this->service->listInvites((int)$currentWorkspace['id']);
         }
 
-        $roles = ['Owner', 'Admin', 'Member'];
-        $canManage = $currentRole !== null && $this->service->isRoleAtLeast($currentRole, 'Admin');
+        $roles = ['Workspace Owner', 'Workspace Admin', 'Workspace Member'];
+        $canManage = $currentRole !== null && $this->service->isRoleAtLeast($currentRole, 'Workspace Admin');
 
         return Response::html(View::render('workspaces/index', [
             'title' => 'Teams',

@@ -5,7 +5,7 @@
     <?php require __DIR__ . '/../nav.php'; ?>
 
     <div class="card">
-        <form method="get" action="/admin/users" class="form-inline table-toolbar" data-auto-search-form>
+        <form method="get" action="/workspace-admin/users" class="form-inline table-toolbar" data-auto-search-form>
             <input type="search" name="search" value="<?= e($search ?? '') ?>" placeholder="Search by name or email" data-auto-search>
             <select name="workspace_id" data-auto-submit>
                 <option value="all" <?= ($selectedWorkspace ?? 'all') === 'all' ? 'selected' : '' ?>>All Workspaces</option>
@@ -59,13 +59,13 @@
             <div class="table-pagination-links">
                 <?php if ($page > 1) : ?>
                     <?php $prev = http_build_query(array_merge($queryBase, ['page' => $page - 1])); ?>
-                    <a class="pagination-link" href="/admin/users?<?= e($prev) ?>">Prev</a>
+                    <a class="pagination-link" href="/workspace-admin/users?<?= e($prev) ?>">Prev</a>
                 <?php else : ?>
                     <button class="pagination-link" type="button" disabled>Prev</button>
                 <?php endif; ?>
                 <?php if ($page < $totalPages) : ?>
                     <?php $next = http_build_query(array_merge($queryBase, ['page' => $page + 1])); ?>
-                    <a class="pagination-link" href="/admin/users?<?= e($next) ?>">Next</a>
+                    <a class="pagination-link" href="/workspace-admin/users?<?= e($next) ?>">Next</a>
                 <?php else : ?>
                     <button class="pagination-link" type="button" disabled>Next</button>
                 <?php endif; ?>

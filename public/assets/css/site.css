@@ -949,6 +949,22 @@ input[type="file"]::-webkit-file-upload-button:hover {
     flex: 1;
 }
 
+.sidebar .sidebar-workspace-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 16px;
+    border-radius: 10px;
+    color: var(--muted);
+}
+
+.sidebar-workspace-toggle:hover {
+    color: var(--text);
+    text-decoration: none;
+}
+
 .sidebar-workspace-link {
     font-size: 0.85rem;
     color: var(--muted);
@@ -1158,6 +1174,14 @@ input[type="file"]::-webkit-file-upload-button:hover {
     padding: 16px 8px;
 }
 
+.page.sidebar-collapsed .sidebar-workspace {
+    display: none;
+}
+
+.page.sidebar-collapsed .sidebar .sidebar-workspace-toggle {
+    display: flex;
+}
+
 .page.sidebar-collapsed .sidebar .sidebar-label,
 .page.sidebar-collapsed .sidebar .brand-text {
     display: none;
@@ -1177,6 +1201,12 @@ input[type="file"]::-webkit-file-upload-button:hover {
     justify-content: center;
     padding: 10px 0;
     gap: 0;
+    width: 44px;
+}
+
+.page.sidebar-collapsed .sidebar .sidebar-workspace-toggle {
+    justify-content: center;
+    padding: 10px 0;
     width: 44px;
 }
 

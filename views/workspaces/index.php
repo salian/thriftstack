@@ -45,7 +45,7 @@
                         <tbody>
                             <?php foreach ($workspaces as $workspace) : ?>
                                 <?php $isCurrent = ($currentWorkspace['id'] ?? null) == $workspace['id']; ?>
-                                <?php $canEditWorkspace = in_array(($workspace['role'] ?? ''), ['Owner', 'Admin'], true); ?>
+                                <?php $canEditWorkspace = in_array(($workspace['role'] ?? ''), ['Workspace Owner', 'Workspace Admin'], true); ?>
                                 <tr>
                                     <td>
                                         <div class="workspace-name-cell" data-workspace-row="<?= e((string)$workspace['id']) ?>">

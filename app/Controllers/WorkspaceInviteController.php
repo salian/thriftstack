@@ -30,8 +30,8 @@ final class WorkspaceInviteController
         }
 
         $email = trim((string)$request->input('email', ''));
-        $role = (string)$request->input('role', 'Member');
-        $allowedRoles = ['Owner', 'Admin', 'Member'];
+        $role = (string)$request->input('role', 'Workspace Member');
+        $allowedRoles = ['Workspace Owner', 'Workspace Admin', 'Workspace Member'];
 
         if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->workspaceController->renderIndex($userId, null, 'Valid email is required.', null);

@@ -20,7 +20,7 @@ final class UsersController
         $eligibleWorkspaces = [];
         foreach ($workspaces as $workspace) {
             $role = (string)($workspace['role'] ?? '');
-            if ($workspaceService->isRoleAtLeast($role, 'Admin')) {
+            if ($workspaceService->isRoleAtLeast($role, 'Workspace Admin')) {
                 $eligibleWorkspaces[] = $workspace;
             }
         }

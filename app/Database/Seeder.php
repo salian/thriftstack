@@ -19,7 +19,7 @@ final class Seeder
         $now = date('Y-m-d H:i:s');
 
         $roles = [
-            ['Admin', 'Full system access'],
+            ['Super Admin', 'Full system access'],
             ['Staff', 'Internal staff access'],
             ['User', 'Standard user access'],
         ];
@@ -47,8 +47,8 @@ final class Seeder
         }
 
         $adminId = $this->ensureDummyUser($now);
-        $this->assignRole($adminId, 'Admin');
-        $this->grantAllPermissionsToRole('Admin');
+        $this->assignRole($adminId, 'Super Admin');
+        $this->grantAllPermissionsToRole('Super Admin');
     }
 
     private function ensureDummyUser(string $now): int
@@ -68,7 +68,7 @@ final class Seeder
              VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
         $insert->execute([
-            'Admin User',
+            'Super Admin User',
             $email,
             $hash,
             $now,

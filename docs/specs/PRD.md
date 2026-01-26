@@ -19,7 +19,7 @@ ThriftStack is a reusable Core PHP starter for logged-in SaaS dashboards on Drea
 ## Core features (planned)
 ### Implemented
 - Auth: signup/login/logout, email verification, password reset.
-- RBAC: Admin/Staff/User roles and permissions.
+- RBAC: Super Admin/Staff/User roles and permissions.
 - Admin panel: user list and audit log.
 - File uploads with secure storage.
 - Workspaces with per-workspace roles and invites.
