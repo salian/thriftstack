@@ -111,6 +111,7 @@
 - Add setup help panels per payment gateway tab.
 - Show webhook URLs per payment gateway tab.
 - Add copy button for webhook URLs.
+- Fix MySQL schema and queries to escape the plans interval column.
 - Label workspace-related roles as Workspace Roles in UI and docs.
 - Rename workspace role column to `workspace_role` in memberships/invites.
 - Rename Global analytics/usage labels to App analytics/usage.

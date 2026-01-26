@@ -16,12 +16,12 @@ final class BillingService
     public function listPlans(bool $includeInactive = false): array
     {
         if ($includeInactive) {
-            $stmt = $this->pdo->query('SELECT id, code, name, price_cents, interval, is_active FROM plans ORDER BY price_cents ASC');
+            $stmt = $this->pdo->query('SELECT id, code, name, price_cents, `interval`, is_active FROM plans ORDER BY price_cents ASC');
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         }
 
         $stmt = $this->pdo->prepare(
-            'SELECT id, code, name, price_cents, interval, is_active
+            'SELECT id, code, name, price_cents, `interval`, is_active
              FROM plans
              WHERE is_active = 1
              ORDER BY price_cents ASC'
@@ -34,7 +34,7 @@ final class BillingService
     {
         $stmt = $this->pdo->prepare(
             'SELECT s.id, s.workspace_id, s.plan_id, s.status, s.trial_ends_at, s.current_period_end, s.created_at,
-                    p.name AS plan_name, p.code AS plan_code, p.price_cents, p.interval
+                    p.name AS plan_name, p.code AS plan_code, p.price_cents, p.`interval`
              FROM subscriptions s
              JOIN plans p ON p.id = s.plan_id
              WHERE s.workspace_id = ?
@@ -130,7 +130,7 @@ final class BillingService
     public function createPlan(string $code, string $name, int $priceCents, string $interval, bool $isActive): void
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO plans (code, name, price_cents, interval, is_active)
+            'INSERT INTO plans (code, name, price_cents, `interval`, is_active)
              VALUES (?, ?, ?, ?, ?)'
         );
         $stmt->execute([$code, $name, $priceCents, $interval, $isActive ? 1 : 0]);
@@ -140,7 +140,7 @@ final class BillingService
     {
         $stmt = $this->pdo->prepare(
             'UPDATE plans
-             SET name = ?, price_cents = ?, interval = ?, is_active = ?
+             SET name = ?, price_cents = ?, `interval` = ?, is_active = ?
              WHERE id = ?'
         );
         $stmt->execute([$name, $priceCents, $interval, $isActive ? 1 : 0, $planId]);
@@ -149,7 +149,7 @@ final class BillingService
     public function findPlanByCode(string $code): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, code, name, price_cents, interval, is_active FROM plans WHERE code = ? LIMIT 1'
+            'SELECT id, code, name, price_cents, `interval`, is_active FROM plans WHERE code = ? LIMIT 1'
         );
         $stmt->execute([$code]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -159,7 +159,7 @@ final class BillingService
     public function findPlan(int $planId): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, code, name, price_cents, interval, is_active FROM plans WHERE id = ? LIMIT 1'
+            'SELECT id, code, name, price_cents, `interval`, is_active FROM plans WHERE id = ? LIMIT 1'
         );
         $stmt->execute([$planId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);

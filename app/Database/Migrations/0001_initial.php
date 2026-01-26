@@ -493,7 +493,7 @@ return static function (PDO $pdo): void {
             code VARCHAR(60) NOT NULL UNIQUE,
             name VARCHAR(120) NOT NULL,
             price_cents INT NOT NULL DEFAULT 0,
-            interval VARCHAR(20) NOT NULL,
+            `interval` VARCHAR(20) NOT NULL,
             is_active TINYINT(1) NOT NULL DEFAULT 1,
             INDEX idx_plans_active (is_active)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
