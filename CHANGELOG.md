@@ -81,3 +81,4 @@
 - Remove legacy RBAC views after consolidating access control.
 - Add search, role filtering, and pagination for User Roles in Super Admin settings.
 - Add deactivate/reactivate actions for users in Super Admin access control.
+- Add search, filtering, and pagination for Teams members and workspaces.
