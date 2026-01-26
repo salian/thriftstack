@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+final class AnalyticsController
+{
+    public function index(Request $request): Response
+    {
+        $kpis = [
+            ['label' => 'Monthly Active Users', 'value' => '1,284', 'delta' => '+8%'],
+            ['label' => 'Active Workspaces', 'value' => '214', 'delta' => '+3%'],
+            ['label' => 'MRR', 'value' => '$12,480', 'delta' => '+5%'],
+            ['label' => 'Churn', 'value' => '2.4%', 'delta' => '-0.4%'],
+        ];
+
+        $charts = [
+            [
+                'title' => 'Usage over time',
+                'description' => 'Active users and sessions by week.',
+            ],
+            [
+                'title' => 'Revenue by plan',
+                'description' => 'MRR split by plan tier and trial conversions.',
+            ],
+            [
+                'title' => 'Workspace retention',
+                'description' => 'New vs retained workspaces by cohort.',
+            ],
+        ];
+
+        $futureSources = [
+            'Billing providers (Stripe, Razorpay, PayPal, Lemon Squeezy)',
+            'Workspace activity events and feature usage',
+            'Audit logs and notification delivery metrics',
+        ];
+
+        return Response::html(View::render('admin/analytics/index', [
+            'title' => 'Global Analytics',
+            'kpis' => $kpis,
+            'charts' => $charts,
+            'futureSources' => $futureSources,
+        ]));
+    }
+}
