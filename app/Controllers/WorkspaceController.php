@@ -14,7 +14,7 @@ final class WorkspaceController
     public function index(Request $request): Response
     {
         $userId = (int)($request->session('user')['id'] ?? 0);
-        return $this->renderIndex($userId, null, null, null);
+        return $this->renderIndex($request, $userId, null, null, null);
     }
 
     public function create(Request $request): Response
@@ -26,12 +26,12 @@ final class WorkspaceController
         $userId = (int)($request->session('user')['id'] ?? 0);
         $name = trim((string)$request->input('name', ''));
         if ($name === '') {
-            return $this->renderIndex($userId, null, 'Workspace name is required.', null);
+            return $this->renderIndex($request, $userId, null, 'Workspace name is required.', null);
         }
 
         $this->service->createWorkspace($name, $userId);
 
-        return $this->renderIndex($userId, 'Workspace created.', null, null);
+        return $this->renderIndex($request, $userId, 'Workspace created.', null, null);
     }
 
     public function switch(Request $request): Response
@@ -43,12 +43,12 @@ final class WorkspaceController
         $userId = (int)($request->session('user')['id'] ?? 0);
         $workspaceId = (int)$request->input('workspace_id', 0);
         if ($workspaceId <= 0) {
-            return $this->renderIndex($userId, null, 'Select a workspace to switch.', null);
+            return $this->renderIndex($request, $userId, null, 'Select a workspace to switch.', null);
         }
 
         $role = $this->service->membershipRole($userId, $workspaceId);
         if ($role === null) {
-            return $this->renderIndex($userId, null, 'You are not a member of that workspace.', null);
+            return $this->renderIndex($request, $userId, null, 'You are not a member of that workspace.', null);
         }
 
         $this->service->setCurrentWorkspace($workspaceId);
@@ -79,20 +79,20 @@ final class WorkspaceController
         $role = (string)$request->input('role', 'Workspace Member');
 
         if ($workspaceId <= 0 || $memberId <= 0) {
-            return $this->renderIndex($userId, null, 'Unable to update member role.', null);
+            return $this->renderIndex($request, $userId, null, 'Unable to update member role.', null);
         }
 
         $allowedRoles = ['Workspace Owner', 'Workspace Admin', 'Workspace Member'];
         if (!in_array($role, $allowedRoles, true)) {
-            return $this->renderIndex($userId, null, 'Invalid role selected.', null);
+            return $this->renderIndex($request, $userId, null, 'Invalid role selected.', null);
         }
 
         $updated = $this->service->changeMemberRole($workspaceId, $memberId, $role, $userId);
         if (!$updated) {
-            return $this->renderIndex($userId, null, 'Member role update failed.', null);
+            return $this->renderIndex($request, $userId, null, 'Member role update failed.', null);
         }
 
-        return $this->renderIndex($userId, 'Member role updated.', null, null);
+        return $this->renderIndex($request, $userId, 'Member role updated.', null, null);
     }
 
     public function updateName(Request $request): Response
@@ -106,11 +106,11 @@ final class WorkspaceController
         $name = trim((string)$request->input('name', ''));
 
         if ($workspaceId <= 0 || $name === '') {
-            return $this->renderIndex($userId, null, 'Workspace name is required.', null);
+            return $this->renderIndex($request, $userId, null, 'Workspace name is required.', null);
         }
 
         if (strlen($name) < 2 || strlen($name) > 120) {
-            return $this->renderIndex($userId, null, 'Workspace name must be 2 to 120 characters.', null);
+            return $this->renderIndex($request, $userId, null, 'Workspace name must be 2 to 120 characters.', null);
         }
 
         $role = $this->service->membershipRole($userId, $workspaceId);
@@ -134,20 +134,42 @@ final class WorkspaceController
     }
 
     public function renderIndex(
+        Request $request,
         int $userId,
         ?string $message,
         ?string $error,
         ?string $inviteLink
     ): Response {
-        $workspaces = $this->service->listForUser($userId);
+        $memberSearch = trim((string)$request->query('member_search', ''));
+        $memberRole = (string)$request->query('member_role', 'all');
+        $memberPage = max(1, (int)$request->query('member_page', 1));
+        $workspaceSearch = trim((string)$request->query('workspace_search', ''));
+        $workspaceRole = (string)$request->query('workspace_role', 'all');
+        $workspacePage = max(1, (int)$request->query('workspace_page', 1));
+        $perPage = 10;
+
+        $workspacesTotal = $this->service->countWorkspacesForUser($userId, $workspaceSearch, $workspaceRole);
+        $workspaceTotalPages = max(1, (int)ceil($workspacesTotal / $perPage));
+        $workspacePage = min($workspacePage, $workspaceTotalPages);
+        $workspacesOffset = ($workspacePage - 1) * $perPage;
+        $workspaces = $this->service->listWorkspacesForUser($userId, $workspaceSearch, $workspaceRole, $perPage, $workspacesOffset);
+
         $currentWorkspace = $this->service->ensureCurrentWorkspace($userId);
         $currentRole = null;
-        $members = [];
+        $teamEntries = [];
         $invites = [];
+        $memberTotal = 0;
+        $memberTotalPages = 1;
+        $memberPage = max(1, $memberPage);
 
         if ($currentWorkspace) {
             $currentRole = $this->service->membershipRole($userId, (int)$currentWorkspace['id']);
-            $members = $this->service->listMembers((int)$currentWorkspace['id']);
+            $workspaceId = (int)$currentWorkspace['id'];
+            $memberTotal = $this->service->countTeamEntries($workspaceId, $memberSearch, $memberRole);
+            $memberTotalPages = max(1, (int)ceil($memberTotal / $perPage));
+            $memberPage = min($memberPage, $memberTotalPages);
+            $memberOffset = ($memberPage - 1) * $perPage;
+            $teamEntries = $this->service->listTeamEntries($workspaceId, $memberSearch, $memberRole, $perPage, $memberOffset);
             $invites = $this->service->listInvites((int)$currentWorkspace['id']);
         }
 
@@ -160,10 +182,20 @@ final class WorkspaceController
             'error' => $error,
             'inviteLink' => $inviteLink,
             'workspaces' => $workspaces,
+            'workspacesTotal' => $workspacesTotal,
+            'workspaceSearch' => $workspaceSearch,
+            'workspaceRole' => $workspaceRole,
+            'workspacePage' => $workspacePage,
+            'workspaceTotalPages' => $workspaceTotalPages,
             'currentWorkspace' => $currentWorkspace,
             'currentRole' => $currentRole,
-            'members' => $members,
+            'teamEntries' => $teamEntries,
             'invites' => $invites,
+            'memberSearch' => $memberSearch,
+            'memberRole' => $memberRole,
+            'memberPage' => $memberPage,
+            'memberTotalPages' => $memberTotalPages,
+            'memberTotal' => $memberTotal,
             'roles' => $roles,
             'canManage' => $canManage,
         ]));

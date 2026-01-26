@@ -27,6 +27,74 @@ final class WorkspaceService
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    public function countWorkspacesForUser(int $userId, string $search, string $role): int
+    {
+        $conditions = ['m.user_id = ?'];
+        $params = [$userId];
+
+        if ($search !== '') {
+            $conditions[] = 'w.name LIKE ?';
+            $params[] = '%' . $search . '%';
+        }
+
+        if ($role !== '' && $role !== 'all') {
+            $conditions[] = 'm.role = ?';
+            $params[] = $role;
+        }
+
+        $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        $stmt = $this->pdo->prepare(
+            'SELECT COUNT(*)
+             FROM workspaces w
+             JOIN workspace_memberships m ON m.workspace_id = w.id
+             ' . $where
+        );
+        $stmt->execute($params);
+
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function listWorkspacesForUser(
+        int $userId,
+        string $search,
+        string $role,
+        int $limit,
+        int $offset
+    ): array {
+        $conditions = ['m.user_id = ?'];
+        $params = [$userId];
+
+        if ($search !== '') {
+            $conditions[] = 'w.name LIKE ?';
+            $params[] = '%' . $search . '%';
+        }
+
+        if ($role !== '' && $role !== 'all') {
+            $conditions[] = 'm.role = ?';
+            $params[] = $role;
+        }
+
+        $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        $sql = 'SELECT w.id, w.name, w.created_by, w.created_at, m.role,
+                (SELECT COUNT(*) FROM workspace_memberships wm2 WHERE wm2.workspace_id = w.id) AS member_count
+             FROM workspaces w
+             JOIN workspace_memberships m ON m.workspace_id = w.id
+             ' . $where . '
+             ORDER BY w.created_at DESC
+             LIMIT ? OFFSET ?';
+        $stmt = $this->pdo->prepare($sql);
+        $bindIndex = 1;
+        foreach ($params as $param) {
+            $stmt->bindValue($bindIndex, $param);
+            $bindIndex++;
+        }
+        $stmt->bindValue($bindIndex, $limit, PDO::PARAM_INT);
+        $stmt->bindValue($bindIndex + 1, $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public function createWorkspace(string $name, int $userId): int
     {
         $now = date('Y-m-d H:i:s');
@@ -142,6 +210,95 @@ final class WorkspaceService
         $stmt->execute([$workspaceId]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public function countTeamEntries(int $workspaceId, string $search, string $role): int
+    {
+        [$memberWhere, $memberParams] = $this->buildMemberFilters($workspaceId, $search, $role);
+        [$inviteWhere, $inviteParams] = $this->buildInviteFilters($workspaceId, $search, $role);
+
+        $sql = 'SELECT COUNT(*) FROM (
+                SELECT u.id
+                FROM workspace_memberships m
+                JOIN users u ON u.id = m.user_id
+                ' . $memberWhere . '
+                UNION ALL
+                SELECT i.id
+                FROM workspace_invites i
+                ' . $inviteWhere . '
+            ) AS entries';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(array_merge($memberParams, $inviteParams));
+
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function listTeamEntries(
+        int $workspaceId,
+        string $search,
+        string $role,
+        int $limit,
+        int $offset
+    ): array {
+        [$memberWhere, $memberParams] = $this->buildMemberFilters($workspaceId, $search, $role);
+        [$inviteWhere, $inviteParams] = $this->buildInviteFilters($workspaceId, $search, $role);
+
+        $sql = 'SELECT u.id AS user_id, u.name, u.email, m.role,
+                    "Active" AS status, 0 AS is_invite, NULL AS invite_id, m.created_at AS sort_date
+                FROM workspace_memberships m
+                JOIN users u ON u.id = m.user_id
+                ' . $memberWhere . '
+                UNION ALL
+                SELECT NULL AS user_id, NULL AS name, i.email, i.role,
+                    "Invited" AS status, 1 AS is_invite, i.id AS invite_id, i.created_at AS sort_date
+                FROM workspace_invites i
+                ' . $inviteWhere . '
+                ORDER BY is_invite ASC, sort_date ASC
+                LIMIT ? OFFSET ?';
+        $stmt = $this->pdo->prepare($sql);
+        $params = array_merge($memberParams, $inviteParams);
+        $params[] = $limit;
+        $params[] = $offset;
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    private function buildMemberFilters(int $workspaceId, string $search, string $role): array
+    {
+        $conditions = ['m.workspace_id = ?'];
+        $params = [$workspaceId];
+
+        if ($search !== '') {
+            $conditions[] = '(u.name LIKE ? OR u.email LIKE ?)';
+            $params[] = '%' . $search . '%';
+            $params[] = '%' . $search . '%';
+        }
+
+        if ($role !== '' && $role !== 'all') {
+            $conditions[] = 'm.role = ?';
+            $params[] = $role;
+        }
+
+        return ['WHERE ' . implode(' AND ', $conditions), $params];
+    }
+
+    private function buildInviteFilters(int $workspaceId, string $search, string $role): array
+    {
+        $conditions = ['i.workspace_id = ?', 'i.accepted_at IS NULL'];
+        $params = [$workspaceId];
+
+        if ($search !== '') {
+            $conditions[] = 'i.email LIKE ?';
+            $params[] = '%' . $search . '%';
+        }
+
+        if ($role !== '' && $role !== 'all') {
+            $conditions[] = 'i.role = ?';
+            $params[] = $role;
+        }
+
+        return ['WHERE ' . implode(' AND ', $conditions), $params];
     }
 
     public function changeMemberRole(int $workspaceId, int $memberId, string $role, int $actorId): bool

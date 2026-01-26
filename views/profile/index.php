@@ -46,6 +46,15 @@
     </div>
 
     <div class="card">
+        <h2>Delete my account</h2>
+        <p>Deactivate your account. You will be logged out and only a Super Admin can reactivate it.</p>
+        <form method="post" action="/profile/deactivate" class="form">
+            <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+            <button type="submit" class="button button-ghost">Deactivate account</button>
+        </form>
+    </div>
+
+    <div class="card">
         <h2>Profile image</h2>
         <form method="post" action="/uploads/profile" enctype="multipart/form-data" class="form">
             <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">

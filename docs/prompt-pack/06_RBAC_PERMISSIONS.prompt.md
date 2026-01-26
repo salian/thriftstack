@@ -21,7 +21,7 @@ Implement RBAC.
 - /app/Controllers/Admin/RolesController.php
 - /app/Controllers/Admin/PermissionsController.php
 - /app/Controllers/Admin/UserRolesController.php
-- /views/admin/rbac/*.php
+- /views/admin/site_settings/index.php
 - /routes/web.php
 
 ## Deliverable

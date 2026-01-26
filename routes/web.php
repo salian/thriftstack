@@ -87,6 +87,112 @@ $router
     ->setName('dashboard');
 
 $router
+    ->get('/super-admin', static function () {
+        return View::render('admin/super_admin/index', ['title' => 'Super Admin']);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
+    ->middleware(new RequireRole('Super Admin'))
+    ->setName('super_admin');
+
+$router
+    ->get('/super-admin/analytics', static function () {
+        return View::render('admin/analytics/index', ['title' => 'Global Analytics']);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
+    ->middleware(new RequireRole('Super Admin'))
+    ->setName('super_admin.analytics');
+
+$router
+    ->get('/super-admin/usage', static function () {
+        return View::render('admin/usage/index', ['title' => 'Global Usage']);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
+    ->middleware(new RequireRole('Super Admin'))
+    ->setName('super_admin.usage');
+
+$router
+    ->get('/super-admin/settings', static function (Request $request) use ($pdo) {
+        $rbac = new Rbac($pdo);
+        $roles = $rbac->roles();
+        $permissions = $rbac->permissions();
+        $permissionsByRole = $rbac->permissionsByRole();
+        $superAdminCount = 0;
+        $countSuper = $pdo->prepare(
+            'SELECT COUNT(DISTINCT u.id)
+             FROM users u
+             INNER JOIN user_roles ur ON ur.user_id = u.id
+             INNER JOIN roles r ON r.id = ur.role_id
+             WHERE r.name = ?'
+        );
+        $countSuper->execute(['Super Admin']);
+        $superAdminCount = (int)$countSuper->fetchColumn();
+
+        $search = trim((string)$request->query('search', ''));
+        $selectedRole = (string)$request->query('role_id', 'all');
+        $page = max(1, (int)$request->query('page', 1));
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        $conditions = [];
+        $params = [];
+        if ($search !== '') {
+            $conditions[] = '(u.name LIKE ? OR u.email LIKE ?)';
+            $params[] = '%' . $search . '%';
+            $params[] = '%' . $search . '%';
+        }
+        if ($selectedRole !== '' && $selectedRole !== 'all') {
+            if ($selectedRole === 'unassigned') {
+                $conditions[] = 'ur.role_id IS NULL';
+            } else {
+                $conditions[] = 'r.id = ?';
+                $params[] = (int)$selectedRole;
+            }
+        }
+
+        $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        $countSql = 'SELECT COUNT(*) FROM users u LEFT JOIN user_roles ur ON ur.user_id = u.id LEFT JOIN roles r ON r.id = ur.role_id ' . $where;
+        $countStmt = $pdo->prepare($countSql);
+        $countStmt->execute($params);
+        $total = (int)$countStmt->fetchColumn();
+        $totalPages = max(1, (int)ceil($total / $limit));
+        $page = min($page, $totalPages);
+        $offset = ($page - 1) * $limit;
+
+        $sql = 'SELECT u.id, u.name, u.email, u.status, r.name AS role_name
+            FROM users u
+            LEFT JOIN user_roles ur ON ur.user_id = u.id
+            LEFT JOIN roles r ON r.id = ur.role_id
+            ' . $where . '
+            ORDER BY u.name ASC
+            LIMIT ' . (int)$limit . ' OFFSET ' . (int)$offset;
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        return View::render('admin/site_settings/index', [
+            'title' => 'Site Settings',
+            'roles' => $roles,
+            'permissions' => $permissions,
+            'permissionsByRole' => $permissionsByRole,
+            'users' => $users,
+            'search' => $search,
+            'selectedRole' => $selectedRole,
+            'page' => $page,
+            'total' => $total,
+            'totalPages' => $totalPages,
+            'limit' => $limit,
+            'superAdminCount' => $superAdminCount,
+        ]);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
+    ->middleware(new RequireRole('Super Admin'))
+    ->setName('super_admin.settings');
+
+$router
     ->get('/notifications', static function (Request $request) use ($notificationsController) {
         return $notificationsController->index($request);
     })
@@ -116,12 +222,6 @@ $router
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspace($pdo));
 
-$router
-    ->post('/profile/password', static function (Request $request) use ($uploadController) {
-        return $uploadController->updatePassword($request);
-    })
-    ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo));
 
 $router
     ->post('/settings/preferences', static function (Request $request) use ($settingsController) {
@@ -216,6 +316,20 @@ $router
     ->setName('profile');
 
 $router
+    ->post('/profile/password', static function (Request $request) use ($uploadController) {
+        return $uploadController->updatePassword($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo));
+
+$router
+    ->post('/profile/deactivate', static function (Request $request) use ($uploadController) {
+        return $uploadController->deactivateAccount($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo));
+
+$router
     ->get('/uploads', static function () {
         return Response::redirect('/profile');
     })
@@ -255,15 +369,6 @@ $router
     ->setName('workspace_admin.users');
 
 $router
-    ->get('/super-admin/roles', static function (Request $request) use ($rolesController) {
-        return $rolesController->index($request);
-    })
-    ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
-    ->middleware(new RequireRole('Super Admin'))
-    ->setName('super_admin.roles');
-
-$router
     ->post('/super-admin/roles', static function (Request $request) use ($rolesController) {
         return $rolesController->create($request);
     })
@@ -280,15 +385,6 @@ $router
     ->middleware(new RequireRole('Super Admin'));
 
 $router
-    ->get('/super-admin/permissions', static function (Request $request) use ($permissionsController) {
-        return $permissionsController->index($request);
-    })
-    ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
-    ->middleware(new RequireRole('Super Admin'))
-    ->setName('super_admin.permissions');
-
-$router
     ->post('/super-admin/permissions', static function (Request $request) use ($permissionsController) {
         return $permissionsController->create($request);
     })
@@ -297,8 +393,8 @@ $router
     ->middleware(new RequireRole('Super Admin'));
 
 $router
-    ->get('/super-admin/user-roles', static function (Request $request) use ($userRolesController) {
-        return $userRolesController->index($request);
+    ->get('/super-admin/user-roles', static function () {
+        return Response::redirect('/super-admin/settings?tab=user-roles');
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
@@ -308,6 +404,14 @@ $router
 $router
     ->post('/super-admin/user-roles', static function (Request $request) use ($userRolesController) {
         return $userRolesController->assign($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
+    ->middleware(new RequireRole('Super Admin'));
+
+$router
+    ->post('/super-admin/users/status', static function (Request $request) use ($userRolesController) {
+        return $userRolesController->updateStatus($request);
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))

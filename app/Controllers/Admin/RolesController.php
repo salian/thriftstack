@@ -15,16 +15,7 @@ final class RolesController
 
     public function index(Request $request): Response
     {
-        $roles = $this->rbac->roles();
-        $permissions = $this->rbac->permissions();
-        $byRole = $this->rbac->permissionsByRole();
-
-        return Response::html(View::render('admin/rbac/roles', [
-            'title' => 'Roles',
-            'roles' => $roles,
-            'permissions' => $permissions,
-            'permissionsByRole' => $byRole,
-        ]));
+        return Response::notFound(View::render('404', ['title' => 'Not Found']));
     }
 
     public function create(Request $request): Response
@@ -40,7 +31,7 @@ final class RolesController
             $this->rbac->createRole($name, $description);
         }
 
-        return Response::redirect('/admin/roles');
+        return Response::redirect('/super-admin/settings?tab=roles');
     }
 
     public function updatePermissions(Request $request): Response
@@ -56,6 +47,6 @@ final class RolesController
             $this->rbac->setRolePermissions($roleId, $permissionIds);
         }
 
-        return Response::redirect('/admin/roles');
+        return Response::redirect('/super-admin/settings?tab=roles');
     }
 }

@@ -73,3 +73,11 @@
 - Split admin routes into `/workspace-admin` and `/super-admin`.
 - Move roles/permissions/user role assignment to Super Admin navigation.
 - Add password change form to the profile page.
+- Add account deactivation from the profile page with inactive login block.
+- Add Super Admin sections for analytics, usage, and site settings placeholders.
+- Align admin page headers with tab navigation layout.
+- Show roles table in Super Admin access control settings.
+- Add access control tabs in Super Admin site settings with User Roles, Permissions, and Roles.
+- Remove legacy RBAC views after consolidating access control.
+- Add search, role filtering, and pagination for User Roles in Super Admin settings.
+- Add deactivate/reactivate actions for users in Super Admin access control.

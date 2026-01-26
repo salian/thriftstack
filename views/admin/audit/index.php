@@ -1,8 +1,9 @@
 <section class="page-section">
-    <h1>Audit Log</h1>
-    <p>Recent security and admin events.</p>
+    <h1>Workspace Admin</h1>
 
     <?php require __DIR__ . '/../nav.php'; ?>
+
+    <h2>Workspace Audit Log</h2>
 
     <?php
     $pagination = $pagination ?? ['page' => 1, 'totalPages' => 1, 'total' => 0];

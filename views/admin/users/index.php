@@ -1,8 +1,9 @@
 <section class="page-section">
-    <h1>Users</h1>
-    <p>View registered users.</p>
+    <h1>Workspace Admin</h1>
 
     <?php require __DIR__ . '/../nav.php'; ?>
+
+    <h2>Workspace Users</h2>
 
     <div class="card">
         <form method="get" action="/workspace-admin/users" class="form-inline table-toolbar" data-auto-search-form>

@@ -33,6 +33,20 @@
                     <p>No workspaces yet. Create one to get started.</p>
                 <?php else : ?>
                     <?php $returnTo = $_SERVER['REQUEST_URI'] ?? '/teams'; ?>
+                    <form method="get" class="table-toolbar form-inline" data-auto-search-form>
+                        <input type="hidden" name="tab" value="workspaces">
+                        <input type="search" name="workspace_search" value="<?= e($workspaceSearch ?? '') ?>"
+                            placeholder="Search workspaces" data-auto-search>
+                        <select name="workspace_role" data-auto-submit>
+                            <option value="all" <?= ($workspaceRole ?? 'all') === 'all' ? 'selected' : '' ?>>All roles</option>
+                            <?php foreach ($roles as $roleOption) : ?>
+                                <option value="<?= e($roleOption) ?>" <?= ($workspaceRole ?? '') === $roleOption ? 'selected' : '' ?>>
+                                    <?= e($roleOption) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <span class="table-search-status" data-search-status aria-live="polite"></span>
+                    </form>
                     <table class="table">
                         <thead>
                             <tr>
@@ -87,6 +101,32 @@
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    <?php
+                    $workspaceTotalPages = (int)($workspaceTotalPages ?? 1);
+                    $workspacePage = (int)($workspacePage ?? 1);
+                    $workspaceQueryBase = [
+                        'tab' => 'workspaces',
+                        'workspace_search' => $workspaceSearch ?? '',
+                        'workspace_role' => $workspaceRole ?? 'all',
+                    ];
+                    ?>
+                    <div class="table-pagination">
+                        <span>Page <?= e((string)$workspacePage) ?> of <?= e((string)max(1, $workspaceTotalPages)) ?> (<?= e((string)($workspacesTotal ?? 0)) ?> total)</span>
+                        <div class="table-pagination-links">
+                            <?php if ($workspacePage > 1) : ?>
+                                <?php $prev = http_build_query(array_merge($workspaceQueryBase, ['workspace_page' => $workspacePage - 1])); ?>
+                                <a class="pagination-link" href="/teams?<?= e($prev) ?>">Prev</a>
+                            <?php else : ?>
+                                <button class="pagination-link" type="button" disabled>Prev</button>
+                            <?php endif; ?>
+                            <?php if ($workspacePage < $workspaceTotalPages) : ?>
+                                <?php $next = http_build_query(array_merge($workspaceQueryBase, ['workspace_page' => $workspacePage + 1])); ?>
+                                <a class="pagination-link" href="/teams?<?= e($next) ?>">Next</a>
+                            <?php else : ?>
+                                <button class="pagination-link" type="button" disabled>Next</button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -100,9 +140,23 @@
                             <button type="button" class="button" data-modal-open="team-invite">Add a Team Member</button>
                         <?php endif; ?>
                     </div>
-                    <?php if (empty($members)) : ?>
+                    <?php if (empty($teamEntries)) : ?>
                         <p>No members yet.</p>
                     <?php else : ?>
+                        <form method="get" class="table-toolbar form-inline" data-auto-search-form>
+                            <input type="hidden" name="tab" value="team">
+                            <input type="search" name="member_search" value="<?= e($memberSearch ?? '') ?>"
+                                placeholder="Search by name or email" data-auto-search>
+                            <select name="member_role" data-auto-submit>
+                                <option value="all" <?= ($memberRole ?? 'all') === 'all' ? 'selected' : '' ?>>All roles</option>
+                                <?php foreach ($roles as $roleOption) : ?>
+                                    <option value="<?= e($roleOption) ?>" <?= ($memberRole ?? '') === $roleOption ? 'selected' : '' ?>>
+                                        <?= e($roleOption) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <span class="table-search-status" data-search-status aria-live="polite"></span>
+                        </form>
                         <table class="table">
                             <thead>
                                 <tr>
@@ -116,52 +170,73 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($members as $member) : ?>
-                                    <tr>
-                                        <td><?= e($member['name'] ?? '') ?></td>
-                                        <td><?= e($member['email'] ?? '') ?></td>
-                                        <td><?= e($member['role'] ?? '') ?></td>
-                                        <td>Active</td>
+                                <?php foreach ($teamEntries as $entry) : ?>
+                                    <?php $isInvite = !empty($entry['is_invite']); ?>
+                                    <tr class="<?= $isInvite ? 'is-muted' : '' ?>">
+                                        <td>
+                                            <?php if ($isInvite) : ?>
+                                                <span class="badge">Invited</span>
+                                            <?php else : ?>
+                                                <?= e($entry['name'] ?? '') ?>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="<?= $isInvite ? 'is-italic' : '' ?>"><?= e($entry['email'] ?? '') ?></td>
+                                        <td><?= e($entry['role'] ?? '') ?></td>
+                                        <td><?= e($entry['status'] ?? '') ?></td>
                                         <?php if (!empty($canManage)) : ?>
                                             <td>
-                                                <form method="post" action="/teams/members/role" class="form-inline">
-                                                    <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
-                                                    <input type="hidden" name="member_id" value="<?= e((string)$member['id']) ?>">
-                                                    <select name="role">
-                                                        <?php foreach ($roles as $roleOption) : ?>
-                                                            <option value="<?= e($roleOption) ?>" <?= ($roleOption === $member['role']) ? 'selected' : '' ?>>
-                                                                <?= e($roleOption) ?>
-                                                            </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                    <button type="submit" class="button">Update</button>
-                                                </form>
-                                            </td>
-                                        <?php endif; ?>
-                                    </tr>
-                                <?php endforeach; ?>
-                                <?php foreach ($invites as $invite) : ?>
-                                    <?php if (!empty($invite['accepted_at'])) : ?>
-                                        <?php continue; ?>
-                                    <?php endif; ?>
-                                    <tr class="is-muted">
-                                        <td><span class="badge">Invited</span></td>
-                                        <td class="is-italic"><?= e($invite['email'] ?? '') ?></td>
-                                        <td><?= e($invite['role'] ?? '') ?></td>
-                                        <td></td>
-                                        <?php if (!empty($canManage)) : ?>
-                                            <td>
-                                                <form method="post" action="/teams/invites/resend">
-                                                    <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
-                                                    <input type="hidden" name="invite_id" value="<?= e((string)$invite['id']) ?>">
-                                                    <button type="submit" class="button button-ghost">Resend</button>
-                                                </form>
+                                                <?php if ($isInvite) : ?>
+                                                    <form method="post" action="/teams/invites/resend">
+                                                        <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+                                                        <input type="hidden" name="invite_id" value="<?= e((string)$entry['invite_id']) ?>">
+                                                        <button type="submit" class="button button-ghost">Resend</button>
+                                                    </form>
+                                                <?php else : ?>
+                                                    <form method="post" action="/teams/members/role" class="form-inline">
+                                                        <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+                                                        <input type="hidden" name="member_id" value="<?= e((string)$entry['user_id']) ?>">
+                                                        <select name="role">
+                                                            <?php foreach ($roles as $roleOption) : ?>
+                                                                <option value="<?= e($roleOption) ?>" <?= ($roleOption === ($entry['role'] ?? '')) ? 'selected' : '' ?>>
+                                                                    <?= e($roleOption) ?>
+                                                                </option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                        <button type="submit" class="button">Update</button>
+                                                    </form>
+                                                <?php endif; ?>
                                             </td>
                                         <?php endif; ?>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        <?php
+                        $memberTotalPages = (int)($memberTotalPages ?? 1);
+                        $memberPage = (int)($memberPage ?? 1);
+                        $memberQueryBase = [
+                            'tab' => 'team',
+                            'member_search' => $memberSearch ?? '',
+                            'member_role' => $memberRole ?? 'all',
+                        ];
+                        ?>
+                        <div class="table-pagination">
+                            <span>Page <?= e((string)$memberPage) ?> of <?= e((string)max(1, $memberTotalPages)) ?> (<?= e((string)($memberTotal ?? 0)) ?> total)</span>
+                            <div class="table-pagination-links">
+                                <?php if ($memberPage > 1) : ?>
+                                    <?php $prev = http_build_query(array_merge($memberQueryBase, ['member_page' => $memberPage - 1])); ?>
+                                    <a class="pagination-link" href="/teams?<?= e($prev) ?>">Prev</a>
+                                <?php else : ?>
+                                    <button class="pagination-link" type="button" disabled>Prev</button>
+                                <?php endif; ?>
+                                <?php if ($memberPage < $memberTotalPages) : ?>
+                                    <?php $next = http_build_query(array_merge($memberQueryBase, ['member_page' => $memberPage + 1])); ?>
+                                    <a class="pagination-link" href="/teams?<?= e($next) ?>">Next</a>
+                                <?php else : ?>
+                                    <button class="pagination-link" type="button" disabled>Next</button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     <?php endif; ?>
                 </div>
             <?php else : ?>

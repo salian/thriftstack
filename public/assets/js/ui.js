@@ -324,10 +324,8 @@
   }
 
   const params = new URLSearchParams(window.location.search);
-  let preferredTab = null;
-  if (params.get('tab') === 'workspaces') {
-    preferredTab = 'workspaces';
-  } else if (params.get('open') === 'create-workspace') {
+  let preferredTab = params.get('tab');
+  if (!preferredTab && params.get('open') === 'create-workspace') {
     preferredTab = 'workspaces';
   }
 

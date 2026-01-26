@@ -13,12 +13,7 @@ final class PermissionsController
 
     public function index(Request $request): Response
     {
-        $permissions = $this->rbac->permissions();
-
-        return Response::html(View::render('admin/rbac/permissions', [
-            'title' => 'Permissions',
-            'permissions' => $permissions,
-        ]));
+        return Response::notFound(View::render('404', ['title' => 'Not Found']));
     }
 
     public function create(Request $request): Response
@@ -34,6 +29,6 @@ final class PermissionsController
             $this->rbac->createPermission($name, $description);
         }
 
-        return Response::redirect('/admin/permissions');
+        return Response::redirect('/super-admin/settings?tab=permissions');
     }
 }

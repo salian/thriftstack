@@ -99,7 +99,7 @@
                     <nav class="nav" aria-label="Primary">
                         <?php if (Auth::check()) : ?>
                             <?php if ((Auth::user()['role'] ?? null) === 'Super Admin') : ?>
-                                <a href="/super-admin/roles">Super Admin</a>
+                                <a href="/super-admin">Super Admin</a>
                             <?php endif; ?>
                             <a href="/notifications" class="nav-icon" aria-label="Notifications">
                                 <i class="fa-solid fa-bell" aria-hidden="true"></i>
@@ -137,7 +137,7 @@
                                     <?php if ((Auth::user()['role'] ?? null) === 'Super Admin') : ?>
                                         <div class="nav-menu-divider"></div>
                                         <a href="/workspace-admin/users">Workspace Admin</a>
-                                        <a href="/super-admin/roles">Super Admin</a>
+                                        <a href="/super-admin">Super Admin</a>
                                     <?php endif; ?>
                                     <div class="nav-menu-divider"></div>
                                     <form method="post" action="/logout" class="nav-menu-form">

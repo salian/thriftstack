@@ -900,18 +900,33 @@ input[type="file"]::-webkit-file-upload-button:hover {
 }
 
 .admin-nav {
-    display: flex;
+    display: inline-flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 8px;
+    padding: 6px;
+    border-radius: 999px;
+    background: var(--surface-muted);
     margin: 16px 0 24px;
 }
 
 .admin-nav a {
-    padding: 8px 14px;
+    padding: 8px 18px;
     border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--surface);
+    border: none;
+    background: transparent;
+    color: var(--muted);
     font-weight: 600;
+}
+
+.admin-nav a.is-active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+}
+
+.admin-nav a:hover {
+    text-decoration: none;
+    color: var(--text);
 }
 
 .sidebar {
@@ -1307,6 +1322,8 @@ input[type="file"]::-webkit-file-upload-button:hover {
     font-size: 1rem;
     background: var(--surface);
     color: var(--text);
+    height: 44px;
+    line-height: 1.4;
 }
 
 .table-toolbar select {
@@ -1315,4 +1332,6 @@ input[type="file"]::-webkit-file-upload-button:hover {
     border-radius: 10px;
     border: 1px solid var(--border);
     font-size: 1rem;
+    height: 44px;
+    line-height: 1.4;
 }

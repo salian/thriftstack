@@ -100,6 +100,27 @@ final class UploadController
         return $this->renderProfile($userId, 'Password updated.', null);
     }
 
+    public function deactivateAccount(Request $request): Response
+    {
+        if (!Csrf::validate($request->input('_token'))) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+
+        $userId = (int)($request->session('user')['id'] ?? 0);
+        if ($userId <= 0) {
+            return Response::redirect('/login');
+        }
+
+        $stmt = $this->pdo->prepare('UPDATE users SET status = ?, updated_at = ? WHERE id = ?');
+        $stmt->execute(['inactive', date('Y-m-d H:i:s'), $userId]);
+
+        $this->audit->log('account.deactivated', $userId);
+        Auth::logout();
+        Csrf::rotate();
+
+        return Response::redirect('/login');
+    }
+
     public function download(Request $request): Response
     {
         $userId = (int)($request->session('user')['id'] ?? 0);

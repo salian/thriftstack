@@ -70,6 +70,11 @@ final class AuthController
             return $this->loginError('Invalid credentials.', $inviteToken);
         }
 
+        if (($user['status'] ?? 'active') !== 'active') {
+            $this->audit->log('auth.login.blocked', (int)$user['id'], ['reason' => 'account_inactive']);
+            return $this->loginError('Your account is inactive. Contact support.', $inviteToken);
+        }
+
         $requireVerified = filter_var(
             $this->config['auth']['require_verified'] ?? true,
             FILTER_VALIDATE_BOOLEAN
