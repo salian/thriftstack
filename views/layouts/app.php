@@ -99,7 +99,7 @@
                     <nav class="nav" aria-label="Primary">
                         <?php if (Auth::check()) : ?>
                             <?php if ((Auth::user()['role'] ?? null) === 'Super Admin') : ?>
-                                <a href="/super-admin">Super Admin</a>
+                                <a href="/super-admin/analytics">Super Admin</a>
                             <?php endif; ?>
                             <a href="/notifications" class="nav-icon" aria-label="Notifications">
                                 <i class="fa-solid fa-bell" aria-hidden="true"></i>
@@ -137,7 +137,7 @@
                                     <?php if ((Auth::user()['role'] ?? null) === 'Super Admin') : ?>
                                         <div class="nav-menu-divider"></div>
                                         <a href="/workspace-admin/users">Workspace Admin</a>
-                                        <a href="/super-admin">Super Admin</a>
+                                        <a href="/super-admin/analytics">Super Admin</a>
                                     <?php endif; ?>
                                     <div class="nav-menu-divider"></div>
                                     <form method="post" action="/logout" class="nav-menu-form">
@@ -170,7 +170,11 @@
             <footer class="site-footer">
                 <div class="content-inner">
                     <div class="footer-content">
+                        <?php $buildId = trim((string)config('app.build', '')); ?>
                         <span>© <?= e(date('Y')) ?> <?= e((string)config('app.name', 'ThriftStack')) ?>. All rights reserved.</span>
+                        <?php if ($buildId !== '') : ?>
+                            <span class="footer-build">Build <?= e($buildId) ?></span>
+                        <?php endif; ?>
                         <div class="footer-links">
                             <a href="/privacy">Privacy</a>
                             <a href="/terms">Terms</a>

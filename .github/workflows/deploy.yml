@@ -28,6 +28,7 @@ jobs:
       - name: Set release metadata
         run: |
           echo "RELEASE_TS=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+          echo "BUILD_ID=$(git describe --always --dirty --tags)" >> $GITHUB_ENV
 
       - name: Set deploy target
         run: |
@@ -72,7 +73,7 @@ jobs:
       - name: Write shared env
         run: |
           ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            "cat > ${DEPLOY_PATH}/shared/.env <<'ENVFILE'\n${{ secrets.ENV_FILE }}\nENVFILE"
+            "cat > ${DEPLOY_PATH}/shared/.env <<'ENVFILE'\n${{ secrets.ENV_FILE }}\nENVFILE\nprintf '\nTHRIFTSTACK_BUILD_ID=%s\n' '${BUILD_ID}' >> ${DEPLOY_PATH}/shared/.env"
 
       - name: Link shared assets and switch release
         run: |

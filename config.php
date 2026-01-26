@@ -38,6 +38,7 @@ return [
         'url' => $env('THRIFTSTACK_APP_URL', 'http://localhost'),
         'timezone' => $env('THRIFTSTACK_APP_TIMEZONE', 'UTC'),
         'key' => $env('THRIFTSTACK_APP_KEY', ''),
+        'build' => $env('THRIFTSTACK_BUILD_ID', ''),
     ],
     'db' => [
         'driver' => $env('THRIFTSTACK_DB_DRIVER', 'mysql'),

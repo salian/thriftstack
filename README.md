@@ -20,6 +20,7 @@ Core PHP 8.5 starter focused on logged-in SaaS dashboards, DreamHost shared host
    `THRIFTSTACK_DB_PATH=storage/database.sqlite`.
 4. Run migrations: `php scripts/migrate.php`.
 5. Seed dummy data: `php scripts/seed.php`.
+6. Optional: set `THRIFTSTACK_BUILD_ID` to show a build identifier in the footer.
 
 ## Tests
 Run the minimal test suite: `php tests/run.php`.

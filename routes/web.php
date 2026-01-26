@@ -13,6 +13,7 @@ $settingsService = new SettingsService($pdo);
 $settingsController = new SettingsController($pdo, $settingsService);
 $notificationService = new NotificationService($pdo, $config);
 $notificationsController = new NotificationsController($notificationService);
+$analyticsController = new AnalyticsController();
 
 $router
     ->get('/', static function (Request $request) use ($config) {
@@ -88,7 +89,7 @@ $router
 
 $router
     ->get('/super-admin', static function () {
-        return View::render('admin/super_admin/index', ['title' => 'Super Admin']);
+        return Response::redirect('/super-admin/analytics');
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))
@@ -96,8 +97,8 @@ $router
     ->setName('super_admin');
 
 $router
-    ->get('/super-admin/analytics', static function () {
-        return View::render('admin/analytics/index', ['title' => 'Global Analytics']);
+    ->get('/super-admin/analytics', static function (Request $request) use ($analyticsController) {
+        return $analyticsController->index($request);
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspace($pdo, 'Workspace Admin'))

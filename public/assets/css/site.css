@@ -159,6 +159,12 @@ a:hover {
     text-decoration: none;
 }
 
+.footer-build {
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+}
+
 .brand {
     font-weight: 800;
     font-size: 1.5rem;
@@ -824,6 +830,65 @@ input[type="file"]::-webkit-file-upload-button:hover {
     border-radius: 999px;
     background: var(--surface-muted);
     margin: 16px 0 24px;
+}
+
+.analytics-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 16px 0 24px;
+}
+
+.kpi-card {
+    display: grid;
+    gap: 8px;
+}
+
+.kpi-label {
+    color: var(--muted);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.kpi-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.kpi-meta {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.analytics-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.chart-card {
+    display: grid;
+    gap: 12px;
+}
+
+.chart-subtitle {
+    color: var(--muted);
+    margin: 0;
+}
+
+.chart-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 180px;
+    border-radius: 12px;
+    border: 1px dashed var(--border);
+    background: var(--surface-muted);
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.02em;
 }
 
 .tab-button {

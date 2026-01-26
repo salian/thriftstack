@@ -38,6 +38,7 @@ require __DIR__ . '/../app/Controllers/Admin/PermissionsController.php';
 require __DIR__ . '/../app/Controllers/Admin/UserRolesController.php';
 require __DIR__ . '/../app/Controllers/Admin/UsersController.php';
 require __DIR__ . '/../app/Controllers/Admin/AuditLogController.php';
+require __DIR__ . '/../app/Controllers/Admin/AnalyticsController.php';
 require __DIR__ . '/../app/Controllers/UploadController.php';
 require __DIR__ . '/../app/View/View.php';
 

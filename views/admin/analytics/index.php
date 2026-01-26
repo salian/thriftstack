@@ -6,8 +6,35 @@
     <h2>Global Analytics</h2>
     <p>Usage, revenue, and churn summaries across all workspaces.</p>
 
+    <div class="analytics-kpis">
+        <?php foreach (($kpis ?? []) as $kpi) : ?>
+            <div class="card kpi-card">
+                <p class="kpi-label"><?= e($kpi['label']) ?></p>
+                <p class="kpi-value"><?= e($kpi['value']) ?></p>
+                <p class="kpi-meta"><?= e($kpi['delta']) ?> vs last period</p>
+            </div>
+        <?php endforeach; ?>
+    </div>
+
+    <div class="analytics-charts">
+        <?php foreach (($charts ?? []) as $chart) : ?>
+            <div class="card chart-card">
+                <h3><?= e($chart['title']) ?></h3>
+                <p class="chart-subtitle"><?= e($chart['description']) ?></p>
+                <div class="chart-placeholder">
+                    <span>Chart placeholder</span>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+
     <div class="card">
-        <h2>Coming soon</h2>
-        <p>We will add global usage, revenue, and churn metrics here.</p>
+        <h2>Future data sources</h2>
+        <p>These placeholders will connect to:</p>
+        <ul>
+            <?php foreach (($futureSources ?? []) as $source) : ?>
+                <li><?= e($source) ?></li>
+            <?php endforeach; ?>
+        </ul>
     </div>
 </section>

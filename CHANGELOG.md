@@ -82,3 +82,7 @@
 - Add search, role filtering, and pagination for User Roles in Super Admin settings.
 - Add deactivate/reactivate actions for users in Super Admin access control.
 - Add search, filtering, and pagination for Teams members and workspaces.
+- Add analytics placeholder KPIs, charts, and future data source callouts.
+- Make Super Admin default route land on Analytics.
+- Add optional footer build identifier from `THRIFTSTACK_BUILD_ID`.
+- Populate `THRIFTSTACK_BUILD_ID` during deploy from `git describe`.

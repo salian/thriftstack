@@ -8,6 +8,7 @@
    `THRIFTSTACK_DB_PATH=storage/database.sqlite`.
 5. Run migrations: `php scripts/migrate.php`.
 6. Seed dummy data: `php scripts/seed.php`.
+7. Optional: set `THRIFTSTACK_BUILD_ID` to show a build identifier in the footer.
 
 ## DreamHost
 ### GitHub Actions deploy
