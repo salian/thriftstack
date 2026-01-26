@@ -35,7 +35,7 @@ final class AnalyticsController
         ];
 
         return Response::html(View::render('admin/analytics/index', [
-            'title' => 'Global Analytics',
+            'title' => 'App Analytics',
             'kpis' => $kpis,
             'charts' => $charts,
             'futureSources' => $futureSources,

@@ -9,6 +9,12 @@
 5. Run migrations: `php scripts/migrate.php`.
 6. Seed dummy data: `php scripts/seed.php`.
 7. Optional: set `THRIFTSTACK_BUILD_ID` to show a build identifier in the footer.
+8. Optional: set `THRIFTSTACK_BILLING_OWNER_ROLES` (comma-separated) to control who can access billing.
+9. Configure webhook secrets if you plan to receive billing events:
+   - `THRIFTSTACK_BILLING_STRIPE_SECRET`
+   - `THRIFTSTACK_BILLING_RAZORPAY_SECRET`
+   - `THRIFTSTACK_BILLING_PAYPAL_SECRET`
+   - `THRIFTSTACK_BILLING_LEMONSQUEEZY_SECRET`
 
 ## DreamHost
 ### GitHub Actions deploy

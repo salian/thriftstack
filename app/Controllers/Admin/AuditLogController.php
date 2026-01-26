@@ -23,7 +23,7 @@ final class AuditLogController
 
         $membershipStmt = $this->pdo->prepare(
             'SELECT workspace_id FROM workspace_memberships
-             WHERE user_id = ? AND role IN ("Workspace Admin", "Workspace Owner")'
+             WHERE user_id = ? AND workspace_role IN ("Workspace Admin", "Workspace Owner")'
         );
         $membershipStmt->execute([$userId]);
         $workspaceIds = array_map('intval', $membershipStmt->fetchAll(PDO::FETCH_COLUMN) ?: []);

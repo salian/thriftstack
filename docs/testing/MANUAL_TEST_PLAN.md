@@ -9,7 +9,7 @@
 - Request a password reset and complete reset flow.
 - Visit `/dashboard` only when authenticated.
 - As Workspace Admin, visit `/workspace-admin/users` and `/workspace-admin/audit`.
-- As Super Admin, visit `/super-admin/settings` and switch tabs for User Roles, Permissions, and Roles.
+- As App Super Admin, visit `/super-admin/settings` and switch tabs for User Roles, Permissions, and Roles.
 - Upload profile image and attachment from `/profile`.
 - Download attachment via `/uploads/attachment/{id}`.
 - Create a workspace, invite a member, accept invite.

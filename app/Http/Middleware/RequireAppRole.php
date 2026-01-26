@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final class RequireRole
+final class RequireAppRole
 {
     private string $role;
 

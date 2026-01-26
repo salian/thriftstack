@@ -5,11 +5,12 @@ Core PHP 8.5 starter focused on logged-in SaaS dashboards, DreamHost shared host
 ## Highlights
 - Front controller at `/public/index.php` with a custom router.
 - Auth: signup/login/logout, email verification, password reset, CSRF.
-- Workspaces: multi-workspace memberships with invites and per-workspace roles.
+- Workspaces: multi-workspace memberships with invites and Workspace Roles.
 - RBAC admin: roles, permissions, user role assignments.
 - Admin panel: users list and audit log.
 - Notifications: in-app history and email digests.
 - Uploads for profile images and attachments in `/storage/uploads`.
+- Billing: plans, subscriptions, and webhook scaffolding for major providers.
 - Single stylesheet at `/public/assets/css/site.css` with enterprise baseline.
 - GitHub Actions deploy with releases and migrations.
 
@@ -21,6 +22,7 @@ Core PHP 8.5 starter focused on logged-in SaaS dashboards, DreamHost shared host
 4. Run migrations: `php scripts/migrate.php`.
 5. Seed dummy data: `php scripts/seed.php`.
 6. Optional: set `THRIFTSTACK_BUILD_ID` to show a build identifier in the footer.
+7. Optional: set `THRIFTSTACK_BILLING_OWNER_ROLES` (comma-separated) to control who can access billing.
 
 ## Tests
 Run the minimal test suite: `php tests/run.php`.

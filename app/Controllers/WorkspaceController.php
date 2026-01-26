@@ -74,22 +74,46 @@ final class WorkspaceController
         }
 
         $userId = (int)($request->session('user')['id'] ?? 0);
+        $returnTo = (string)$request->input('return_to', '/teams');
+        if ($returnTo === '' || !str_starts_with($returnTo, '/teams')) {
+            $returnTo = '/teams';
+        }
         $workspaceId = $this->service->currentWorkspaceId() ?? 0;
         $memberId = (int)$request->input('member_id', 0);
         $role = (string)$request->input('role', 'Workspace Member');
 
         if ($workspaceId <= 0 || $memberId <= 0) {
-            return $this->renderIndex($request, $userId, null, 'Unable to update member role.', null);
+            $_SESSION['flash'] = [
+                'type' => 'error',
+                'message' => 'Unable to update member role.',
+            ];
+            return Response::redirect($returnTo);
         }
 
         $allowedRoles = ['Workspace Owner', 'Workspace Admin', 'Workspace Member'];
         if (!in_array($role, $allowedRoles, true)) {
-            return $this->renderIndex($request, $userId, null, 'Invalid role selected.', null);
+            $_SESSION['flash'] = [
+                'type' => 'error',
+                'message' => 'Invalid role selected.',
+            ];
+            return Response::redirect($returnTo);
+        }
+
+        if ($memberId === $userId && $role !== 'Workspace Owner') {
+            $_SESSION['flash'] = [
+                'type' => 'error',
+                'message' => 'Workspace owners cannot change their own role. Assign another owner first.',
+            ];
+            return Response::redirect($returnTo);
         }
 
         $updated = $this->service->changeMemberRole($workspaceId, $memberId, $role, $userId);
         if (!$updated) {
-            return $this->renderIndex($request, $userId, null, 'Member role update failed.', null);
+            $_SESSION['flash'] = [
+                'type' => 'error',
+                'message' => 'Member role update failed.',
+            ];
+            return Response::redirect($returnTo);
         }
 
         return $this->renderIndex($request, $userId, 'Member role updated.', null, null);

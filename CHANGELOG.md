@@ -86,3 +86,31 @@
 - Make Super Admin default route land on Analytics.
 - Add optional footer build identifier from `THRIFTSTACK_BUILD_ID`.
 - Populate `THRIFTSTACK_BUILD_ID` during deploy from `git describe`.
+- Add billing plans, subscriptions, and webhook scaffolding with provider verification.
+- Add Super Admin tabs for Billing Plans and Payment Gateways.
+- Move billing plan management to Super Admin Billing Plans.
+- Restrict Billing page access to Workspace Owners.
+- Allow configurable billing owner roles via `THRIFTSTACK_BILLING_OWNER_ROLES`.
+- Allow Super Admins to access `/super-admin` routes without workspace membership.
+- Add billing permission to control access to billing pages.
+- Rename global roles to App Super Admin/App Staff/App User across code and data.
+- Rename app role tables to `app_roles`/`user_app_roles` and pivot columns to `app_role_id`.
+- Squash database migrations into a single schema file.
+- Split permissions into app permissions and workspace permissions.
+- Move user role management into the Super Admin usage section.
+- Rename middleware to RequireWorkspaceRole and RequireAppRole for clarity.
+- Add workspace roles/permissions tabs in Super Admin Access Control.
+- Add workspace roles/permissions management for Super Admin settings.
+- Gate billing access with workspace-level billing permission.
+- Add app-level billing.admin permission for plans and payment gateways.
+- Move billing plan create/edit forms into a modal with edit action.
+- Add gateway tabs on Super Admin payment gateways page.
+- Persist payment gateway settings per provider in the database.
+- Add enable/disable control per payment gateway tab.
+- Add disabled gateway banner with enable button per provider.
+- Add setup help panels per payment gateway tab.
+- Show webhook URLs per payment gateway tab.
+- Add copy button for webhook URLs.
+- Label workspace-related roles as Workspace Roles in UI and docs.
+- Rename workspace role column to `workspace_role` in memberships/invites.
+- Rename Global analytics/usage labels to App analytics/usage.

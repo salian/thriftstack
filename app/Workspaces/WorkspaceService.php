@@ -16,7 +16,7 @@ final class WorkspaceService
     public function listForUser(int $userId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT w.id, w.name, w.created_by, w.created_at, m.role,
+            'SELECT w.id, w.name, w.created_by, w.created_at, m.workspace_role AS role,
                 (SELECT COUNT(*) FROM workspace_memberships wm2 WHERE wm2.workspace_id = w.id) AS member_count
              FROM workspaces w
              JOIN workspace_memberships m ON m.workspace_id = w.id
@@ -38,7 +38,7 @@ final class WorkspaceService
         }
 
         if ($role !== '' && $role !== 'all') {
-            $conditions[] = 'm.role = ?';
+            $conditions[] = 'm.workspace_role = ?';
             $params[] = $role;
         }
 
@@ -70,12 +70,12 @@ final class WorkspaceService
         }
 
         if ($role !== '' && $role !== 'all') {
-            $conditions[] = 'm.role = ?';
+            $conditions[] = 'm.workspace_role = ?';
             $params[] = $role;
         }
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
-        $sql = 'SELECT w.id, w.name, w.created_by, w.created_at, m.role,
+        $sql = 'SELECT w.id, w.name, w.created_by, w.created_at, m.workspace_role AS role,
                 (SELECT COUNT(*) FROM workspace_memberships wm2 WHERE wm2.workspace_id = w.id) AS member_count
              FROM workspaces w
              JOIN workspace_memberships m ON m.workspace_id = w.id
@@ -105,7 +105,7 @@ final class WorkspaceService
         $workspaceId = (int)$this->pdo->lastInsertId();
 
         $memberStmt = $this->pdo->prepare(
-            'INSERT INTO workspace_memberships (user_id, workspace_id, role, created_at) VALUES (?, ?, ?, ?)'
+            'INSERT INTO workspace_memberships (user_id, workspace_id, workspace_role, created_at) VALUES (?, ?, ?, ?)'
         );
         $memberStmt->execute([$userId, $workspaceId, 'Workspace Owner', $now]);
 
@@ -190,7 +190,7 @@ final class WorkspaceService
     public function membershipRole(int $userId, int $workspaceId): ?string
     {
         $stmt = $this->pdo->prepare(
-            'SELECT role FROM workspace_memberships WHERE user_id = ? AND workspace_id = ? LIMIT 1'
+            'SELECT workspace_role FROM workspace_memberships WHERE user_id = ? AND workspace_id = ? LIMIT 1'
         );
         $stmt->execute([$userId, $workspaceId]);
         $role = $stmt->fetchColumn();
@@ -198,10 +198,35 @@ final class WorkspaceService
         return $role ? (string)$role : null;
     }
 
+    public function workspacePermissionsForRole(string $role): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT p.name
+             FROM workspace_role_permissions wrp
+             INNER JOIN workspace_permissions p ON p.id = wrp.workspace_permission_id
+             WHERE wrp.workspace_role = ?
+             ORDER BY p.name'
+        );
+        $stmt->execute([$role]);
+
+        return $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+    }
+
+    public function hasWorkspacePermission(int $userId, int $workspaceId, string $permission): bool
+    {
+        $role = $this->membershipRole($userId, $workspaceId);
+        if ($role === null) {
+            return false;
+        }
+
+        $permissions = $this->workspacePermissionsForRole($role);
+        return in_array($permission, $permissions, true);
+    }
+
     public function listMembers(int $workspaceId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT u.id, u.name, u.email, m.role, m.created_at
+            'SELECT u.id, u.name, u.email, m.workspace_role AS role, m.created_at
              FROM workspace_memberships m
              JOIN users u ON u.id = m.user_id
              WHERE m.workspace_id = ?
@@ -243,13 +268,13 @@ final class WorkspaceService
         [$memberWhere, $memberParams] = $this->buildMemberFilters($workspaceId, $search, $role);
         [$inviteWhere, $inviteParams] = $this->buildInviteFilters($workspaceId, $search, $role);
 
-        $sql = 'SELECT u.id AS user_id, u.name, u.email, m.role,
+        $sql = 'SELECT u.id AS user_id, u.name, u.email, m.workspace_role AS role,
                     "Active" AS status, 0 AS is_invite, NULL AS invite_id, m.created_at AS sort_date
                 FROM workspace_memberships m
                 JOIN users u ON u.id = m.user_id
                 ' . $memberWhere . '
                 UNION ALL
-                SELECT NULL AS user_id, NULL AS name, i.email, i.role,
+                SELECT NULL AS user_id, NULL AS name, i.email, i.workspace_role AS role,
                     "Invited" AS status, 1 AS is_invite, i.id AS invite_id, i.created_at AS sort_date
                 FROM workspace_invites i
                 ' . $inviteWhere . '
@@ -276,7 +301,7 @@ final class WorkspaceService
         }
 
         if ($role !== '' && $role !== 'all') {
-            $conditions[] = 'm.role = ?';
+            $conditions[] = 'm.workspace_role = ?';
             $params[] = $role;
         }
 
@@ -294,7 +319,7 @@ final class WorkspaceService
         }
 
         if ($role !== '' && $role !== 'all') {
-            $conditions[] = 'i.role = ?';
+            $conditions[] = 'i.workspace_role = ?';
             $params[] = $role;
         }
 
@@ -303,27 +328,56 @@ final class WorkspaceService
 
     public function changeMemberRole(int $workspaceId, int $memberId, string $role, int $actorId): bool
     {
-        $stmt = $this->pdo->prepare(
-            'UPDATE workspace_memberships SET role = ? WHERE workspace_id = ? AND user_id = ?'
-        );
-        $stmt->execute([$role, $workspaceId, $memberId]);
+        $currentRole = $this->membershipRole($memberId, $workspaceId);
+        if ($currentRole === null) {
+            return false;
+        }
 
-        if ($stmt->rowCount() > 0) {
+        if ($currentRole === $role) {
+            return true;
+        }
+
+        $this->pdo->beginTransaction();
+        try {
+            if ($role === 'Workspace Owner') {
+                $ownerStmt = $this->pdo->prepare(
+                    'SELECT user_id FROM workspace_memberships WHERE workspace_id = ? AND workspace_role = ? LIMIT 1'
+                );
+                $ownerStmt->execute([$workspaceId, 'Workspace Owner']);
+                $currentOwnerId = (int)($ownerStmt->fetchColumn() ?: 0);
+
+                if ($currentOwnerId > 0 && $currentOwnerId !== $memberId) {
+                    $demote = $this->pdo->prepare(
+                        'UPDATE workspace_memberships SET workspace_role = ? WHERE workspace_id = ? AND user_id = ?'
+                    );
+                    $demote->execute(['Workspace Admin', $workspaceId, $currentOwnerId]);
+                }
+            }
+
+            $stmt = $this->pdo->prepare(
+                'UPDATE workspace_memberships SET workspace_role = ? WHERE workspace_id = ? AND user_id = ?'
+            );
+            $stmt->execute([$role, $workspaceId, $memberId]);
+
+            $this->pdo->commit();
             $this->audit->log('workspaces.member.role_changed', $actorId, [
                 'workspace_id' => $workspaceId,
                 'member_id' => $memberId,
                 'role' => $role,
             ]);
             return true;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
         }
-
-        return false;
     }
 
     public function listInvites(int $workspaceId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, email, role, expires_at, created_at, accepted_at
+            'SELECT id, email, workspace_role AS role, expires_at, created_at, accepted_at
              FROM workspace_invites
              WHERE workspace_id = ?
              ORDER BY created_at DESC'
@@ -340,7 +394,7 @@ final class WorkspaceService
         $expires = $now->modify('+7 days');
 
         $stmt = $this->pdo->prepare(
-            'INSERT INTO workspace_invites (workspace_id, email, role, token_hash, expires_at, created_at)
+            'INSERT INTO workspace_invites (workspace_id, email, workspace_role, token_hash, expires_at, created_at)
              VALUES (?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
@@ -364,7 +418,7 @@ final class WorkspaceService
     public function resendInvite(int $inviteId, int $workspaceId, int $actorId): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, email, role, accepted_at FROM workspace_invites WHERE id = ? AND workspace_id = ? LIMIT 1'
+            'SELECT id, email, workspace_role AS role, accepted_at FROM workspace_invites WHERE id = ? AND workspace_id = ? LIMIT 1'
         );
         $stmt->execute([$inviteId, $workspaceId]);
         $invite = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -407,7 +461,7 @@ final class WorkspaceService
     {
         $tokenHash = hash('sha256', $token);
         $stmt = $this->pdo->prepare(
-            'SELECT i.id, i.workspace_id, i.email, i.role, i.expires_at, i.accepted_at, w.name AS workspace_name
+            'SELECT i.id, i.workspace_id, i.email, i.workspace_role AS role, i.expires_at, i.accepted_at, w.name AS workspace_name
              FROM workspace_invites i
              JOIN workspaces w ON w.id = i.workspace_id
              WHERE i.token_hash = ?
@@ -441,7 +495,7 @@ final class WorkspaceService
         $existing = $this->membershipRole($userId, $workspaceId);
         if ($existing === null) {
             $stmt = $this->pdo->prepare(
-                'INSERT INTO workspace_memberships (user_id, workspace_id, role, created_at) VALUES (?, ?, ?, ?)'
+                'INSERT INTO workspace_memberships (user_id, workspace_id, workspace_role, created_at) VALUES (?, ?, ?, ?)'
             );
             $stmt->execute([$userId, $workspaceId, $role, $now]);
         }
@@ -479,6 +533,13 @@ final class WorkspaceService
             return 'My Workspace';
         }
 
-        return $userName . "'s Workspace";
+        $first = $userName;
+        $spacePos = strpos($userName, ' ');
+        if ($spacePos !== false) {
+            $first = substr($userName, 0, $spacePos);
+        }
+        $first = substr($first, 0, 10);
+
+        return $first . "'s Workspace";
     }
 }

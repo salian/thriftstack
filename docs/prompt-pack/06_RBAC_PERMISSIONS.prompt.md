@@ -3,20 +3,22 @@
 Implement RBAC.
 
 ## Requirements
-- Default roles: Super Admin, Staff, User.
-- Permissions table and role_permissions pivot.
-- user_roles pivot.
+- Default roles: App Super Admin, App Staff, App User.
+- App permissions table and app_role_permissions pivot.
+- Workspace permissions table and workspace_role_permissions pivot.
+- user_app_roles pivot.
 - Middleware helpers:
-  - requireRole('Super Admin')
+  - requireRole('App Super Admin')
   - requirePermission('users.view') etc.
-- Add Super Admin-only pages to manage:
-  - roles
-  - permissions
+- Add App Super Admin-only pages to manage:
+  - app_roles
+  - app_permissions
+  - workspace_permissions
   - user role assignments
 
 ## Create/update
 - /app/Auth/Rbac.php
-- /app/Http/Middleware/RequireRole.php
+- /app/Http/Middleware/RequireAppRole.php
 - /app/Http/Middleware/RequirePermission.php
 - /app/Controllers/Admin/RolesController.php
 - /app/Controllers/Admin/PermissionsController.php

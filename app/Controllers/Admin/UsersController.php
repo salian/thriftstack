@@ -72,8 +72,8 @@ final class UsersController
 
             $listSql = 'SELECT u.id, u.name, u.email, u.status, u.created_at,
                     (SELECT r.name
-                     FROM user_roles ur
-                     JOIN roles r ON r.id = ur.role_id
+                     FROM user_app_roles ur
+                     JOIN app_roles r ON r.id = ur.app_role_id
                      WHERE ur.user_id = u.id
                      LIMIT 1) AS role
                 FROM users u

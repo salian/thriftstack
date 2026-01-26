@@ -1,5 +1,5 @@
 <section class="page-section">
-    <h1>Application Super Admin</h1>
+    <h1>App Super Admin</h1>
 
     <?php require __DIR__ . '/../super_nav.php'; ?>
 

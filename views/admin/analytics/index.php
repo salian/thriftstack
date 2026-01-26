@@ -1,9 +1,9 @@
 <section class="page-section">
-    <h1>Application Super Admin</h1>
+    <h1>App Super Admin</h1>
 
     <?php require __DIR__ . '/../super_nav.php'; ?>
 
-    <h2>Global Analytics</h2>
+    <h2>App Analytics</h2>
     <p>Usage, revenue, and churn summaries across all workspaces.</p>
 
     <div class="analytics-kpis">

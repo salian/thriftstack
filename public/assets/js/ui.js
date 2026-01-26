@@ -175,19 +175,17 @@
 
 (() => {
   const openButtons = document.querySelectorAll('[data-modal-open]');
-  if (openButtons.length === 0) {
-    return;
-  }
-
-  openButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      const targetId = button.getAttribute('data-modal-open');
-      const modal = targetId ? document.getElementById(targetId) : null;
-      if (modal && typeof modal.showModal === 'function') {
-        modal.showModal();
-      }
+  if (openButtons.length > 0) {
+    openButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const targetId = button.getAttribute('data-modal-open');
+        const modal = targetId ? document.getElementById(targetId) : null;
+        if (modal && typeof modal.showModal === 'function') {
+          modal.showModal();
+        }
+      });
     });
-  });
+  }
 
   document.addEventListener('click', (event) => {
     const closeButton = event.target.closest('[data-modal-close]');
@@ -314,6 +312,145 @@
         closeActive(true);
       }
     }
+  });
+})();
+
+(() => {
+  const copyButtons = document.querySelectorAll('[data-copy-text]');
+  if (copyButtons.length === 0) {
+    return;
+  }
+
+  copyButtons.forEach((button) => {
+    button.addEventListener('click', async () => {
+      const text = button.getAttribute('data-copy-text') || '';
+      if (!text) {
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        button.classList.add('is-copied');
+        setTimeout(() => button.classList.remove('is-copied'), 1200);
+      } catch (error) {
+        // Ignore clipboard errors silently.
+      }
+    });
+  });
+})();
+
+(() => {
+  const modal = document.getElementById('billing-plan-modal');
+  if (!modal) {
+    return;
+  }
+
+  const form = modal.querySelector('[data-billing-form]');
+  const title = modal.querySelector('[data-billing-title]');
+  const subtitle = modal.querySelector('[data-billing-subtitle]');
+  const submit = modal.querySelector('[data-billing-submit]');
+  const codeWrap = modal.querySelector('[data-billing-code]');
+  const codeInput = modal.querySelector('[data-billing-code-input]');
+  const idInput = modal.querySelector('[data-billing-id]');
+  const nameInput = modal.querySelector('[data-billing-name]');
+  const priceInput = modal.querySelector('[data-billing-price]');
+  const intervalInput = modal.querySelector('[data-billing-interval]');
+  const activeInput = modal.querySelector('[data-billing-active]');
+
+  const resetForm = () => {
+    if (!form) {
+      return;
+    }
+    form.action = '/billing/plans';
+    if (title) {
+      title.textContent = 'Create plan';
+    }
+    if (subtitle) {
+      subtitle.textContent = 'Define pricing and availability for a plan.';
+    }
+    if (submit) {
+      submit.textContent = 'Create plan';
+    }
+    if (idInput) {
+      idInput.value = '';
+    }
+    if (codeWrap) {
+      codeWrap.removeAttribute('hidden');
+    }
+    if (codeInput) {
+      codeInput.value = '';
+      codeInput.disabled = false;
+      codeInput.required = true;
+    }
+    if (nameInput) {
+      nameInput.value = '';
+    }
+    if (priceInput) {
+      priceInput.value = '0';
+    }
+    if (intervalInput) {
+      intervalInput.value = 'monthly';
+    }
+    if (activeInput) {
+      activeInput.checked = true;
+    }
+  };
+
+  const openForCreate = () => {
+    resetForm();
+    modal.showModal();
+  };
+
+  const openForEdit = (button) => {
+    if (!form) {
+      return;
+    }
+    form.action = '/billing/plans/update';
+    if (title) {
+      title.textContent = 'Edit plan';
+    }
+    if (subtitle) {
+      subtitle.textContent = 'Update pricing, interval, and availability.';
+    }
+    if (submit) {
+      submit.textContent = 'Save changes';
+    }
+    if (idInput) {
+      idInput.value = button.dataset.planId || '';
+    }
+    if (codeWrap) {
+      codeWrap.setAttribute('hidden', 'hidden');
+    }
+    if (codeInput) {
+      codeInput.value = button.dataset.planCode || '';
+      codeInput.disabled = true;
+      codeInput.required = false;
+    }
+    if (nameInput) {
+      nameInput.value = button.dataset.planName || '';
+    }
+    if (priceInput) {
+      priceInput.value = button.dataset.planPrice || '0';
+    }
+    if (intervalInput) {
+      intervalInput.value = button.dataset.planInterval || 'monthly';
+    }
+    if (activeInput) {
+      activeInput.checked = (button.dataset.planActive || '0') === '1';
+    }
+    modal.showModal();
+  };
+
+  document.addEventListener('click', (event) => {
+    const trigger = event.target.closest('[data-billing-open]');
+    if (!trigger) {
+      return;
+    }
+    const mode = trigger.getAttribute('data-billing-open');
+    if (mode === 'edit') {
+      openForEdit(trigger);
+      return;
+    }
+    openForCreate();
   });
 })();
 

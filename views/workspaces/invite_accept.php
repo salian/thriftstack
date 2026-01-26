@@ -13,7 +13,7 @@
         <div class="card">
             <h2>Invite details</h2>
             <p><strong>Workspace:</strong> <?= e($invite['workspace_name'] ?? '') ?></p>
-            <p><strong>Role:</strong> <?= e($invite['role'] ?? '') ?></p>
+            <p><strong>Workspace Role:</strong> <?= e($invite['role'] ?? '') ?></p>
             <p><strong>Invited email:</strong> <?= e($invite['email'] ?? '') ?></p>
         </div>
     <?php endif; ?>

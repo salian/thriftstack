@@ -361,8 +361,8 @@ final class AuthController
         $stmt = $this->pdo->prepare(
             'SELECT u.id, u.name, u.email, r.name AS role
              FROM users u
-             LEFT JOIN user_roles ur ON ur.user_id = u.id
-             LEFT JOIN roles r ON r.id = ur.role_id
+             LEFT JOIN user_app_roles ur ON ur.user_id = u.id
+             LEFT JOIN app_roles r ON r.id = ur.app_role_id
              WHERE u.id = ?
              LIMIT 1'
         );
@@ -384,9 +384,9 @@ final class AuthController
     {
         $stmt = $this->pdo->prepare(
             'SELECT DISTINCT p.name
-             FROM permissions p
-             INNER JOIN role_permissions rp ON rp.permission_id = p.id
-             INNER JOIN user_roles ur ON ur.role_id = rp.role_id
+             FROM app_permissions p
+             INNER JOIN app_role_permissions rp ON rp.app_permission_id = p.id
+             INNER JOIN user_app_roles ur ON ur.app_role_id = rp.app_role_id
              WHERE ur.user_id = ?'
         );
         $stmt->execute([$userId]);

@@ -28,6 +28,25 @@
                 $workspaceService = new WorkspaceService(DB::connect($GLOBALS['config'] ?? []));
                 $workspaceList = $workspaceService->listForUser((int)(Auth::user()['id'] ?? 0));
                 $currentWorkspaceId = $workspaceService->currentWorkspaceId();
+                $canAccessBilling = false;
+                $hasWorkspaceBillingPermission = false;
+                $workspacePermissionCache = [];
+
+                foreach ($workspaceList as $workspace) {
+                    $role = (string)($workspace['role'] ?? '');
+                    if ($role === '') {
+                        continue;
+                    }
+                    if (!array_key_exists($role, $workspacePermissionCache)) {
+                        $workspacePermissionCache[$role] = $workspaceService->workspacePermissionsForRole($role);
+                    }
+                    if (in_array('billing.manage', $workspacePermissionCache[$role], true)) {
+                        $hasWorkspaceBillingPermission = true;
+                        break;
+                    }
+                }
+
+                $canAccessBilling = $hasWorkspaceBillingPermission;
                 ?>
                 <div class="sidebar-workspace">
                     <form method="post" action="/teams/switch" class="form-inline">
@@ -98,9 +117,6 @@
                     <?php endif; ?>
                     <nav class="nav" aria-label="Primary">
                         <?php if (Auth::check()) : ?>
-                            <?php if ((Auth::user()['role'] ?? null) === 'Super Admin') : ?>
-                                <a href="/super-admin/analytics">Super Admin</a>
-                            <?php endif; ?>
                             <a href="/notifications" class="nav-icon" aria-label="Notifications">
                                 <i class="fa-solid fa-bell" aria-hidden="true"></i>
                                 <span class="nav-icon-dot" aria-hidden="true"></span>
@@ -132,12 +148,14 @@
                                     <a href="/teams">Teams</a>
                                     <a href="/settings">Settings</a>
                                     <a href="/notifications">Notifications</a>
-                                    <a href="/billing">Billing</a>
+                                    <?php if ($canAccessBilling) : ?>
+                                        <a href="/billing">Billing</a>
+                                    <?php endif; ?>
                                     <a href="/profile">Profile</a>
-                                    <?php if ((Auth::user()['role'] ?? null) === 'Super Admin') : ?>
+                                    <?php if ((Auth::user()['role'] ?? null) === 'App Super Admin') : ?>
                                         <div class="nav-menu-divider"></div>
                                         <a href="/workspace-admin/users">Workspace Admin</a>
-                                        <a href="/super-admin/analytics">Super Admin</a>
+                                        <a href="/super-admin/analytics">App Super Admin</a>
                                     <?php endif; ?>
                                     <div class="nav-menu-divider"></div>
                                     <form method="post" action="/logout" class="nav-menu-form">

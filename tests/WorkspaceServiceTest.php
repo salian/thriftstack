@@ -18,8 +18,8 @@ final class WorkspaceServiceTest extends TestCase
         $pdo->exec('CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT)');
         $pdo->exec('CREATE TABLE audit_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, workspace_id INTEGER, action TEXT, metadata TEXT, created_at TEXT)');
         $pdo->exec('CREATE TABLE workspaces (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, created_by INTEGER, created_at TEXT)');
-        $pdo->exec('CREATE TABLE workspace_memberships (user_id INTEGER, workspace_id INTEGER, role TEXT, created_at TEXT, PRIMARY KEY (user_id, workspace_id))');
-        $pdo->exec('CREATE TABLE workspace_invites (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace_id INTEGER, email TEXT, role TEXT, token_hash TEXT, expires_at TEXT, created_at TEXT, accepted_at TEXT)');
+        $pdo->exec('CREATE TABLE workspace_memberships (user_id INTEGER, workspace_id INTEGER, workspace_role TEXT, created_at TEXT, PRIMARY KEY (user_id, workspace_id))');
+        $pdo->exec('CREATE TABLE workspace_invites (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace_id INTEGER, email TEXT, workspace_role TEXT, token_hash TEXT, expires_at TEXT, created_at TEXT, accepted_at TEXT)');
 
         $pdo->exec("INSERT INTO users (name, email) VALUES ('Owner', 'owner@example.com')");
         $pdo->exec("INSERT INTO users (name, email) VALUES ('Member', 'member@example.com')");

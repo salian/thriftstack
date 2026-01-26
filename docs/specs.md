@@ -78,17 +78,18 @@ Auth system is required and must include:
 
 ### Roles
 Default roles:
-- `Super Admin`
-- `Staff`
-- `User`
+- `App Super Admin`
+- `App Staff`
+- `App User`
 
 ### RBAC
-- Implement **roles + permissions**
+- Implement **app roles + app permissions**
+- Implement **workspace roles + workspace permissions** (scoped to a workspace)
 - Must support:
-  - assigning roles to users
-  - permissions grouped by feature/module
+  - assigning app roles to users
+  - app permissions grouped by feature/module
   - middleware/guards in routing layer
-- Super Admin can manage roles/permissions.
+- App Super Admin can manage app roles/permissions.
 
 ---
 
@@ -168,7 +169,7 @@ Debug mode:
 - In production: hide errors by default
 - Must support config to show errors in production:
   - globally OR
-  - only for Super Admin users
+  - only for App Super Admin users
 
 ---
 
@@ -186,7 +187,7 @@ Must include:
 
 ### Admin panel skeleton
 - Workspace admin: user list + audit log
-- Super admin: roles, permissions, user role assignment
+- Super admin: app roles, app permissions, user role assignment
 - Separate navigation shells for workspace vs super admin
 
 ### File uploads module

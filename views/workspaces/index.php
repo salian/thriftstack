@@ -38,7 +38,7 @@
                         <input type="search" name="workspace_search" value="<?= e($workspaceSearch ?? '') ?>"
                             placeholder="Search workspaces" data-auto-search>
                         <select name="workspace_role" data-auto-submit>
-                            <option value="all" <?= ($workspaceRole ?? 'all') === 'all' ? 'selected' : '' ?>>All roles</option>
+                            <option value="all" <?= ($workspaceRole ?? 'all') === 'all' ? 'selected' : '' ?>>All workspace roles</option>
                             <?php foreach ($roles as $roleOption) : ?>
                                 <option value="<?= e($roleOption) ?>" <?= ($workspaceRole ?? '') === $roleOption ? 'selected' : '' ?>>
                                     <?= e($roleOption) ?>
@@ -52,7 +52,7 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Members</th>
-                                <th>Role</th>
+                                <th>Workspace Role</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -148,7 +148,7 @@
                             <input type="search" name="member_search" value="<?= e($memberSearch ?? '') ?>"
                                 placeholder="Search by name or email" data-auto-search>
                             <select name="member_role" data-auto-submit>
-                                <option value="all" <?= ($memberRole ?? 'all') === 'all' ? 'selected' : '' ?>>All roles</option>
+                                <option value="all" <?= ($memberRole ?? 'all') === 'all' ? 'selected' : '' ?>>All workspace roles</option>
                                 <?php foreach ($roles as $roleOption) : ?>
                                     <option value="<?= e($roleOption) ?>" <?= ($memberRole ?? '') === $roleOption ? 'selected' : '' ?>>
                                         <?= e($roleOption) ?>
@@ -162,7 +162,7 @@
                                 <tr>
                                     <th>Name</th>
                                     <th>Email</th>
-                                    <th>Role</th>
+                                    <th>Workspace Role</th>
                                     <th>Status</th>
                                     <?php if (!empty($canManage)) : ?>
                                         <th>Update</th>
@@ -195,6 +195,7 @@
                                                     <form method="post" action="/teams/members/role" class="form-inline">
                                                         <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
                                                         <input type="hidden" name="member_id" value="<?= e((string)$entry['user_id']) ?>">
+                                                        <input type="hidden" name="return_to" value="<?= e($_SERVER['REQUEST_URI'] ?? '/teams') ?>">
                                                         <select name="role">
                                                             <?php foreach ($roles as $roleOption) : ?>
                                                                 <option value="<?= e($roleOption) ?>" <?= ($roleOption === ($entry['role'] ?? '')) ? 'selected' : '' ?>>
@@ -266,7 +267,7 @@
                         <input type="email" name="email" required>
                     </label>
                     <label>
-                        <span>Role</span>
+                        <span>Workspace Role</span>
                         <select name="role">
                             <?php foreach ($roles as $roleOption) : ?>
                                 <option value="<?= e($roleOption) ?>"><?= e($roleOption) ?></option>
@@ -285,7 +286,7 @@
                         <thead>
                             <tr>
                                 <th>Email</th>
-                                <th>Role</th>
+                                <th>Workspace Role</th>
                                 <th>Status</th>
                                 <th>Expires</th>
                                 <?php if (!empty($canManage)) : ?>

@@ -93,6 +93,6 @@ final class Bootstrap
         $user = $_SESSION['user'];
         $role = is_array($user) ? ($user['role'] ?? null) : null;
 
-        return $role === 'Super Admin' || ($user['is_admin'] ?? false) === true;
+        return $role === 'App Super Admin' || ($user['is_admin'] ?? false) === true;
     }
 }

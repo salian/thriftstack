@@ -65,4 +65,25 @@ return [
     'auth' => [
         'require_verified' => filter_var($env('THRIFTSTACK_AUTH_REQUIRE_VERIFIED', 'true'), FILTER_VALIDATE_BOOLEAN),
     ],
+    'billing' => [
+        'trial_days' => (int)$env('THRIFTSTACK_BILLING_TRIAL_DAYS', '14'),
+        'owner_roles' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string)$env('THRIFTSTACK_BILLING_OWNER_ROLES', 'Workspace Owner,Owner'))
+        ))),
+        'providers' => [
+            'stripe' => [
+                'webhook_secret' => $env('THRIFTSTACK_BILLING_STRIPE_SECRET', ''),
+            ],
+            'razorpay' => [
+                'webhook_secret' => $env('THRIFTSTACK_BILLING_RAZORPAY_SECRET', ''),
+            ],
+            'paypal' => [
+                'webhook_secret' => $env('THRIFTSTACK_BILLING_PAYPAL_SECRET', ''),
+            ],
+            'lemonsqueezy' => [
+                'webhook_secret' => $env('THRIFTSTACK_BILLING_LEMONSQUEEZY_SECRET', ''),
+            ],
+        ],
+    ],
 ];

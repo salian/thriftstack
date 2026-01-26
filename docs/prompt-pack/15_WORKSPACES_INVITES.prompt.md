@@ -4,7 +4,7 @@ Add workspaces (organizations) with per-workspace roles and invite flow.
 
 ## Requirements
 - Workspaces are named containers; users can belong to multiple workspaces.
-- Per-workspace roles: Workspace Owner, Workspace Admin, Workspace Member.
+- Workspace Roles: Workspace Owner, Workspace Admin, Workspace Member.
 - Invite flow:
 - Workspace Admin/Workspace Owner can invite by email.
   - Token stored hashed in DB with expiry.
@@ -17,7 +17,7 @@ Add workspaces (organizations) with per-workspace roles and invite flow.
 - /app/Workspaces/WorkspaceService.php
 - /app/Controllers/WorkspaceController.php
 - /app/Controllers/WorkspaceInviteController.php
-- /app/Http/Middleware/RequireWorkspace.php
+- /app/Http/Middleware/RequireWorkspaceRole.php
 - /app/Database/Migrations/0003_workspaces.php
 - /views/workspaces/*.php
 - /routes/web.php

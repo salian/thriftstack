@@ -34,27 +34,27 @@ final class UserRolesController
             $newRole = $roles[$roleId]['name'] ?? null;
             $currentRole = $this->rbac->roleForUser($userId);
 
-            if ($currentRole === 'Super Admin' && $newRole !== 'Super Admin') {
+            if ($currentRole === 'App Super Admin' && $newRole !== 'App Super Admin') {
                 $countStmt = $this->pdo->prepare(
                     'SELECT COUNT(DISTINCT u.id)
                      FROM users u
-                     INNER JOIN user_roles ur ON ur.user_id = u.id
-                     INNER JOIN roles r ON r.id = ur.role_id
+                     INNER JOIN user_app_roles ur ON ur.user_id = u.id
+                     INNER JOIN app_roles r ON r.id = ur.app_role_id
                      WHERE r.name = ?'
                 );
-                $countStmt->execute(['Super Admin']);
+                $countStmt->execute(['App Super Admin']);
                 $superAdminCount = (int)$countStmt->fetchColumn();
 
                 if ($superAdminCount <= 1) {
-                    $_SESSION['flash']['message'] = 'At least one Super Admin is required.';
-                    return Response::redirect('/super-admin/settings?tab=user-roles');
+                    $_SESSION['flash']['message'] = 'At least one App Super Admin is required.';
+                    return Response::redirect('/super-admin/usage');
                 }
             }
 
             $this->rbac->assignRole($userId, $roleId);
         }
 
-        return Response::redirect('/super-admin/settings?tab=user-roles');
+        return Response::redirect('/super-admin/usage');
     }
 
     public function updateStatus(Request $request): Response
@@ -65,11 +65,11 @@ final class UserRolesController
 
         $userId = (int)$request->input('user_id', 0);
         $status = (string)$request->input('status', '');
-        $redirect = (string)$request->input('redirect', '/super-admin/settings?tab=user-roles');
+        $redirect = (string)$request->input('redirect', '/super-admin/usage');
         $actorId = (int)($request->session('user')['id'] ?? 0);
 
-        if (!str_starts_with($redirect, '/super-admin/settings')) {
-            $redirect = '/super-admin/settings?tab=user-roles';
+        if (!str_starts_with($redirect, '/super-admin/usage')) {
+            $redirect = '/super-admin/usage';
         }
 
         if ($userId <= 0 || !in_array($status, ['active', 'inactive'], true)) {

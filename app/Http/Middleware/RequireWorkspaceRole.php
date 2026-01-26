@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final class RequireWorkspace
+final class RequireWorkspaceRole
 {
     private PDO $pdo;
     private ?string $role;
@@ -19,6 +19,10 @@ final class RequireWorkspace
             return Response::redirect('/login');
         }
 
+        if ((Auth::user()['role'] ?? null) === 'App Super Admin' && str_starts_with($request->path(), '/super-admin')) {
+            return $next($request);
+        }
+
         $userId = (int)(Auth::user()['id'] ?? 0);
         $service = new WorkspaceService($this->pdo, new Audit($this->pdo));
         $workspace = $service->ensureCurrentWorkspace($userId);
@@ -32,6 +36,12 @@ final class RequireWorkspace
         if ($role === null) {
             return Response::redirect('/teams');
         }
+
+        $permissions = $service->workspacePermissionsForRole($role);
+        if (!isset($_SESSION['user']) || !is_array($_SESSION['user'])) {
+            $_SESSION['user'] = [];
+        }
+        $_SESSION['user']['workspace_permissions'] = $permissions;
 
         if ($this->role !== null && !$service->isRoleAtLeast($role, $this->role)) {
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
