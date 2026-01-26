@@ -66,3 +66,5 @@
 - Rename Workspaces page to Teams and move it to `/teams`.
 - Add resend invite action for pending team invites.
 - Add in-app and email notifications with batched digest dispatch.
+- Add date range and action filters for audit logs.
+- Add pagination to the audit log table.

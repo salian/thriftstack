@@ -403,6 +403,7 @@ h2 {
     justify-content: center;
     gap: 6px;
     padding: 10px 18px;
+    min-height: 44px;
     border-radius: var(--button-radius);
     background: var(--primary);
     color: #fff;
@@ -418,13 +419,42 @@ h2 {
 
 .button-ghost {
     background: transparent;
-    color: #dfe6f3;
-    border: 1px solid rgba(223, 230, 243, 0.4);
+    color: var(--muted);
+    border: 1px solid var(--border);
 }
 
 .button-ghost:hover {
+    color: var(--text);
+    border-color: var(--primary);
+    background: var(--surface-muted);
+}
+
+.button-ghost:disabled,
+.button-ghost[disabled] {
+    color: var(--muted);
+    border-color: var(--border);
+    background: transparent;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+[data-theme="dark"] .button-ghost {
+    color: #dfe6f3;
+    border-color: rgba(223, 230, 243, 0.4);
+}
+
+[data-theme="dark"] .button-ghost:hover {
     color: #ffffff;
     border-color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .button-ghost:disabled,
+[data-theme="dark"] .button-ghost[disabled] {
+    color: rgba(223, 230, 243, 0.6);
+    border-color: rgba(223, 230, 243, 0.3);
+    background: transparent;
+    opacity: 0.6;
 }
 
 .badge {
@@ -468,6 +498,24 @@ ul {
     background: #fff;
 }
 
+.form input[type="date"],
+input[type="date"] {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 1rem;
+    background: var(--surface);
+    color: var(--text);
+    height: 44px;
+    line-height: 1.4;
+}
+
+.form input[type="date"]:focus,
+input[type="date"]:focus {
+    outline: 2px solid rgba(43, 90, 149, 0.3);
+    border-color: rgba(43, 90, 149, 0.6);
+}
+
 .form select,
 select {
     appearance: none;
@@ -500,7 +548,15 @@ select {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    align-items: center;
+    align-items: flex-end;
+}
+
+.field-inline {
+    display: grid;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--muted);
 }
 
 .form-inline select {
@@ -675,6 +731,13 @@ input[type="file"]::-webkit-file-upload-button:hover {
     background: var(--surface-muted);
     color: var(--muted);
     cursor: not-allowed;
+    border-color: var(--border);
+}
+
+.pagination-link.is-disabled {
+    pointer-events: none;
+    background: var(--surface-muted);
+    color: var(--muted);
     border-color: var(--border);
 }
 
@@ -957,8 +1020,8 @@ input[type="file"]::-webkit-file-upload-button:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: var(--button-radius);
     border: 1px solid var(--border);
     background: var(--surface);
