@@ -92,7 +92,7 @@ return static function (PDO $pdo): void {
         );
 
         $pdo->exec(
-            'CREATE TABLE IF NOT EXISTS workspace_memberships (
+            "CREATE TABLE IF NOT EXISTS workspace_memberships (
                 user_id INTEGER NOT NULL,
                 workspace_id INTEGER NOT NULL,
                 workspace_role TEXT NOT NULL CHECK (workspace_role IN ('Workspace Owner', 'Workspace Admin', 'Workspace Member')),
@@ -100,11 +100,11 @@ return static function (PDO $pdo): void {
                 PRIMARY KEY (user_id, workspace_id),
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
                 FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
-            );'
+            );"
         );
 
         $pdo->exec(
-            'CREATE TABLE IF NOT EXISTS workspace_invites (
+            "CREATE TABLE IF NOT EXISTS workspace_invites (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 workspace_id INTEGER NOT NULL,
                 email TEXT NOT NULL,
@@ -114,7 +114,7 @@ return static function (PDO $pdo): void {
                 created_at TEXT NOT NULL,
                 accepted_at TEXT NULL,
                 FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
-            );'
+            );"
         );
 
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_workspace_memberships_role ON workspace_memberships (workspace_role);');
