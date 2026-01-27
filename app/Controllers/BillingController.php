@@ -117,7 +117,7 @@ final class BillingController
         $code = trim((string)$request->input('code', ''));
         $name = trim((string)$request->input('name', ''));
         $price = (int)$request->input('price_cents', 0);
-        $interval = trim((string)$request->input('interval', 'monthly'));
+        $duration = trim((string)$request->input('duration', 'monthly'));
         $isActive = $request->input('is_active') === '1';
 
         if ($code === '' || $name === '') {
@@ -125,7 +125,7 @@ final class BillingController
             return Response::redirect('/billing');
         }
 
-        $this->billing->createPlan($code, $name, $price, $interval, $isActive);
+        $this->billing->createPlan($code, $name, $price, $duration, $isActive);
         $_SESSION['flash']['message'] = 'Plan created.';
 
         return Response::redirect('/billing');
@@ -144,7 +144,7 @@ final class BillingController
         $planId = (int)$request->input('plan_id', 0);
         $name = trim((string)$request->input('name', ''));
         $price = (int)$request->input('price_cents', 0);
-        $interval = trim((string)$request->input('interval', 'monthly'));
+        $duration = trim((string)$request->input('duration', 'monthly'));
         $isActive = $request->input('is_active') === '1';
 
         if ($planId <= 0 || $name === '') {
@@ -152,7 +152,7 @@ final class BillingController
             return Response::redirect('/billing');
         }
 
-        $this->billing->updatePlan($planId, $name, $price, $interval, $isActive);
+        $this->billing->updatePlan($planId, $name, $price, $duration, $isActive);
         $_SESSION['flash']['message'] = 'Plan updated.';
 
         return Response::redirect('/billing');

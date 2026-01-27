@@ -48,7 +48,7 @@
                         <div class="plan-card">
                             <h3><?= e($plan['name']) ?></h3>
                             <p class="plan-price">$<?= number_format(((int)$plan['price_cents']) / 100, 2) ?></p>
-                            <p class="plan-interval"><?= e($plan['interval']) ?></p>
+                            <p class="plan-interval"><?= e($plan['duration']) ?></p>
                             <?php if ($isCurrent) : ?>
                                 <span class="badge badge-primary">Current plan</span>
                             <?php else : ?>

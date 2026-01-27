@@ -70,7 +70,7 @@ final class Seeder
         ];
 
         $planStmt = $this->pdo->prepare(
-            $this->insertIgnore . ' INTO plans (code, name, price_cents, `interval`, is_active) VALUES (?, ?, ?, ?, ?)'
+            $this->insertIgnore . ' INTO plans (code, name, price_cents, duration, is_active) VALUES (?, ?, ?, ?, ?)'
         );
         foreach ($plans as [$code, $name, $price, $interval, $active]) {
             $planStmt->execute([$code, $name, $price, $interval, $active]);

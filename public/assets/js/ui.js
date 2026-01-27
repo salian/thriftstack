@@ -353,7 +353,7 @@
   const idInput = modal.querySelector('[data-billing-id]');
   const nameInput = modal.querySelector('[data-billing-name]');
   const priceInput = modal.querySelector('[data-billing-price]');
-  const intervalInput = modal.querySelector('[data-billing-interval]');
+  const durationInput = modal.querySelector('[data-billing-duration]');
   const activeInput = modal.querySelector('[data-billing-active]');
 
   const resetForm = () => {
@@ -387,8 +387,8 @@
     if (priceInput) {
       priceInput.value = '0';
     }
-    if (intervalInput) {
-      intervalInput.value = 'monthly';
+    if (durationInput) {
+      durationInput.value = 'monthly';
     }
     if (activeInput) {
       activeInput.checked = true;
@@ -409,7 +409,7 @@
       title.textContent = 'Edit plan';
     }
     if (subtitle) {
-      subtitle.textContent = 'Update pricing, interval, and availability.';
+      subtitle.textContent = 'Update pricing, duration, and availability.';
     }
     if (submit) {
       submit.textContent = 'Save changes';
@@ -431,8 +431,8 @@
     if (priceInput) {
       priceInput.value = button.dataset.planPrice || '0';
     }
-    if (intervalInput) {
-      intervalInput.value = button.dataset.planInterval || 'monthly';
+    if (durationInput) {
+      durationInput.value = button.dataset.planDuration || 'monthly';
     }
     if (activeInput) {
       activeInput.checked = (button.dataset.planActive || '0') === '1';

@@ -21,7 +21,7 @@
                         <th>Code</th>
                         <th>Name</th>
                         <th>Price (cents)</th>
-                        <th>Interval</th>
+                        <th>Duration</th>
                         <th>Active</th>
                         <th>Action</th>
                     </tr>
@@ -32,7 +32,7 @@
                             <td><?= e($plan['code'] ?? '') ?></td>
                             <td><?= e($plan['name'] ?? '') ?></td>
                             <td><?= e((string)($plan['price_cents'] ?? 0)) ?></td>
-                            <td><?= e($plan['interval'] ?? '') ?></td>
+                            <td><?= e($plan['duration'] ?? '') ?></td>
                             <td><?= (int)($plan['is_active'] ?? 0) === 1 ? 'Yes' : 'No' ?></td>
                             <td>
                                 <button
@@ -43,7 +43,7 @@
                                     data-plan-code="<?= e($plan['code'] ?? '') ?>"
                                     data-plan-name="<?= e($plan['name'] ?? '') ?>"
                                     data-plan-price="<?= e((string)($plan['price_cents'] ?? 0)) ?>"
-                                    data-plan-interval="<?= e($plan['interval'] ?? '') ?>"
+                                    data-plan-duration="<?= e($plan['duration'] ?? '') ?>"
                                     data-plan-active="<?= (int)($plan['is_active'] ?? 0) === 1 ? '1' : '0' ?>"
                                 >
                                     Edit
@@ -85,8 +85,8 @@
                     <input type="number" name="price_cents" min="0" step="1" value="0" data-billing-price>
                 </label>
                 <label>
-                    <span>Interval</span>
-                    <input type="text" name="interval" value="monthly" required data-billing-interval>
+                    <span>Duration</span>
+                    <input type="text" name="duration" value="monthly" required data-billing-duration>
                 </label>
                 <label class="checkbox">
                     <input type="checkbox" name="is_active" value="1" data-billing-active>
