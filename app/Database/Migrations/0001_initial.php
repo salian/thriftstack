@@ -131,12 +131,12 @@ return static function (PDO $pdo): void {
         );
 
         $pdo->exec(
-            'CREATE TABLE IF NOT EXISTS workspace_role_permissions (
+            "CREATE TABLE IF NOT EXISTS workspace_role_permissions (
                 workspace_role TEXT NOT NULL CHECK (workspace_role IN ('Workspace Owner', 'Workspace Admin', 'Workspace Member')),
                 workspace_permission_id INTEGER NOT NULL,
                 PRIMARY KEY (workspace_role, workspace_permission_id),
                 FOREIGN KEY (workspace_permission_id) REFERENCES workspace_permissions(id) ON DELETE CASCADE
-            );'
+            );"
         );
 
         $pdo->exec(
@@ -438,7 +438,7 @@ return static function (PDO $pdo): void {
     );
 
     $pdo->exec(
-        'CREATE TABLE IF NOT EXISTS workspace_memberships (
+        "CREATE TABLE IF NOT EXISTS workspace_memberships (
             user_id BIGINT UNSIGNED NOT NULL,
             workspace_id BIGINT UNSIGNED NOT NULL,
             workspace_role ENUM('Workspace Owner','Workspace Admin','Workspace Member') NOT NULL,
@@ -447,11 +447,11 @@ return static function (PDO $pdo): void {
             INDEX idx_workspace_members_role (workspace_role),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
     );
 
     $pdo->exec(
-        'CREATE TABLE IF NOT EXISTS workspace_invites (
+        "CREATE TABLE IF NOT EXISTS workspace_invites (
             id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             workspace_id BIGINT UNSIGNED NOT NULL,
             email VARCHAR(190) NOT NULL,
@@ -463,7 +463,7 @@ return static function (PDO $pdo): void {
             INDEX idx_workspace_invites_email (email),
             INDEX idx_workspace_invites_expires (expires_at),
             FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
     );
 
     $pdo->exec(
@@ -476,12 +476,12 @@ return static function (PDO $pdo): void {
     );
 
     $pdo->exec(
-        'CREATE TABLE IF NOT EXISTS workspace_role_permissions (
+        "CREATE TABLE IF NOT EXISTS workspace_role_permissions (
             workspace_role ENUM('Workspace Owner','Workspace Admin','Workspace Member') NOT NULL,
             workspace_permission_id BIGINT UNSIGNED NOT NULL,
             PRIMARY KEY (workspace_role, workspace_permission_id),
             FOREIGN KEY (workspace_permission_id) REFERENCES workspace_permissions(id) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
     );
 
     $pdo->exec(
@@ -524,12 +524,12 @@ return static function (PDO $pdo): void {
     );
 
     $pdo->exec(
-        'CREATE TABLE IF NOT EXISTS plans (
+        "CREATE TABLE IF NOT EXISTS plans (
             id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             code VARCHAR(60) NOT NULL UNIQUE,
             name VARCHAR(120) NOT NULL,
             price_cents INT NOT NULL DEFAULT 0,
-            currency VARCHAR(10) NOT NULL DEFAULT "USD",
+            currency VARCHAR(10) NOT NULL DEFAULT \"USD\",
             duration VARCHAR(20) NOT NULL,
             plan_type ENUM('subscription','topup') NOT NULL DEFAULT 'subscription',
             ai_credits INT NOT NULL DEFAULT 0,
@@ -543,7 +543,7 @@ return static function (PDO $pdo): void {
             dodo_price_id VARCHAR(120) NULL,
             paddle_price_id VARCHAR(120) NULL,
             INDEX idx_plans_active (is_active)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
     );
 
     $pdo->exec(
