@@ -18,35 +18,6 @@ final class Seeder
     {
         $now = date('Y-m-d H:i:s');
 
-        $roles = [
-            ['App Super Admin', 'Full system access'],
-            ['App Staff', 'Internal staff access'],
-            ['App User', 'Standard user access'],
-        ];
-
-        $roleStmt = $this->pdo->prepare(
-            $this->insertIgnore . ' INTO app_roles (name, description, created_at) VALUES (?, ?, ?)'
-        );
-        foreach ($roles as [$name, $description]) {
-            $roleStmt->execute([$name, $description, $now]);
-        }
-
-        $permissions = [
-            ['admin.view', 'View admin area'],
-            ['users.manage', 'Manage users'],
-            ['roles.manage', 'Manage roles'],
-            ['audit.view', 'View audit logs'],
-            ['uploads.manage', 'Manage uploads'],
-            ['billing.admin', 'Manage billing plans and payment gateways'],
-        ];
-
-        $permStmt = $this->pdo->prepare(
-            $this->insertIgnore . ' INTO app_permissions (name, description, created_at) VALUES (?, ?, ?)'
-        );
-        foreach ($permissions as [$name, $description]) {
-            $permStmt->execute([$name, $description, $now]);
-        }
-
         $workspacePermissions = [
             ['workspace.manage', 'Manage workspace settings'],
             ['members.manage', 'Manage workspace members'],
@@ -63,25 +34,26 @@ final class Seeder
         }
 
         $plans = [
-            ['free', 'Free', 0, 'monthly', 1],
-            ['trial', 'Trial', 0, 'trial', 1],
-            ['pro', 'Pro', 2900, 'monthly', 1],
-            ['business', 'Business', 9900, 'monthly', 1],
+            ['free', 'Free', 0, 'monthly', 'subscription', 10, 1],
+            ['trial', 'Trial', 0, 'trial', 'subscription', 10, 1],
+            ['pro', 'Pro', 2900, 'monthly', 'subscription', 100, 1],
+            ['business', 'Business', 9900, 'monthly', 'subscription', 350, 1],
+            ['topup-500', 'AI Credits 500', 500, 'one_time', 'topup', 500, 1],
+            ['topup-2000', 'AI Credits 2000', 1800, 'one_time', 'topup', 2000, 1],
         ];
 
         $planStmt = $this->pdo->prepare(
-            $this->insertIgnore . ' INTO plans (code, name, price_cents, currency, duration, is_active, is_grandfathered, disabled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            $this->insertIgnore . ' INTO plans (code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
-        foreach ($plans as [$code, $name, $price, $interval, $active]) {
-            $planStmt->execute([$code, $name, $price, 'USD', $interval, $active, 0, null]);
+        foreach ($plans as [$code, $name, $price, $interval, $type, $credits, $active]) {
+            $planStmt->execute([$code, $name, $price, 'USD', $interval, $type, $credits, $active, 0, null]);
         }
 
         $this->seedAppSettings($now);
         $this->seedPaymentGatewaySettings($now);
 
         $adminId = $this->ensureDummyUser($now);
-        $this->assignRole($adminId, 'App Super Admin');
-        $this->grantAllPermissionsToRole('App Super Admin');
+        $this->grantSystemAccess($adminId);
         $this->seedWorkspaceRolePermissions();
     }
 
@@ -98,8 +70,8 @@ final class Seeder
 
         $hash = password_hash('Ma3GqqHVkb', PASSWORD_BCRYPT);
         $insert = $this->pdo->prepare(
-            'INSERT INTO users (name, email, password_hash, email_verified_at, status, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO users (name, email, password_hash, email_verified_at, status, is_system_admin, is_system_staff, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $insert->execute([
             'Demo User',
@@ -107,6 +79,8 @@ final class Seeder
             $hash,
             $now,
             'active',
+            1,
+            1,
             $now,
             $now,
         ]);
@@ -114,34 +88,10 @@ final class Seeder
         return (int)$this->pdo->lastInsertId();
     }
 
-    private function assignRole(int $userId, string $roleName): void
+    private function grantSystemAccess(int $userId): void
     {
-        $roleId = $this->fetchId('app_roles', $roleName);
-        if ($roleId === null) {
-            return;
-        }
-
-        $stmt = $this->pdo->prepare(
-            $this->insertIgnore . ' INTO user_app_roles (user_id, app_role_id) VALUES (?, ?)'
-        );
-        $stmt->execute([$userId, $roleId]);
-    }
-
-    private function grantAllPermissionsToRole(string $roleName): void
-    {
-        $roleId = $this->fetchId('app_roles', $roleName);
-        if ($roleId === null) {
-            return;
-        }
-
-        $perms = $this->pdo->query('SELECT id FROM app_permissions')->fetchAll(PDO::FETCH_COLUMN);
-        $stmt = $this->pdo->prepare(
-            $this->insertIgnore . ' INTO app_role_permissions (app_role_id, app_permission_id) VALUES (?, ?)'
-        );
-
-        foreach ($perms as $permissionId) {
-            $stmt->execute([$roleId, (int)$permissionId]);
-        }
+        $stmt = $this->pdo->prepare('UPDATE users SET is_system_admin = 1, is_system_staff = 1 WHERE id = ?');
+        $stmt->execute([$userId]);
     }
 
     private function seedWorkspaceRolePermissions(): void

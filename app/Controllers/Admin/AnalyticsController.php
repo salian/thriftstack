@@ -6,6 +6,9 @@ final class AnalyticsController
 {
     public function index(Request $request): Response
     {
+        $user = $request->session('user');
+        $isAdmin = is_array($user) ? (int)($user['is_system_admin'] ?? 0) === 1 : false;
+
         $kpis = [
             ['label' => 'Monthly Active Users', 'value' => '1,284', 'delta' => '+8%'],
             ['label' => 'Active Workspaces', 'value' => '214', 'delta' => '+3%'],
@@ -28,6 +31,15 @@ final class AnalyticsController
             ],
         ];
 
+        if (!$isAdmin) {
+            $kpis = array_values(array_filter($kpis, static function (array $kpi): bool {
+                return $kpi['label'] !== 'MRR';
+            }));
+            $charts = array_values(array_filter($charts, static function (array $chart): bool {
+                return $chart['title'] !== 'Revenue by plan';
+            }));
+        }
+
         $futureSources = [
             'Billing providers (Stripe, Razorpay, PayPal, Lemon Squeezy)',
             'Workspace activity events and feature usage',
@@ -39,6 +51,7 @@ final class AnalyticsController
             'kpis' => $kpis,
             'charts' => $charts,
             'futureSources' => $futureSources,
+            'showRevenue' => $isAdmin,
         ]));
     }
 }

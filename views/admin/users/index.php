@@ -9,7 +9,7 @@
         <form method="get" action="/workspace-admin/users" class="form-inline table-toolbar" data-auto-search-form>
             <input type="search" name="search" value="<?= e($search ?? '') ?>" placeholder="Search by name or email" data-auto-search>
             <select name="workspace_id" data-auto-submit>
-                <option value="all" <?= ($selectedWorkspace ?? 'all') === 'all' ? 'selected' : '' ?>>All Workspaces</option>
+                <option value="all" <?= ($selectedWorkspace ?? 'all') === 'all' ? 'selected' : '' ?>>All My Workspaces</option>
                 <?php foreach ($workspaces as $workspace) : ?>
                     <option value="<?= e((string)$workspace['id']) ?>" <?= ($selectedWorkspace ?? '') == $workspace['id'] ? 'selected' : '' ?>>
                         <?= e($workspace['name'] ?? '') ?>
@@ -22,8 +22,8 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
+                    <th>Workspace</th>
+                    <th>Workspace Role</th>
                     <th>Status</th>
                     <th>Joined</th>
                 </tr>
@@ -37,8 +37,8 @@
                     <?php foreach ($users as $user) : ?>
                         <tr>
                             <td><?= e($user['name']) ?></td>
-                            <td><?= e($user['email']) ?></td>
-                            <td><?= e($user['role'] ?? 'Unassigned') ?></td>
+                            <td><?= e($user['workspace_names'] ?? '') ?></td>
+                            <td><?= e($user['workspace_roles'] ?? '') ?></td>
                             <td><?= e($user['status'] ?? '') ?></td>
                             <td><?= e($user['created_at'] ?? '') ?></td>
                         </tr>

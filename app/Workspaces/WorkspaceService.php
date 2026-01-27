@@ -16,7 +16,7 @@ final class WorkspaceService
     public function listForUser(int $userId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT w.id, w.name, w.created_by, w.created_at, m.workspace_role AS role,
+            'SELECT w.id, w.name, w.created_by, w.created_at, w.ai_credit_balance, m.workspace_role AS role,
                 (SELECT COUNT(*) FROM workspace_memberships wm2 WHERE wm2.workspace_id = w.id) AS member_count
              FROM workspaces w
              JOIN workspace_memberships m ON m.workspace_id = w.id
@@ -169,7 +169,7 @@ final class WorkspaceService
 
     public function getWorkspace(int $workspaceId): ?array
     {
-        $stmt = $this->pdo->prepare('SELECT id, name, created_by, created_at FROM workspaces WHERE id = ?');
+        $stmt = $this->pdo->prepare('SELECT id, name, created_by, created_at, ai_credit_balance FROM workspaces WHERE id = ?');
         $stmt->execute([$workspaceId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 

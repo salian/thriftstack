@@ -2,22 +2,14 @@
 
 declare(strict_types=1);
 
-final class RoleRequired
+final class RequireSystemAdmin
 {
-    /** @var string[] */
-    private array $roles;
-
-    public function __construct(array $roles)
-    {
-        $this->roles = $roles;
-    }
-
     public function handle(Request $request, callable $next)
     {
         $user = $request->session('user');
-        $role = is_array($user) ? ($user['role'] ?? null) : null;
+        $isAdmin = is_array($user) ? (int)($user['is_system_admin'] ?? 0) === 1 : false;
 
-        if ($role === null || !in_array($role, $this->roles, true)) {
+        if (!$isAdmin) {
             $body = View::render('403', ['title' => 'Forbidden']);
             return Response::forbidden($body);
         }

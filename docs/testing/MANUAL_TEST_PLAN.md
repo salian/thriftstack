@@ -9,14 +9,14 @@
 - Request a password reset and complete reset flow.
 - Visit `/dashboard` only when authenticated.
 - As Workspace Admin, visit `/workspace-admin/users` and `/workspace-admin/audit`.
-- As App Super Admin, visit `/super-admin/settings` and switch tabs for User Roles, Permissions, and Roles.
+- As System Admin, visit `/super-admin/settings` and switch tabs for Workspace Roles and Workspace Permissions.
 - Upload profile image and attachment from `/profile`.
 - Download attachment via `/uploads/attachment/{id}`.
 - Create a workspace, invite a member, accept invite.
 - Switch workspace context and verify role guard.
 - Update profile name from `/profile` and notification preferences from `/settings`.
 - Send an in-app notification and view `/notifications`.
-- Queue a batched notification and run `php scripts/notifications_dispatch.php`.
+- Queue a batched notification and run `php scripts/daily.php`.
 
 ## Upcoming features (planned)
 - Update user settings and preference flags.

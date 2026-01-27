@@ -13,6 +13,8 @@
     const subscriptionId = <?= json_encode((string)($subscriptionId ?? 0)) ?>;
     const changeId = <?= json_encode((string)($changeId ?? 0)) ?>;
     const planId = <?= json_encode((string)($planId ?? 0)) ?>;
+    const purchaseId = <?= json_encode((string)($purchaseId ?? 0)) ?>;
+    const mode = <?= json_encode((string)($mode ?? 'subscription')) ?>;
     const successUrl = <?= json_encode($successUrl ?? '') ?>;
     const cancelUrl = <?= json_encode($cancelUrl ?? '') ?>;
     const customerEmail = <?= json_encode($customerEmail ?? '') ?>;
@@ -28,7 +30,9 @@
         customData: {
           subscription_id: subscriptionId,
           change_id: changeId,
-          plan_id: planId
+          plan_id: planId,
+          purchase_id: purchaseId,
+          mode: mode
         },
         settings: {
           successUrl: successUrl,

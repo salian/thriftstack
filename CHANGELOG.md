@@ -93,12 +93,11 @@
 - Allow configurable billing owner roles via `THRIFTSTACK_BILLING_OWNER_ROLES`.
 - Allow Super Admins to access `/super-admin` routes without workspace membership.
 - Add billing permission to control access to billing pages.
-- Rename global roles to App Super Admin/App Staff/App User across code and data.
-- Rename app role tables to `app_roles`/`user_app_roles` and pivot columns to `app_role_id`.
+- Remove app roles and replace with system access flags (`users.is_system_admin`, `users.is_system_staff`).
 - Squash database migrations into a single schema file.
-- Split permissions into app permissions and workspace permissions.
-- Move user role management into the Super Admin usage section.
-- Rename middleware to RequireWorkspaceRole and RequireAppRole for clarity.
+- Split permissions into workspace permissions and system access flags.
+- Move user access management into the Super Admin usage section.
+- Rename middleware to RequireWorkspaceRole for clarity.
 - Add workspace roles/permissions tabs in Super Admin Access Control.
 - Add workspace roles/permissions management for Super Admin settings.
 - Gate billing access with workspace-level billing permission.
@@ -118,6 +117,14 @@
 - Rename Global analytics/usage labels to App analytics/usage.
 - Clarify app vs workspace role/permission scope in docs.
 - Add hosted checkout wiring for Stripe, Razorpay, PayPal, and Lemon Squeezy with pending subscriptions and provider selection rules.
+- Store workspace roles as enums in the database (MySQL) with SQLite checks.
+- Remove app permissions from the database and gate app access via system access flags.
+- Fallback to local `git describe` for the footer build identifier when unset.
+- Add AI credits to plans and support top-up purchases with a new credits section on Billing.
+- Add workspace credit balance + ledger with credit grants for subscriptions and top-ups.
+- Show workspace AI credit balance on the Billing page.
+- Expire top-up credits after 365 days via a daily cron job.
+- Add `scripts/daily.php` to run all daily tasks (digests + credit expiry).
 - Ensure subscription provider is updated when switching payment gateways.
 - Document how to add a new billing provider.
 - Add Dodo Payments and Paddle provider integrations with hosted checkout support.

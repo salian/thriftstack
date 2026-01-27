@@ -14,7 +14,7 @@ Implement notifications with immediate and batched delivery.
 - /app/Notifications/NotificationDispatcher.php
 - /app/Controllers/NotificationsController.php
 - /app/Database/Migrations/0005_notifications.php
-- /scripts/notifications_dispatch.php
+- /scripts/daily.php
 - /views/notifications/*.php
 - /routes/web.php
 
@@ -24,7 +24,7 @@ Implement notifications with immediate and batched delivery.
 
 ## Delivery rules
 - Immediate: send and mark sent.
-- Batched: store and dispatch via `php scripts/notifications_dispatch.php`.
+- Batched: store and dispatch via `php scripts/daily.php`.
 
 ## Deliverable
 All file contents.

@@ -13,46 +13,10 @@ return static function (PDO $pdo): void {
                 password_hash TEXT NOT NULL,
                 email_verified_at TEXT NULL,
                 status TEXT NOT NULL DEFAULT "active",
+                is_system_admin INTEGER NOT NULL DEFAULT 0,
+                is_system_staff INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
-            );'
-        );
-
-        $pdo->exec(
-            'CREATE TABLE IF NOT EXISTS app_roles (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE,
-                description TEXT NULL,
-                created_at TEXT NOT NULL
-            );'
-        );
-
-        $pdo->exec(
-            'CREATE TABLE IF NOT EXISTS app_permissions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE,
-                description TEXT NULL,
-                created_at TEXT NOT NULL
-            );'
-        );
-
-        $pdo->exec(
-            'CREATE TABLE IF NOT EXISTS app_role_permissions (
-                app_role_id INTEGER NOT NULL,
-                app_permission_id INTEGER NOT NULL,
-                PRIMARY KEY (app_role_id, app_permission_id),
-                FOREIGN KEY (app_role_id) REFERENCES app_roles(id) ON DELETE CASCADE,
-                FOREIGN KEY (app_permission_id) REFERENCES app_permissions(id) ON DELETE CASCADE
-            );'
-        );
-
-        $pdo->exec(
-            'CREATE TABLE IF NOT EXISTS user_app_roles (
-                user_id INTEGER NOT NULL,
-                app_role_id INTEGER NOT NULL,
-                PRIMARY KEY (user_id, app_role_id),
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                FOREIGN KEY (app_role_id) REFERENCES app_roles(id) ON DELETE CASCADE
             );'
         );
 
@@ -121,6 +85,7 @@ return static function (PDO $pdo): void {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 created_by INTEGER NOT NULL,
+                ai_credit_balance INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
             );'
@@ -130,7 +95,7 @@ return static function (PDO $pdo): void {
             'CREATE TABLE IF NOT EXISTS workspace_memberships (
                 user_id INTEGER NOT NULL,
                 workspace_id INTEGER NOT NULL,
-                workspace_role TEXT NOT NULL,
+                workspace_role TEXT NOT NULL CHECK (workspace_role IN ('Workspace Owner', 'Workspace Admin', 'Workspace Member')),
                 created_at TEXT NOT NULL,
                 PRIMARY KEY (user_id, workspace_id),
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -143,7 +108,7 @@ return static function (PDO $pdo): void {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 workspace_id INTEGER NOT NULL,
                 email TEXT NOT NULL,
-                workspace_role TEXT NOT NULL,
+                workspace_role TEXT NOT NULL CHECK (workspace_role IN ('Workspace Owner', 'Workspace Admin', 'Workspace Member')),
                 token_hash TEXT NOT NULL UNIQUE,
                 expires_at TEXT NOT NULL,
                 created_at TEXT NOT NULL,
@@ -167,7 +132,7 @@ return static function (PDO $pdo): void {
 
         $pdo->exec(
             'CREATE TABLE IF NOT EXISTS workspace_role_permissions (
-                workspace_role TEXT NOT NULL,
+                workspace_role TEXT NOT NULL CHECK (workspace_role IN ('Workspace Owner', 'Workspace Admin', 'Workspace Member')),
                 workspace_permission_id INTEGER NOT NULL,
                 PRIMARY KEY (workspace_role, workspace_permission_id),
                 FOREIGN KEY (workspace_permission_id) REFERENCES workspace_permissions(id) ON DELETE CASCADE
@@ -223,6 +188,8 @@ return static function (PDO $pdo): void {
                 price_cents INTEGER NOT NULL DEFAULT 0,
                 currency TEXT NOT NULL DEFAULT \'USD\',
                 duration TEXT NOT NULL,
+                plan_type TEXT NOT NULL DEFAULT \'subscription\',
+                ai_credits INTEGER NOT NULL DEFAULT 0,
                 is_active INTEGER NOT NULL DEFAULT 1,
                 is_grandfathered INTEGER NOT NULL DEFAULT 0,
                 disabled_at TEXT NULL,
@@ -253,6 +220,7 @@ return static function (PDO $pdo): void {
                 current_period_end TEXT NULL,
                 cancel_at_period_end INTEGER NOT NULL DEFAULT 0,
                 canceled_at TEXT NULL,
+                credits_granted_at TEXT NULL,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
                 FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE RESTRICT
@@ -273,6 +241,44 @@ return static function (PDO $pdo): void {
         );
 
         $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS ai_credit_purchases (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                workspace_id INTEGER NOT NULL,
+                plan_id INTEGER NOT NULL,
+                credits INTEGER NOT NULL,
+                remaining_credits INTEGER NOT NULL DEFAULT 0,
+                amount_cents INTEGER NOT NULL,
+                currency TEXT NOT NULL DEFAULT \'USD\',
+                provider TEXT NULL,
+                provider_checkout_id TEXT NULL,
+                provider_customer_id TEXT NULL,
+                provider_status TEXT NULL,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NULL,
+                applied_at TEXT NULL,
+                expired_at TEXT NULL,
+                FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+                FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE RESTRICT
+            );'
+        );
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS workspace_credit_ledger (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                workspace_id INTEGER NOT NULL,
+                change_type TEXT NOT NULL,
+                credits INTEGER NOT NULL,
+                balance_after INTEGER NOT NULL,
+                source_type TEXT NOT NULL,
+                source_id INTEGER NULL,
+                description TEXT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+            );'
+        );
+
+        $pdo->exec(
             'CREATE TABLE IF NOT EXISTS webhook_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 provider TEXT NOT NULL,
@@ -287,6 +293,7 @@ return static function (PDO $pdo): void {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 provider TEXT NOT NULL,
                 subscription_id INTEGER NULL,
+                purchase_id INTEGER NULL,
                 status TEXT NOT NULL,
                 event_type TEXT NOT NULL,
                 created_at TEXT NOT NULL
@@ -333,11 +340,16 @@ return static function (PDO $pdo): void {
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_gateway_provider ON payment_gateway_settings (provider);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_gateway_events_provider ON payment_gateway_events (provider);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_gateway_events_status ON payment_gateway_events (status);');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_gateway_events_purchase ON payment_gateway_events (purchase_id);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_subscription_changes_subscription ON subscription_changes (subscription_id);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_plans_active ON plans (is_active);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_subscriptions_workspace ON subscriptions (workspace_id);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions (status);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_invoices_subscription ON invoices (subscription_id);');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_ai_credit_purchases_workspace ON ai_credit_purchases (workspace_id);');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_ai_credit_purchases_status ON ai_credit_purchases (status);');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_workspace_credit_ledger_workspace ON workspace_credit_ledger (workspace_id);');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_workspace_credit_ledger_created ON workspace_credit_ledger (created_at);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_webhooks_provider ON webhook_events (provider);');
         return;
     }
@@ -350,46 +362,10 @@ return static function (PDO $pdo): void {
             password_hash VARCHAR(255) NOT NULL,
             email_verified_at DATETIME NULL,
             status VARCHAR(20) NOT NULL DEFAULT "active",
+            is_system_admin TINYINT(1) NOT NULL DEFAULT 0,
+            is_system_staff TINYINT(1) NOT NULL DEFAULT 0,
             created_at DATETIME NOT NULL,
             updated_at DATETIME NOT NULL
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
-    );
-
-    $pdo->exec(
-        'CREATE TABLE IF NOT EXISTS app_roles (
-            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(50) NOT NULL UNIQUE,
-            description VARCHAR(255) NULL,
-            created_at DATETIME NOT NULL
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
-    );
-
-    $pdo->exec(
-        'CREATE TABLE IF NOT EXISTS app_permissions (
-            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) NOT NULL UNIQUE,
-            description VARCHAR(255) NULL,
-            created_at DATETIME NOT NULL
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
-    );
-
-    $pdo->exec(
-        'CREATE TABLE IF NOT EXISTS app_role_permissions (
-            app_role_id BIGINT UNSIGNED NOT NULL,
-            app_permission_id BIGINT UNSIGNED NOT NULL,
-            PRIMARY KEY (app_role_id, app_permission_id),
-            FOREIGN KEY (app_role_id) REFERENCES app_roles(id) ON DELETE CASCADE,
-            FOREIGN KEY (app_permission_id) REFERENCES app_permissions(id) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
-    );
-
-    $pdo->exec(
-        'CREATE TABLE IF NOT EXISTS user_app_roles (
-            user_id BIGINT UNSIGNED NOT NULL,
-            app_role_id BIGINT UNSIGNED NOT NULL,
-            PRIMARY KEY (user_id, app_role_id),
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            FOREIGN KEY (app_role_id) REFERENCES app_roles(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
     );
 
@@ -454,6 +430,7 @@ return static function (PDO $pdo): void {
             id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(190) NOT NULL,
             created_by BIGINT UNSIGNED NOT NULL,
+            ai_credit_balance INT NOT NULL DEFAULT 0,
             created_at DATETIME NOT NULL,
             INDEX idx_workspace_created (created_at),
             FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
@@ -464,7 +441,7 @@ return static function (PDO $pdo): void {
         'CREATE TABLE IF NOT EXISTS workspace_memberships (
             user_id BIGINT UNSIGNED NOT NULL,
             workspace_id BIGINT UNSIGNED NOT NULL,
-            workspace_role VARCHAR(20) NOT NULL,
+            workspace_role ENUM('Workspace Owner','Workspace Admin','Workspace Member') NOT NULL,
             created_at DATETIME NOT NULL,
             PRIMARY KEY (user_id, workspace_id),
             INDEX idx_workspace_members_role (workspace_role),
@@ -478,7 +455,7 @@ return static function (PDO $pdo): void {
             id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             workspace_id BIGINT UNSIGNED NOT NULL,
             email VARCHAR(190) NOT NULL,
-            workspace_role VARCHAR(20) NOT NULL,
+            workspace_role ENUM('Workspace Owner','Workspace Admin','Workspace Member') NOT NULL,
             token_hash VARCHAR(128) NOT NULL UNIQUE,
             expires_at DATETIME NOT NULL,
             created_at DATETIME NOT NULL,
@@ -500,7 +477,7 @@ return static function (PDO $pdo): void {
 
     $pdo->exec(
         'CREATE TABLE IF NOT EXISTS workspace_role_permissions (
-            workspace_role VARCHAR(20) NOT NULL,
+            workspace_role ENUM('Workspace Owner','Workspace Admin','Workspace Member') NOT NULL,
             workspace_permission_id BIGINT UNSIGNED NOT NULL,
             PRIMARY KEY (workspace_role, workspace_permission_id),
             FOREIGN KEY (workspace_permission_id) REFERENCES workspace_permissions(id) ON DELETE CASCADE
@@ -554,6 +531,8 @@ return static function (PDO $pdo): void {
             price_cents INT NOT NULL DEFAULT 0,
             currency VARCHAR(10) NOT NULL DEFAULT "USD",
             duration VARCHAR(20) NOT NULL,
+            plan_type ENUM('subscription','topup') NOT NULL DEFAULT 'subscription',
+            ai_credits INT NOT NULL DEFAULT 0,
             is_active TINYINT(1) NOT NULL DEFAULT 1,
             is_grandfathered TINYINT(1) NOT NULL DEFAULT 0,
             disabled_at DATETIME NULL,
@@ -585,6 +564,7 @@ return static function (PDO $pdo): void {
             current_period_end DATETIME NULL,
             cancel_at_period_end TINYINT(1) NOT NULL DEFAULT 0,
             canceled_at DATETIME NULL,
+            credits_granted_at DATETIME NULL,
             created_at DATETIME NOT NULL,
             INDEX idx_subscriptions_workspace (workspace_id),
             INDEX idx_subscriptions_status (status),
@@ -604,6 +584,48 @@ return static function (PDO $pdo): void {
             created_at DATETIME NOT NULL,
             INDEX idx_invoices_subscription (subscription_id),
             FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS ai_credit_purchases (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            workspace_id BIGINT UNSIGNED NOT NULL,
+            plan_id BIGINT UNSIGNED NOT NULL,
+            credits INT NOT NULL,
+            remaining_credits INT NOT NULL DEFAULT 0,
+            amount_cents INT NOT NULL,
+            currency VARCHAR(10) NOT NULL DEFAULT "USD",
+            provider VARCHAR(30) NULL,
+            provider_checkout_id VARCHAR(120) NULL,
+            provider_customer_id VARCHAR(120) NULL,
+            provider_status VARCHAR(60) NULL,
+            status VARCHAR(30) NOT NULL,
+            created_at DATETIME NOT NULL,
+            expires_at DATETIME NULL,
+            applied_at DATETIME NULL,
+            expired_at DATETIME NULL,
+            INDEX idx_ai_credit_purchases_workspace (workspace_id),
+            INDEX idx_ai_credit_purchases_status (status),
+            FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+            FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE RESTRICT
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS workspace_credit_ledger (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            workspace_id BIGINT UNSIGNED NOT NULL,
+            change_type VARCHAR(30) NOT NULL,
+            credits INT NOT NULL,
+            balance_after INT NOT NULL,
+            source_type VARCHAR(30) NOT NULL,
+            source_id BIGINT UNSIGNED NULL,
+            description VARCHAR(255) NULL,
+            created_at DATETIME NOT NULL,
+            INDEX idx_workspace_credit_ledger_workspace (workspace_id),
+            INDEX idx_workspace_credit_ledger_created (created_at),
+            FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
     );
 
@@ -635,11 +657,13 @@ return static function (PDO $pdo): void {
             id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             provider VARCHAR(30) NOT NULL,
             subscription_id BIGINT UNSIGNED NULL,
+            purchase_id BIGINT UNSIGNED NULL,
             status VARCHAR(40) NOT NULL,
             event_type VARCHAR(120) NOT NULL,
             created_at DATETIME NOT NULL,
             INDEX idx_gateway_events_provider (provider),
-            INDEX idx_gateway_events_status (status)
+            INDEX idx_gateway_events_status (status),
+            INDEX idx_gateway_events_purchase (purchase_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
     );
 

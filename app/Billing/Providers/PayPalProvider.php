@@ -69,6 +69,57 @@ final class PayPalProvider implements BillingProvider
             throw new RuntimeException('PayPal credentials are not configured.');
         }
 
+        $mode = (string)($payload['mode'] ?? 'subscription');
+        if ($mode === 'payment') {
+            $plan = $payload['plan'] ?? [];
+            $amountCents = (int)($plan['price_cents'] ?? 0);
+            $currency = (string)($plan['currency'] ?? 'USD');
+            $purchaseId = (int)($payload['purchase_id'] ?? 0);
+            if ($amountCents <= 0) {
+                throw new RuntimeException('PayPal amount is missing for this top-up.');
+            }
+
+            $environment = $this->environment($settings, $clientId, $clientSecret);
+            $client = new \PayPalCheckoutSdk\Core\PayPalHttpClient($environment);
+            $request = new \PayPalCheckoutSdk\Orders\OrdersCreateRequest();
+            $request->prefer('return=representation');
+            $request->body = [
+                'intent' => 'CAPTURE',
+                'purchase_units' => [[
+                    'custom_id' => $purchaseId > 0 ? ('purchase:' . $purchaseId) : null,
+                    'description' => (string)($plan['name'] ?? 'Top-up'),
+                    'amount' => [
+                        'currency_code' => $currency,
+                        'value' => number_format($amountCents / 100, 2, '.', ''),
+                    ],
+                ]],
+                'application_context' => [
+                    'return_url' => (string)($payload['success_url'] ?? ''),
+                    'cancel_url' => (string)($payload['cancel_url'] ?? ''),
+                ],
+            ];
+
+            $response = $client->execute($request);
+            $result = $response->result;
+            $approvalUrl = '';
+            if (!empty($result->links)) {
+                foreach ($result->links as $link) {
+                    if (($link->rel ?? '') === 'approve') {
+                        $approvalUrl = (string)$link->href;
+                        break;
+                    }
+                }
+            }
+
+            return [
+                'checkout_url' => $approvalUrl,
+                'checkout_id' => isset($result->id) ? (string)$result->id : null,
+                'provider_subscription_id' => null,
+                'provider_customer_id' => null,
+                'provider_status' => isset($result->status) ? (string)$result->status : null,
+            ];
+        }
+
         $plan = $payload['plan'] ?? [];
         $planId = (string)($plan['paypal_plan_id'] ?? '');
         if ($planId === '') {
@@ -121,13 +172,18 @@ final class PayPalProvider implements BillingProvider
         $eventType = $this->eventType($payload);
         $resource = $payload['resource'] ?? [];
         $customId = $resource['custom_id'] ?? null;
+        $purchaseId = $this->parsePurchaseId((string)$customId);
         $customParts = $this->parseCustomId((string)$customId);
+        if ($purchaseId === null && isset($resource['purchase_units'][0]['custom_id'])) {
+            $purchaseId = $this->parsePurchaseId((string)$resource['purchase_units'][0]['custom_id']);
+        }
 
         $result = [
             'event_type' => $eventType,
             'subscription_id' => $customParts['subscription_id'],
             'change_id' => $customParts['change_id'],
             'target_plan_id' => $customParts['plan_id'],
+            'purchase_id' => $purchaseId,
             'provider_subscription_id' => isset($resource['id']) ? (string)$resource['id'] : null,
             'provider_checkout_id' => null,
             'provider_customer_id' => isset($resource['subscriber']['payer_id']) ? (string)$resource['subscriber']['payer_id'] : null,
@@ -148,6 +204,19 @@ final class PayPalProvider implements BillingProvider
             $result['invoice_amount'] = isset($resource['amount']['total']) ? (int)round(((float)$resource['amount']['total']) * 100) : null;
             $result['invoice_status'] = $eventType === 'PAYMENT.SALE.COMPLETED' ? 'paid' : 'failed';
             $result['gateway_event_status'] = $eventType === 'PAYMENT.SALE.COMPLETED' ? 'success' : 'failed';
+        }
+
+        if ($eventType === 'CHECKOUT.ORDER.APPROVED' || $eventType === 'PAYMENT.CAPTURE.COMPLETED') {
+            $result['provider_checkout_id'] = isset($resource['id']) ? (string)$resource['id'] : null;
+            $amount = $resource['amount']['value'] ?? ($resource['purchase_units'][0]['payments']['captures'][0]['amount']['value'] ?? null);
+            if (is_numeric($amount)) {
+                $result['invoice_amount'] = (int)round(((float)$amount) * 100);
+            }
+            if ($eventType === 'PAYMENT.CAPTURE.COMPLETED') {
+                $result['invoice_status'] = 'paid';
+                $result['gateway_event_status'] = 'success';
+                $result['status'] = 'active';
+            }
         }
 
         return $result;
@@ -182,6 +251,17 @@ final class PayPalProvider implements BillingProvider
             'CANCELLED', 'CANCELED' => 'canceled',
             default => null,
         };
+    }
+
+    private function parsePurchaseId(string $value): ?int
+    {
+        if ($value === '') {
+            return null;
+        }
+        if (str_starts_with($value, 'purchase:')) {
+            return (int)substr($value, 9);
+        }
+        return null;
     }
 
     private function timestampToString($value): ?string

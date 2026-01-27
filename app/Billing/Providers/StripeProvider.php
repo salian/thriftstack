@@ -68,32 +68,52 @@ final class StripeProvider implements BillingProvider
         }
 
         $subscriptionId = (int)($payload['subscription_id'] ?? 0);
+        $purchaseId = (int)($payload['purchase_id'] ?? 0);
         $workspace = $payload['workspace'] ?? [];
         $metadata = [
             'subscription_id' => (string)$subscriptionId,
             'workspace_id' => (string)($workspace['id'] ?? ''),
             'plan_id' => (string)($plan['id'] ?? ''),
             'change_id' => (string)($payload['change_id'] ?? ''),
+            'purchase_id' => $purchaseId > 0 ? (string)$purchaseId : '',
         ];
 
-        $params = [
-            'mode' => 'subscription',
-            'line_items' => [
-                ['price' => $priceId, 'quantity' => 1],
-            ],
-            'success_url' => (string)($payload['success_url'] ?? ''),
-            'cancel_url' => (string)($payload['cancel_url'] ?? ''),
-            'client_reference_id' => (string)$subscriptionId,
-            'customer_email' => (string)($payload['customer_email'] ?? ''),
-            'metadata' => $metadata,
-            'subscription_data' => [
+        $mode = (string)($payload['mode'] ?? 'subscription');
+        if ($mode === 'payment') {
+            $params = [
+                'mode' => 'payment',
+                'line_items' => [
+                    ['price' => $priceId, 'quantity' => 1],
+                ],
+                'success_url' => (string)($payload['success_url'] ?? ''),
+                'cancel_url' => (string)($payload['cancel_url'] ?? ''),
+                'client_reference_id' => $purchaseId > 0 ? (string)$purchaseId : (string)$subscriptionId,
+                'customer_email' => (string)($payload['customer_email'] ?? ''),
                 'metadata' => $metadata,
-            ],
-        ];
+                'payment_intent_data' => [
+                    'metadata' => $metadata,
+                ],
+            ];
+        } else {
+            $params = [
+                'mode' => 'subscription',
+                'line_items' => [
+                    ['price' => $priceId, 'quantity' => 1],
+                ],
+                'success_url' => (string)($payload['success_url'] ?? ''),
+                'cancel_url' => (string)($payload['cancel_url'] ?? ''),
+                'client_reference_id' => (string)$subscriptionId,
+                'customer_email' => (string)($payload['customer_email'] ?? ''),
+                'metadata' => $metadata,
+                'subscription_data' => [
+                    'metadata' => $metadata,
+                ],
+            ];
 
-        $trialDays = (int)($payload['trial_days'] ?? 0);
-        if ($trialDays > 0) {
-            $params['subscription_data']['trial_period_days'] = $trialDays;
+            $trialDays = (int)($payload['trial_days'] ?? 0);
+            if ($trialDays > 0) {
+                $params['subscription_data']['trial_period_days'] = $trialDays;
+            }
         }
 
         $client = new \Stripe\StripeClient($secretKey);
@@ -119,6 +139,7 @@ final class StripeProvider implements BillingProvider
             'subscription_id' => $this->toInt($metadata['subscription_id'] ?? null),
             'change_id' => $this->toInt($metadata['change_id'] ?? null),
             'target_plan_id' => $this->toInt($metadata['plan_id'] ?? null),
+            'purchase_id' => $this->toInt($metadata['purchase_id'] ?? null),
             'provider_subscription_id' => null,
             'provider_checkout_id' => null,
             'provider_customer_id' => null,

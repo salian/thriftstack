@@ -22,6 +22,22 @@ final class BillingGatewaySelector
             return null;
         }
 
+        return $this->selectFromProviders($enabled);
+    }
+
+    public function selectProviderFor(array $supported): ?string
+    {
+        $enabled = $this->gateways->enabledProviders();
+        $eligible = array_values(array_intersect($enabled, $supported));
+        if (empty($eligible)) {
+            return null;
+        }
+
+        return $this->selectFromProviders($eligible);
+    }
+
+    private function selectFromProviders(array $enabled): ?string
+    {
         $rule = $this->appSettings->get('billing.gateway_rule', 'priority');
         $priority = $this->appSettings->getJson('billing.gateway_priority', $enabled);
         $priority = array_values(array_filter($priority, static fn ($item) => in_array($item, $enabled, true)));

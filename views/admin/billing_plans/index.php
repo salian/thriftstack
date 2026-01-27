@@ -1,5 +1,5 @@
 <section class="page-section">
-    <h1>App Super Admin</h1>
+    <h1>System Admin</h1>
 
     <?php require __DIR__ . '/../super_nav.php'; ?>
 
@@ -10,7 +10,7 @@
         <div class="table-header">
             <div>
                 <h2>Manage plans</h2>
-                <p class="muted">Edit pricing and availability for subscription plans.</p>
+                <p class="muted">Edit pricing and availability for subscription and top-up plans.</p>
             </div>
             <button type="button" class="button" data-billing-open="create">Create plan</button>
         </div>
@@ -22,6 +22,8 @@
                         <th>Name</th>
                         <th>Price (cents)</th>
                         <th>Duration</th>
+                        <th>Type</th>
+                        <th>AI credits</th>
                         <th>Active</th>
                         <th>Action</th>
                     </tr>
@@ -33,6 +35,8 @@
                             <td><?= e($plan['name'] ?? '') ?></td>
                             <td><?= e((string)($plan['price_cents'] ?? 0)) ?></td>
                             <td><?= e($plan['duration'] ?? '') ?></td>
+                            <td><?= e($plan['plan_type'] ?? 'subscription') ?></td>
+                            <td><?= e((string)($plan['ai_credits'] ?? 0)) ?></td>
                             <td><?= (int)($plan['is_active'] ?? 0) === 1 ? 'Yes' : 'No' ?></td>
                             <td>
                                 <button
@@ -44,6 +48,8 @@
                                     data-plan-name="<?= e($plan['name'] ?? '') ?>"
                                     data-plan-price="<?= e((string)($plan['price_cents'] ?? 0)) ?>"
                                     data-plan-duration="<?= e($plan['duration'] ?? '') ?>"
+                                    data-plan-type="<?= e($plan['plan_type'] ?? 'subscription') ?>"
+                                    data-plan-credits="<?= e((string)($plan['ai_credits'] ?? 0)) ?>"
                                     data-plan-stripe="<?= e($plan['stripe_price_id'] ?? '') ?>"
                                     data-plan-razorpay="<?= e($plan['razorpay_plan_id'] ?? '') ?>"
                                     data-plan-paypal="<?= e($plan['paypal_plan_id'] ?? '') ?>"
@@ -94,6 +100,17 @@
                 <label>
                     <span>Duration</span>
                     <input type="text" name="duration" value="monthly" required data-billing-duration>
+                </label>
+                <label>
+                    <span>Plan type</span>
+                    <select name="plan_type" data-billing-type>
+                        <option value="subscription">Subscription</option>
+                        <option value="topup">AI credit top-up</option>
+                    </select>
+                </label>
+                <label>
+                    <span>AI credits</span>
+                    <input type="number" name="ai_credits" min="0" step="1" value="0" data-billing-credits>
                 </label>
                 <label>
                     <span>Stripe price ID</span>

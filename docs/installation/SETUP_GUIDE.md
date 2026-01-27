@@ -10,7 +10,7 @@
 6. Seed dummy data: `php scripts/seed.php`.
 7. Optional: set `THRIFTSTACK_BUILD_ID` to show a build identifier in the footer.
 8. Optional: set `THRIFTSTACK_BILLING_OWNER_ROLES` (comma-separated) to control who can access billing.
-9. Configure payment gateway credentials in **App Super Admin → Payment Gateways**:
+9. Configure payment gateway credentials in **System Admin → Payment Gateways**:
    - Stripe: publishable key, secret key, webhook secret
    - Razorpay: key id, key secret, webhook secret
    - PayPal: client id, client secret, webhook id
@@ -33,5 +33,5 @@
    - `${DEPLOY_PATH}/shared/storage`
 3. Push to `main` for production or `staging` for staging.
 4. Migrations run automatically during deployment.
-5. Add a cron job to send notification digests (example daily run):
-   - `0 9 * * * /usr/bin/php ${DEPLOY_PATH}/current/scripts/notifications_dispatch.php`
+5. Add a daily cron job (example):
+   - `0 2 * * * /usr/bin/php ${DEPLOY_PATH}/current/scripts/daily.php`

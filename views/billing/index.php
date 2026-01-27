@@ -4,7 +4,7 @@
 
     <?php if (($_GET['status'] ?? '') === 'success') : ?>
         <div class="banner banner-success" data-clear-status>
-            <span>Checkout completed. Your subscription will update shortly.</span>
+            <span>Checkout completed. Your subscription or top-up will update shortly.</span>
         </div>
     <?php elseif (($_GET['status'] ?? '') === 'cancelled') : ?>
         <div class="banner banner-warning" data-clear-status>
@@ -48,6 +48,12 @@
                     </form>
                 <?php endif; ?>
             <?php endif; ?>
+        </div>
+
+        <div class="card">
+            <h2>AI credit balance</h2>
+            <p class="muted">Available credits for this workspace.</p>
+            <p class="plan-price"><?= number_format((int)($workspace['ai_credit_balance'] ?? 0)) ?> credits</p>
         </div>
 
         <?php if (!empty($pendingChanges)) : ?>
@@ -96,6 +102,9 @@
                                 <?= number_format(((int)$plan['price_cents']) / 100, 2) ?>
                             </p>
                             <p class="plan-interval"><?= e($plan['duration']) ?></p>
+                            <?php if (!empty($plan['ai_credits'])) : ?>
+                                <p class="muted"><?= e((string)$plan['ai_credits']) ?> AI credits included</p>
+                            <?php endif; ?>
                             <?php if ($isCurrent) : ?>
                                 <span class="badge badge-primary">Current plan</span>
                                 <?php if ((int)($plan['is_active'] ?? 1) !== 1 && (int)($plan['is_grandfathered'] ?? 0) === 1) : ?>
@@ -112,6 +121,58 @@
                     <?php endforeach; ?>
                 </div>
                 <p class="muted">Paid plans redirect to hosted checkout based on your active payment gateways.</p>
+            <?php endif; ?>
+        </div>
+
+        <div class="card">
+            <h2>AI credit top-ups</h2>
+            <p class="muted">Purchase extra AI actions as needed.</p>
+            <?php if (empty($topupPlans)) : ?>
+                <p>No top-up plans configured yet.</p>
+            <?php else : ?>
+                <div class="plan-grid">
+                    <?php foreach ($topupPlans as $plan) : ?>
+                        <div class="plan-card">
+                            <h3><?= e($plan['name']) ?></h3>
+                            <p class="plan-price">
+                                <?= e($plan['currency'] ?? 'USD') ?>
+                                <?= number_format(((int)$plan['price_cents']) / 100, 2) ?>
+                            </p>
+                            <p class="plan-interval"><?= e((string)($plan['ai_credits'] ?? 0)) ?> credits</p>
+                            <form method="post" action="/billing/topups">
+                                <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+                                <input type="hidden" name="plan_id" value="<?= e((string)$plan['id']) ?>">
+                                <button type="submit" class="button button-ghost">Buy credits</button>
+                            </form>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($topupPurchases)) : ?>
+                <table class="table">
+                    <thead>
+                            <tr>
+                                <th>Top-up</th>
+                                <th>Credits</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Expires</th>
+                                <th>Purchased</th>
+                            </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($topupPurchases as $purchase) : ?>
+                            <tr>
+                                <td><?= e($purchase['plan_name'] ?? '') ?></td>
+                                <td><?= e((string)($purchase['credits'] ?? 0)) ?></td>
+                                <td><?= e($purchase['currency'] ?? 'USD') ?> <?= number_format(((int)($purchase['amount_cents'] ?? 0)) / 100, 2) ?></td>
+                                <td><?= e(ucfirst((string)($purchase['status'] ?? 'pending'))) ?></td>
+                                <td><?= e($purchase['expires_at'] ?? '') ?></td>
+                                <td><?= e($purchase['created_at'] ?? '') ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             <?php endif; ?>
         </div>
 

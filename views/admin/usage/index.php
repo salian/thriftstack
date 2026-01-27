@@ -1,5 +1,5 @@
 <section class="page-section">
-    <h1>App Super Admin</h1>
+    <h1>System Admin</h1>
 
     <?php require __DIR__ . '/../super_nav.php'; ?>
 
@@ -10,14 +10,11 @@
         <h2>Users</h2>
         <form method="get" class="table-toolbar form-inline" data-auto-search-form>
             <input type="search" name="search" value="<?= e($search ?? '') ?>" placeholder="Search by name or email" data-auto-search>
-            <select name="role_id" data-auto-submit>
-                <option value="all" <?= ($selectedRole ?? 'all') === 'all' ? 'selected' : '' ?>>All app roles</option>
-                <option value="unassigned" <?= ($selectedRole ?? '') === 'unassigned' ? 'selected' : '' ?>>Unassigned</option>
-                <?php foreach ($roles as $role) : ?>
-                    <option value="<?= e((string)$role['id']) ?>" <?= ($selectedRole ?? '') == $role['id'] ? 'selected' : '' ?>>
-                        <?= e($role['name']) ?>
-                    </option>
-                <?php endforeach; ?>
+            <select name="system_access" data-auto-submit>
+                <option value="all" <?= ($selectedAccess ?? 'all') === 'all' ? 'selected' : '' ?>>All access</option>
+                <option value="admin" <?= ($selectedAccess ?? '') === 'admin' ? 'selected' : '' ?>>System Admin</option>
+                <option value="staff" <?= ($selectedAccess ?? '') === 'staff' ? 'selected' : '' ?>>System Staff</option>
+                <option value="standard" <?= ($selectedAccess ?? '') === 'standard' ? 'selected' : '' ?>>Standard</option>
             </select>
             <span class="table-search-status" data-search-status aria-live="polite"></span>
         </form>
@@ -26,7 +23,7 @@
         $page = (int)($page ?? 1);
         $queryBase = [
             'search' => $search ?? '',
-            'role_id' => $selectedRole ?? 'all',
+            'system_access' => $selectedAccess ?? 'all',
         ];
         ?>
         <table class="table">
@@ -34,17 +31,19 @@
                 <tr>
                     <th>User</th>
                     <th>Email</th>
-                    <th>App role</th>
+                    <th>System access</th>
                     <th>Status</th>
-                    <th>Assign</th>
+                    <th>Update</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                $actorId = (int)(Auth::user()['id'] ?? 0);
+                $actor = Auth::user();
+                $actorId = (int)($actor['id'] ?? 0);
+                $actorIsAdmin = (int)($actor['is_system_admin'] ?? 0) === 1;
                 $superAdminCount = (int)($superAdminCount ?? 0);
-                $superAdminHint = 'At least one App Super Admin is required.';
+                $superAdminHint = 'At least one System Admin is required.';
                 foreach ($users as $user) :
                 ?>
                     <?php
@@ -52,47 +51,56 @@
                     $redirectQuery = http_build_query(array_merge($queryBase, ['page' => $page]));
                     $redirectPath = '/super-admin/usage?' . $redirectQuery;
                     $isSelf = $actorId > 0 && (int)$user['id'] === $actorId;
-                    $isLastSuper = $superAdminCount <= 1 && ($user['role_name'] ?? '') === 'App Super Admin';
+                    $isLastSuper = $superAdminCount <= 1 && (int)($user['is_system_admin'] ?? 0) === 1;
+                    $accessValue = 'standard';
+                    $targetIsAdmin = (int)($user['is_system_admin'] ?? 0) === 1;
+                    $targetIsStaff = (int)($user['is_system_staff'] ?? 0) === 1;
+                    if ($targetIsAdmin) {
+                        $accessValue = 'admin';
+                    } elseif ($targetIsStaff) {
+                        $accessValue = 'staff';
+                    }
+                    $targetIsPrivileged = $targetIsAdmin || $targetIsStaff;
+                    $canManageAccess = $actorIsAdmin;
+                    $canChangeStatus = $actorIsAdmin || !$targetIsPrivileged;
                     ?>
                     <tr>
                         <td><?= e($user['name']) ?></td>
                         <td><?= e($user['email']) ?></td>
-                        <td><?= e($user['role_name'] ?? 'Unassigned') ?></td>
+                        <td><?= e($accessValue === 'admin' ? 'System Admin' : ($accessValue === 'staff' ? 'System Staff' : 'Standard')) ?></td>
                         <td><?= e(ucfirst($status)) ?></td>
                         <td>
-                            <form method="post" action="/super-admin/user-roles" class="form-inline">
-                                <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
-                                <input type="hidden" name="user_id" value="<?= e((string)$user['id']) ?>">
-                                <select name="role_id" required>
-                                    <option value="">Select app role</option>
-                                    <?php foreach ($roles as $role) : ?>
-                                        <?php
-                                        $isSuperRole = $role['name'] === 'App Super Admin';
-                                        $disableRole = $isLastSuper && !$isSuperRole;
-                                        ?>
-                                        <option
-                                            value="<?= e((string)$role['id']) ?>"
-                                            <?= ($user['role_name'] ?? '') === $role['name'] ? 'selected' : '' ?>
-                                            <?= $disableRole ? 'disabled' : '' ?>
-                                            <?= $disableRole ? 'title="' . e($superAdminHint) . '"' : '' ?>
-                                        >
-                                            <?= e($role['name']) ?>
+                            <?php if ($canManageAccess) : ?>
+                                <form method="post" action="/super-admin/user-roles" class="form-inline">
+                                    <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+                                    <input type="hidden" name="user_id" value="<?= e((string)$user['id']) ?>">
+                                    <select name="system_access" required>
+                                        <option value="standard" <?= $accessValue === 'standard' ? 'selected' : '' ?> <?= $isLastSuper ? 'disabled' : '' ?>>Standard</option>
+                                        <option value="staff" <?= $accessValue === 'staff' ? 'selected' : '' ?> <?= $isLastSuper ? 'disabled' : '' ?>>System Staff</option>
+                                        <option value="admin" <?= $accessValue === 'admin' ? 'selected' : '' ?>>
+                                            System Admin
                                         </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <button type="submit" class="button button-ghost">Assign</button>
-                            </form>
+                                    </select>
+                                    <button type="submit" class="button button-ghost" <?= $isLastSuper ? 'title="' . e($superAdminHint) . '"' : '' ?>>Update</button>
+                                </form>
+                            <?php else : ?>
+                                <span class="muted">Admin only</span>
+                            <?php endif; ?>
                         </td>
                         <td>
-                            <form method="post" action="/super-admin/users/status" class="form-inline">
-                                <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
-                                <input type="hidden" name="user_id" value="<?= e((string)$user['id']) ?>">
-                                <input type="hidden" name="status" value="<?= e($status === 'active' ? 'inactive' : 'active') ?>">
-                                <input type="hidden" name="redirect" value="<?= e($redirectPath) ?>">
-                                <button type="submit" class="button button-ghost" <?= $isSelf ? 'disabled' : '' ?>>
-                                    <?= $status === 'active' ? 'Deactivate' : 'Reactivate' ?>
-                                </button>
-                            </form>
+                            <?php if ($canChangeStatus) : ?>
+                                <form method="post" action="/super-admin/users/status" class="form-inline">
+                                    <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+                                    <input type="hidden" name="user_id" value="<?= e((string)$user['id']) ?>">
+                                    <input type="hidden" name="status" value="<?= e($status === 'active' ? 'inactive' : 'active') ?>">
+                                    <input type="hidden" name="redirect" value="<?= e($redirectPath) ?>">
+                                    <button type="submit" class="button button-ghost" <?= $isSelf ? 'disabled' : '' ?>>
+                                        <?= $status === 'active' ? 'Deactivate' : 'Reactivate' ?>
+                                    </button>
+                                </form>
+                            <?php else : ?>
+                                <span class="muted">Admin only</span>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

@@ -141,7 +141,7 @@ final class UploadController
             return Response::notFound(View::render('404', ['title' => 'Not Found']));
         }
 
-        if ((int)$upload['user_id'] !== $userId && (Auth::user()['role'] ?? null) !== 'App Super Admin') {
+        if ((int)$upload['user_id'] !== $userId && (int)(Auth::user()['is_system_admin'] ?? 0) !== 1) {
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
         }
 

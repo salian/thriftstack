@@ -354,6 +354,8 @@
   const nameInput = modal.querySelector('[data-billing-name]');
   const priceInput = modal.querySelector('[data-billing-price]');
   const durationInput = modal.querySelector('[data-billing-duration]');
+  const typeInput = modal.querySelector('[data-billing-type]');
+  const creditsInput = modal.querySelector('[data-billing-credits]');
   const activeInput = modal.querySelector('[data-billing-active]');
   const grandfatheredInput = modal.querySelector('[data-billing-grandfathered]');
   const stripeInput = modal.querySelector('[data-billing-stripe]');
@@ -396,6 +398,12 @@
     }
     if (durationInput) {
       durationInput.value = 'monthly';
+    }
+    if (typeInput) {
+      typeInput.value = 'subscription';
+    }
+    if (creditsInput) {
+      creditsInput.value = '0';
     }
     if (activeInput) {
       activeInput.checked = true;
@@ -461,6 +469,12 @@
     }
     if (durationInput) {
       durationInput.value = button.dataset.planDuration || 'monthly';
+    }
+    if (typeInput) {
+      typeInput.value = button.dataset.planType || 'subscription';
+    }
+    if (creditsInput) {
+      creditsInput.value = button.dataset.planCredits || '0';
     }
     if (activeInput) {
       activeInput.checked = (button.dataset.planActive || '0') === '1';

@@ -359,39 +359,22 @@ final class AuthController
     private function buildSessionUser(int $userId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT u.id, u.name, u.email, r.name AS role
+            'SELECT u.id, u.name, u.email, u.is_system_admin, u.is_system_staff
              FROM users u
-             LEFT JOIN user_app_roles ur ON ur.user_id = u.id
-             LEFT JOIN app_roles r ON r.id = ur.app_role_id
              WHERE u.id = ?
              LIMIT 1'
         );
         $stmt->execute([$userId]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
-        $permissions = $this->fetchPermissions((int)($user['id'] ?? 0));
-
         return [
             'id' => (int)($user['id'] ?? $userId),
             'name' => $user['name'] ?? '',
             'email' => $user['email'] ?? '',
-            'role' => $user['role'] ?? null,
-            'permissions' => $permissions,
+            'is_system_admin' => (int)($user['is_system_admin'] ?? 0),
+            'is_system_staff' => (int)($user['is_system_staff'] ?? 0),
+            'permissions' => [],
         ];
-    }
-
-    private function fetchPermissions(int $userId): array
-    {
-        $stmt = $this->pdo->prepare(
-            'SELECT DISTINCT p.name
-             FROM app_permissions p
-             INNER JOIN app_role_permissions rp ON rp.app_permission_id = p.id
-             INNER JOIN user_app_roles ur ON ur.app_role_id = rp.app_role_id
-             WHERE ur.user_id = ?'
-        );
-        $stmt->execute([$userId]);
-
-        return $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
     }
 
     private function createEmailVerificationToken(int $userId): string

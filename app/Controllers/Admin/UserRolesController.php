@@ -5,13 +5,11 @@ declare(strict_types=1);
 final class UserRolesController
 {
     private PDO $pdo;
-    private Rbac $rbac;
     private Audit $audit;
 
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
-        $this->rbac = new Rbac($pdo);
         $this->audit = new Audit($pdo);
     }
 
@@ -26,33 +24,51 @@ final class UserRolesController
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
         }
 
-        $userId = (int)$request->input('user_id', 0);
-        $roleId = (int)$request->input('role_id', 0);
-
-        if ($userId > 0 && $roleId > 0) {
-            $roles = $this->rbac->rolesById();
-            $newRole = $roles[$roleId]['name'] ?? null;
-            $currentRole = $this->rbac->roleForUser($userId);
-
-            if ($currentRole === 'App Super Admin' && $newRole !== 'App Super Admin') {
-                $countStmt = $this->pdo->prepare(
-                    'SELECT COUNT(DISTINCT u.id)
-                     FROM users u
-                     INNER JOIN user_app_roles ur ON ur.user_id = u.id
-                     INNER JOIN app_roles r ON r.id = ur.app_role_id
-                     WHERE r.name = ?'
-                );
-                $countStmt->execute(['App Super Admin']);
-                $superAdminCount = (int)$countStmt->fetchColumn();
-
-                if ($superAdminCount <= 1) {
-                    $_SESSION['flash']['message'] = 'At least one App Super Admin is required.';
-                    return Response::redirect('/super-admin/usage');
-                }
-            }
-
-            $this->rbac->assignRole($userId, $roleId);
+        $actor = $request->session('user');
+        $actorIsAdmin = is_array($actor) ? (int)($actor['is_system_admin'] ?? 0) === 1 : false;
+        if (!$actorIsAdmin) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
         }
+
+        $userId = (int)$request->input('user_id', 0);
+        $access = (string)$request->input('system_access', '');
+
+        if ($userId <= 0) {
+            return Response::redirect('/super-admin/usage');
+        }
+
+        $stmt = $this->pdo->prepare('SELECT is_system_admin, is_system_staff FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $current = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$current) {
+            return Response::redirect('/super-admin/usage');
+        }
+
+        $currentAdmin = (int)($current['is_system_admin'] ?? 0) === 1;
+        $newAdmin = $access === 'admin';
+        $newStaff = $access === 'staff';
+
+        if ($currentAdmin && !$newAdmin) {
+            $countStmt = $this->pdo->query('SELECT COUNT(*) FROM users WHERE is_system_admin = 1');
+            $superAdminCount = (int)$countStmt->fetchColumn();
+            if ($superAdminCount <= 1) {
+                $_SESSION['flash']['message'] = 'At least one System Admin is required.';
+                return Response::redirect('/super-admin/usage');
+            }
+        }
+
+        $update = $this->pdo->prepare('UPDATE users SET is_system_admin = ?, is_system_staff = ?, updated_at = ? WHERE id = ?');
+        $update->execute([
+            $newAdmin ? 1 : 0,
+            $newStaff ? 1 : 0,
+            date('Y-m-d H:i:s'),
+            $userId,
+        ]);
+
+        $this->audit->log('system.access.updated', (int)($request->session('user')['id'] ?? 0), [
+            'target_user_id' => $userId,
+            'system_access' => $access,
+        ]);
 
         return Response::redirect('/super-admin/usage');
     }
@@ -67,6 +83,7 @@ final class UserRolesController
         $status = (string)$request->input('status', '');
         $redirect = (string)$request->input('redirect', '/super-admin/usage');
         $actorId = (int)($request->session('user')['id'] ?? 0);
+        $actorIsAdmin = (int)($request->session('user')['is_system_admin'] ?? 0) === 1;
 
         if (!str_starts_with($redirect, '/super-admin/usage')) {
             $redirect = '/super-admin/usage';
@@ -81,15 +98,21 @@ final class UserRolesController
             return Response::redirect($redirect);
         }
 
-        $stmt = $this->pdo->prepare('SELECT status FROM users WHERE id = ? LIMIT 1');
+        $stmt = $this->pdo->prepare('SELECT status, is_system_admin, is_system_staff FROM users WHERE id = ? LIMIT 1');
         $stmt->execute([$userId]);
-        $current = $stmt->fetchColumn();
-        if ($current === false) {
+        $current = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$current) {
             return Response::redirect($redirect);
         }
-        $current = (string)$current;
+        $currentStatus = (string)$current['status'];
+        $targetIsAdmin = (int)($current['is_system_admin'] ?? 0) === 1;
+        $targetIsStaff = (int)($current['is_system_staff'] ?? 0) === 1;
+        if (($targetIsAdmin || $targetIsStaff) && !$actorIsAdmin) {
+            $_SESSION['flash']['message'] = 'Only System Admins can change status for System Admin/Staff users.';
+            return Response::redirect($redirect);
+        }
 
-        if ($current === $status) {
+        if ($currentStatus === $status) {
             return Response::redirect($redirect);
         }
 
@@ -99,7 +122,7 @@ final class UserRolesController
         $action = $status === 'inactive' ? 'users.deactivated' : 'users.reactivated';
         $this->audit->log($action, $actorId, [
             'target_user_id' => $userId,
-            'previous_status' => $current,
+            'previous_status' => $currentStatus,
             'new_status' => $status,
         ]);
 

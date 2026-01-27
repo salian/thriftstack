@@ -19,7 +19,7 @@ final class RequireWorkspacePermission
             return Response::redirect('/login');
         }
 
-        if ((Auth::user()['role'] ?? null) === 'App Super Admin') {
+        if ((int)(Auth::user()['is_system_admin'] ?? 0) === 1) {
             return $next($request);
         }
 

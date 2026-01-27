@@ -38,6 +38,59 @@ final class WebhooksController
 
         if (is_array($data)) {
             $normalized = $provider->parseWebhook($data);
+            $purchase = null;
+            $purchaseId = (int)($normalized['purchase_id'] ?? 0);
+            if ($purchaseId > 0) {
+                $purchase = $this->billing->findTopupPurchaseById($purchaseId);
+            }
+            if (!$purchase && !empty($normalized['provider_checkout_id'])) {
+                $purchase = $this->billing->findTopupPurchaseByCheckoutId($providerKey, (string)$normalized['provider_checkout_id']);
+            }
+
+            if ($purchase) {
+                $alreadyApplied = !empty($purchase['applied_at']) || ($purchase['status'] ?? '') === 'paid';
+                $update = [];
+                if (!empty($normalized['provider_checkout_id'])) {
+                    $update['provider_checkout_id'] = $normalized['provider_checkout_id'];
+                }
+                if (!empty($normalized['provider_customer_id'])) {
+                    $update['provider_customer_id'] = $normalized['provider_customer_id'];
+                }
+                if (!empty($normalized['provider_status'])) {
+                    $update['provider_status'] = $normalized['provider_status'];
+                }
+
+                $isPaid = false;
+                $gatewayStatus = (string)($normalized['gateway_event_status'] ?? '');
+                $invoiceStatus = (string)($normalized['invoice_status'] ?? '');
+                $status = (string)($normalized['status'] ?? '');
+                if ($gatewayStatus === 'success' || $invoiceStatus === 'paid' || $status === 'active') {
+                    $isPaid = true;
+                }
+
+                if ($isPaid && !$alreadyApplied) {
+                    $update['status'] = 'paid';
+                    $update['applied_at'] = date('Y-m-d H:i:s');
+                    if (empty($purchase['expires_at'])) {
+                        $update['expires_at'] = (new DateTimeImmutable('now'))->modify('+365 days')->format('Y-m-d H:i:s');
+                    }
+                    $this->billing->applyCreditChange(
+                        (int)$purchase['workspace_id'],
+                        (int)$purchase['credits'],
+                        'topup',
+                        'purchase',
+                        (int)$purchase['id'],
+                        'AI credit top-up'
+                    );
+                }
+
+                if (!empty($update)) {
+                    $this->billing->updateTopupPurchase((int)$purchase['id'], $update);
+                }
+
+                return new Response('ok', 200, ['Content-Type' => 'text/plain']);
+            }
+
             $subscription = null;
             $subscriptionId = $normalized['subscription_id'] ?? null;
             if ($subscriptionId) {
@@ -78,6 +131,9 @@ final class WebhooksController
                 }
                 if (!empty($update)) {
                     $this->billing->updateSubscriptionProvider((int)$subscription['id'], $update);
+                }
+                if (!empty($normalized['status'])) {
+                    $this->billing->grantSubscriptionCreditsIfEligible((int)$subscription['id'], (string)$normalized['status']);
                 }
 
                 if (!empty($normalized['invoice_id']) && $normalized['invoice_amount'] !== null) {

@@ -70,14 +70,17 @@ final class UsersController
             $countStmt->execute($params);
             $total = (int)$countStmt->fetchColumn();
 
-            $listSql = 'SELECT u.id, u.name, u.email, u.status, u.created_at,
-                    (SELECT r.name
-                     FROM user_app_roles ur
-                     JOIN app_roles r ON r.id = ur.app_role_id
-                     WHERE ur.user_id = u.id
-                     LIMIT 1) AS role
+            $isSqlite = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite';
+            $groupConcatNames = $isSqlite
+                ? 'GROUP_CONCAT(DISTINCT w.name) AS workspace_names'
+                : 'GROUP_CONCAT(DISTINCT w.name ORDER BY w.name SEPARATOR ", ") AS workspace_names';
+            $groupConcatRoles = $isSqlite
+                ? 'GROUP_CONCAT(DISTINCT wm.workspace_role) AS workspace_roles'
+                : 'GROUP_CONCAT(DISTINCT wm.workspace_role ORDER BY wm.workspace_role SEPARATOR ", ") AS workspace_roles';
+            $listSql = 'SELECT u.id, u.name, u.status, u.created_at, ' . $groupConcatNames . ', ' . $groupConcatRoles . '
                 FROM users u
                 JOIN workspace_memberships wm ON wm.user_id = u.id
+                JOIN workspaces w ON w.id = wm.workspace_id
                 ' . $where . '
                 GROUP BY u.id
                 ORDER BY u.created_at DESC

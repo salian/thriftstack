@@ -16,14 +16,31 @@ final class BillingService
     public function listPlans(bool $includeInactive = false): array
     {
         if ($includeInactive) {
-            $stmt = $this->pdo->query('SELECT id, code, name, price_cents, currency, duration, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans ORDER BY price_cents ASC');
+            $stmt = $this->pdo->query('SELECT id, code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans ORDER BY price_cents ASC');
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         }
 
         $stmt = $this->pdo->prepare(
-            'SELECT id, code, name, price_cents, currency, duration, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id
+            'SELECT id, code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id
              FROM plans
-             WHERE is_active = 1
+             WHERE is_active = 1 AND plan_type = "subscription"
+             ORDER BY price_cents ASC'
+        );
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public function listTopupPlans(bool $includeInactive = false): array
+    {
+        if ($includeInactive) {
+            $stmt = $this->pdo->query('SELECT id, code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans WHERE plan_type = "topup" ORDER BY price_cents ASC');
+            return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        }
+
+        $stmt = $this->pdo->prepare(
+            'SELECT id, code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id
+             FROM plans
+             WHERE is_active = 1 AND plan_type = "topup"
              ORDER BY price_cents ASC'
         );
         $stmt->execute();
@@ -179,15 +196,16 @@ final class BillingService
         return $row ?: null;
     }
 
-    public function recordGatewayEvent(?int $subscriptionId, string $provider, string $status, string $eventType): void
+    public function recordGatewayEvent(?int $subscriptionId, string $provider, string $status, string $eventType, ?int $purchaseId = null): void
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO payment_gateway_events (provider, subscription_id, status, event_type, created_at)
-             VALUES (?, ?, ?, ?, ?)'
+            'INSERT INTO payment_gateway_events (provider, subscription_id, purchase_id, status, event_type, created_at)
+             VALUES (?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $provider,
             $subscriptionId,
+            $purchaseId,
             $status,
             $eventType,
             date('Y-m-d H:i:s'),
@@ -326,14 +344,16 @@ final class BillingService
         int $priceCents,
         string $currency,
         string $duration,
+        string $planType,
+        int $aiCredits,
         bool $isActive,
         array $providerIds = [],
         bool $isGrandfathered = false
     ): void
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO plans (code, name, price_cents, currency, duration, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO plans (code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $disabledAt = $isActive ? null : date('Y-m-d H:i:s');
         $stmt->execute([
@@ -342,6 +362,8 @@ final class BillingService
             $priceCents,
             $currency,
             $duration,
+            $planType,
+            $aiCredits,
             $isActive ? 1 : 0,
             $isGrandfathered ? 1 : 0,
             $disabledAt,
@@ -359,6 +381,8 @@ final class BillingService
         string $name,
         int $priceCents,
         string $duration,
+        string $planType,
+        int $aiCredits,
         bool $isActive,
         array $providerIds = [],
         bool $isGrandfathered = false
@@ -374,7 +398,7 @@ final class BillingService
 
         $stmt = $this->pdo->prepare(
             'UPDATE plans
-             SET name = ?, price_cents = ?, duration = ?, is_active = ?, is_grandfathered = ?, disabled_at = ?,
+             SET name = ?, price_cents = ?, duration = ?, plan_type = ?, ai_credits = ?, is_active = ?, is_grandfathered = ?, disabled_at = ?,
                  stripe_price_id = ?, razorpay_plan_id = ?, paypal_plan_id = ?, lemonsqueezy_variant_id = ?, dodo_price_id = ?, paddle_price_id = ?
              WHERE id = ?'
         );
@@ -382,6 +406,8 @@ final class BillingService
             $name,
             $priceCents,
             $duration,
+            $planType,
+            $aiCredits,
             $isActive ? 1 : 0,
             $isGrandfathered ? 1 : 0,
             $disabledAt,
@@ -398,7 +424,7 @@ final class BillingService
     public function findPlanByCode(string $code): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, code, name, price_cents, currency, duration, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans WHERE code = ? LIMIT 1'
+            'SELECT id, code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans WHERE code = ? LIMIT 1'
         );
         $stmt->execute([$code]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -408,11 +434,249 @@ final class BillingService
     public function findPlan(int $planId): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, code, name, price_cents, currency, duration, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans WHERE id = ? LIMIT 1'
+            'SELECT id, code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans WHERE id = ? LIMIT 1'
         );
         $stmt->execute([$planId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
+    }
+
+    public function createTopupPurchase(
+        int $workspaceId,
+        int $planId,
+        int $credits,
+        int $amountCents,
+        string $currency,
+        string $provider,
+        ?string $providerCheckoutId,
+        ?string $providerStatus
+    ): int {
+        $expiresAt = (new DateTimeImmutable('now'))->modify('+365 days')->format('Y-m-d H:i:s');
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO ai_credit_purchases (workspace_id, plan_id, credits, remaining_credits, amount_cents, currency, provider, provider_checkout_id, provider_customer_id, provider_status, status, created_at, expires_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([
+            $workspaceId,
+            $planId,
+            $credits,
+            $credits,
+            $amountCents,
+            $currency,
+            $provider,
+            $providerCheckoutId,
+            null,
+            $providerStatus,
+            'pending',
+            date('Y-m-d H:i:s'),
+            $expiresAt,
+        ]);
+
+        return (int)$this->pdo->lastInsertId();
+    }
+
+    public function updateTopupPurchase(int $purchaseId, array $fields): void
+    {
+        $allowed = [
+            'provider',
+            'provider_checkout_id',
+            'provider_customer_id',
+            'provider_status',
+            'status',
+            'applied_at',
+            'remaining_credits',
+            'expires_at',
+            'expired_at',
+        ];
+        $set = [];
+        $params = [];
+        foreach ($fields as $key => $value) {
+            if (!in_array($key, $allowed, true)) {
+                continue;
+            }
+            $set[] = $key . ' = ?';
+            $params[] = $value;
+        }
+        if (empty($set)) {
+            return;
+        }
+        $params[] = $purchaseId;
+        $stmt = $this->pdo->prepare('UPDATE ai_credit_purchases SET ' . implode(', ', $set) . ' WHERE id = ?');
+        $stmt->execute($params);
+    }
+
+    public function findTopupPurchaseById(int $purchaseId): ?array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM ai_credit_purchases WHERE id = ? LIMIT 1');
+        $stmt->execute([$purchaseId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function findTopupPurchaseByCheckoutId(string $provider, string $checkoutId): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM ai_credit_purchases WHERE provider = ? AND provider_checkout_id = ? LIMIT 1'
+        );
+        $stmt->execute([$provider, $checkoutId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function listTopupPurchases(int $workspaceId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT p.id, p.plan_id, p.credits, p.remaining_credits, p.amount_cents, p.currency, p.status, p.created_at, p.applied_at, p.expires_at, p.expired_at, p.provider,
+                    plans.name AS plan_name
+             FROM ai_credit_purchases p
+             JOIN plans ON plans.id = p.plan_id
+             WHERE p.workspace_id = ?
+             ORDER BY p.created_at DESC
+             LIMIT 20'
+        );
+        $stmt->execute([$workspaceId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public function expireTopupCredits(): int
+    {
+        $now = date('Y-m-d H:i:s');
+        $stmt = $this->pdo->prepare(
+            'SELECT id, workspace_id, remaining_credits
+             FROM ai_credit_purchases
+             WHERE status = ? AND remaining_credits > 0 AND expires_at IS NOT NULL AND expires_at <= ? AND expired_at IS NULL'
+        );
+        $stmt->execute(['paid', $now]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        if (empty($rows)) {
+            return 0;
+        }
+
+        $count = 0;
+        foreach ($rows as $row) {
+            $purchaseId = (int)($row['id'] ?? 0);
+            $workspaceId = (int)($row['workspace_id'] ?? 0);
+            $remaining = (int)($row['remaining_credits'] ?? 0);
+            if ($purchaseId <= 0 || $workspaceId <= 0 || $remaining <= 0) {
+                continue;
+            }
+            $this->applyCreditChange(
+                $workspaceId,
+                -$remaining,
+                'expire',
+                'topup',
+                $purchaseId,
+                'Top-up credits expired'
+            );
+            $this->updateTopupPurchase($purchaseId, [
+                'remaining_credits' => 0,
+                'status' => 'expired',
+                'expired_at' => $now,
+            ]);
+            $count++;
+        }
+
+        return $count;
+    }
+
+    public function grantSubscriptionCreditsIfEligible(int $subscriptionId, ?string $status): void
+    {
+        if ($status !== 'active' && $status !== 'trialing') {
+            return;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'SELECT s.id, s.workspace_id, s.credits_granted_at, p.ai_credits, p.name
+             FROM subscriptions s
+             JOIN plans p ON p.id = s.plan_id
+             WHERE s.id = ?
+             LIMIT 1'
+        );
+        $stmt->execute([$subscriptionId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            return;
+        }
+
+        if (!empty($row['credits_granted_at'])) {
+            return;
+        }
+
+        $credits = (int)($row['ai_credits'] ?? 0);
+        if ($credits <= 0) {
+            return;
+        }
+
+        $workspaceId = (int)($row['workspace_id'] ?? 0);
+        $this->applyCreditChange(
+            $workspaceId,
+            $credits,
+            'grant',
+            'subscription',
+            $subscriptionId,
+            'Subscription credits'
+        );
+
+        $update = $this->pdo->prepare('UPDATE subscriptions SET credits_granted_at = ? WHERE id = ?');
+        $update->execute([date('Y-m-d H:i:s'), $subscriptionId]);
+    }
+
+    public function applyCreditChange(
+        int $workspaceId,
+        int $credits,
+        string $changeType,
+        string $sourceType,
+        ?int $sourceId,
+        ?string $description = null
+    ): void {
+        if ($credits === 0) {
+            return;
+        }
+
+        $driver = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $this->pdo->beginTransaction();
+        try {
+            $select = $driver === 'sqlite'
+                ? 'SELECT ai_credit_balance FROM workspaces WHERE id = ?'
+                : 'SELECT ai_credit_balance FROM workspaces WHERE id = ? FOR UPDATE';
+            $stmt = $this->pdo->prepare($select);
+            $stmt->execute([$workspaceId]);
+            $current = $stmt->fetchColumn();
+            if ($current === false) {
+                $this->pdo->rollBack();
+                return;
+            }
+            $balance = (int)$current;
+            $newBalance = $balance + $credits;
+            if ($newBalance < 0) {
+                $newBalance = 0;
+            }
+
+            $update = $this->pdo->prepare('UPDATE workspaces SET ai_credit_balance = ? WHERE id = ?');
+            $update->execute([$newBalance, $workspaceId]);
+
+            $insert = $this->pdo->prepare(
+                'INSERT INTO workspace_credit_ledger (workspace_id, change_type, credits, balance_after, source_type, source_id, description, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            );
+            $insert->execute([
+                $workspaceId,
+                $changeType,
+                $credits,
+                $newBalance,
+                $sourceType,
+                $sourceId,
+                $description,
+                date('Y-m-d H:i:s'),
+            ]);
+
+            $this->pdo->commit();
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
     public function trialDays(): int

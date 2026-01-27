@@ -14,12 +14,12 @@ You are building a **Core PHP 8.5 boilerplate** for DreamHost shared hosting.
 - Migrations must run automatically in CD.
 - Auth: signup/login/logout + email verification + password reset via DreamHost `mail()`.
 - Session auth + CSRF.
-- Roles: App Super Admin, App Staff, App User.
-- RBAC: app roles + app permissions.
+- System access flags: System Admin, System Staff.
+- RBAC: system access flags + workspace permissions.
 - Admin panel: user list + audit log.
 - Uploads: profile images + attachments stored under `/storage`.
 - Logging: error_log + `/storage/logs/app.log` with rotation + delete >30 days.
-- Debug mode: show errors locally; hide in prod by default; allow show errors for App Super Admin only or global flag.
+- Debug mode: show errors locally; hide in prod by default; allow show errors for System Admin only or global flag.
 - Include `/docs/specs`, `/docs/testing`, `/docs/installation`, and root `README.md`, `AGENTS.md`, `CHANGELOG.md`.
 
 ## Output format

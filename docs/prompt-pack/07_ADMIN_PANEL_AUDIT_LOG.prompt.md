@@ -1,11 +1,11 @@
-# 07_ADMIN_PANEL_AUDIT_LOG — App Super Admin UI + audit logging
+# 07_ADMIN_PANEL_AUDIT_LOG — System Admin UI + audit logging
 
 Implement workspace admin shell and audit log.
 
 ## Requirements
-- App Super Admin layout/nav section.
-- Users list page (App Super Admin+App Staff maybe).
-- Audit log table page (App Super Admin only).
+- System Admin layout/nav section.
+- Users list page (System Admin or System Staff).
+- Audit log table page (System Admin only).
 - Audit events:
   - login success/fail
   - signup

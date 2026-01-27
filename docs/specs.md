@@ -76,24 +76,22 @@ Auth system is required and must include:
 - Session cookie auth
 - CSRF protection everywhere
 
-### Roles
-Default roles:
-- `App Super Admin`
-- `App Staff`
-- `App User`
+### System access
+User flags:
+- `is_system_admin` (system-wide admin)
+- `is_system_staff` (system staff)
 
 ### RBAC
-- Implement **app roles + app permissions**
+- Implement **system access flags** (system-wide) and **workspace roles + workspace permissions**
 - Implement **workspace roles + workspace permissions** (scoped to a workspace)
 - Must support:
-  - assigning app roles to users
-  - app permissions grouped by feature/module
+- system access flags for global access (admin/staff)
   - middleware/guards in routing layer
-- App Super Admin can manage app roles/permissions.
+- System Admin can manage system access flags.
 - Clarify scopes:
-  - App roles/permissions are global (super admin and app-level settings).
-  - Workspace roles/permissions are per-workspace (member/admin access within a workspace).
-  - Use `RequireAppRole`/`RequirePermission` for app scope; `RequireWorkspaceRole`/`RequireWorkspacePermission` for workspace scope.
+- System access flags are global (admin/staff + app-level settings).
+- Workspace roles/permissions are per-workspace (member/admin access within a workspace).
+- Use `RequireSystemAdmin`/`RequireSystemAccess` for app scope; `RequireWorkspaceRole`/`RequireWorkspacePermission` for workspace scope.
 
 ---
 
@@ -173,7 +171,7 @@ Debug mode:
 - In production: hide errors by default
 - Must support config to show errors in production:
   - globally OR
-  - only for App Super Admin users
+  - only for System Admin users
 
 ---
 
@@ -191,7 +189,7 @@ Must include:
 
 ### Admin panel skeleton
 - Workspace admin: user list + audit log
-- Super admin: app roles, app permissions, user role assignment
+- Super admin: system access flags, user access assignment
 - Separate navigation shells for workspace vs super admin
 
 ### File uploads module

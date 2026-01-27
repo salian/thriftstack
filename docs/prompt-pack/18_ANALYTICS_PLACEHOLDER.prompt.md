@@ -3,7 +3,7 @@
 Add a placeholder analytics page for future metrics.
 
 ## Requirements
-- App Super Admin-only route and view.
+- System Admin-only route and view.
 - Placeholder KPI cards and charts (static).
 - Mention future data sources.
 

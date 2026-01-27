@@ -152,10 +152,10 @@
                                         <a href="/billing">Billing</a>
                                     <?php endif; ?>
                                     <a href="/profile">Profile</a>
-                                    <?php if ((Auth::user()['role'] ?? null) === 'App Super Admin') : ?>
+                                    <?php if ((int)(Auth::user()['is_system_admin'] ?? 0) === 1 || (int)(Auth::user()['is_system_staff'] ?? 0) === 1) : ?>
                                         <div class="nav-menu-divider"></div>
                                         <a href="/workspace-admin/users">Workspace Admin</a>
-                                        <a href="/super-admin/analytics">App Super Admin</a>
+                                        <a href="/super-admin/analytics">System Admin</a>
                                     <?php endif; ?>
                                     <div class="nav-menu-divider"></div>
                                     <form method="post" action="/logout" class="nav-menu-form">

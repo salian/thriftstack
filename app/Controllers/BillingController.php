@@ -47,6 +47,7 @@ final class BillingController
         }
         $invoices = $subscription ? $this->billing->listInvoices((int)$subscription['id']) : [];
         $plans = $this->billing->listPlans();
+        $topupPlans = $this->billing->listTopupPlans();
         $pendingChanges = $subscription ? $this->billing->pendingChangesForSubscription((int)$subscription['id']) : [];
         $allPlans = $subscription ? $this->billing->listPlans(true) : [];
         if ($subscription && (int)($subscription['plan_id'] ?? 0) > 0) {
@@ -58,15 +59,19 @@ final class BillingController
             }
         }
 
+        $topupPurchases = $workspaceId > 0 ? $this->billing->listTopupPurchases($workspaceId) : [];
+
         return Response::html(View::render('billing/index', [
             'title' => 'Billing',
             'workspace' => $workspace,
             'subscription' => $subscription,
             'plans' => $plans,
+            'topupPlans' => $topupPlans,
             'pendingChanges' => $pendingChanges,
             'planIndex' => $this->indexPlansById($allPlans),
             'invoices' => $invoices,
             'trialDays' => $this->billing->trialDays(),
+            'topupPurchases' => $topupPurchases,
         ]));
     }
 
@@ -86,12 +91,16 @@ final class BillingController
         $existing = $this->billing->getSubscriptionForWorkspace($workspaceId);
         if ($existing) {
             $_SESSION['flash']['message'] = 'Subscription already exists for this workspace.';
-            return Response::redirect('/billing');
+            return Response::redirect('/super-admin/billing-plans');
         }
 
         $trialPlan = $this->billing->findPlanByCode('trial');
         if (!$trialPlan) {
             $_SESSION['flash']['message'] = 'Trial plan is not configured yet.';
+            return Response::redirect('/super-admin/billing-plans');
+        }
+        if (($trialPlan['plan_type'] ?? 'subscription') !== 'subscription') {
+            $_SESSION['flash']['message'] = 'Trial plan must be a subscription plan.';
             return Response::redirect('/billing');
         }
 
@@ -117,6 +126,10 @@ final class BillingController
             $_SESSION['flash']['message'] = 'Select a valid plan.';
             return Response::redirect('/billing');
         }
+        if (($plan['plan_type'] ?? 'subscription') !== 'subscription') {
+            $_SESSION['flash']['message'] = 'Select a subscription plan.';
+            return Response::redirect('/billing');
+        }
 
         $subscription = $this->billing->getSubscriptionForWorkspace($workspaceId);
         if ($subscription && (int)$subscription['plan_id'] === $planId) {
@@ -134,13 +147,39 @@ final class BillingController
         return $this->beginCheckout($workspace, $plan, $request, null);
     }
 
+    public function purchaseTopup(Request $request): Response
+    {
+        if (!Csrf::validate($request->input('_token'))) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+
+        $userId = (int)($request->session('user')['id'] ?? 0);
+        $workspace = $this->resolveBillingWorkspace($userId);
+        if (!$workspace) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+
+        $planId = (int)$request->input('plan_id', 0);
+        $plan = $planId > 0 ? $this->billing->findPlan($planId) : null;
+        if (!$plan || ($plan['plan_type'] ?? '') !== 'topup') {
+            $_SESSION['flash']['message'] = 'Select a valid top-up plan.';
+            return Response::redirect('/billing');
+        }
+        if ((int)($plan['is_active'] ?? 0) !== 1) {
+            $_SESSION['flash']['message'] = 'Select an active top-up plan.';
+            return Response::redirect('/billing');
+        }
+
+        return $this->beginTopupCheckout($workspace, $plan, $request);
+    }
+
     public function createPlan(Request $request): Response
     {
         if (!Csrf::validate($request->input('_token'))) {
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
         }
 
-        if ((Auth::user()['role'] ?? null) !== 'App Super Admin') {
+        if ((int)(Auth::user()['is_system_admin'] ?? 0) !== 1) {
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
         }
 
@@ -148,6 +187,11 @@ final class BillingController
         $name = trim((string)$request->input('name', ''));
         $price = (int)$request->input('price_cents', 0);
         $duration = trim((string)$request->input('duration', 'monthly'));
+        $planType = trim((string)$request->input('plan_type', 'subscription'));
+        $aiCredits = (int)$request->input('ai_credits', 0);
+        if (!in_array($planType, ['subscription', 'topup'], true)) {
+            $planType = 'subscription';
+        }
         $isActive = $request->input('is_active') === '1';
         $isGrandfathered = $request->input('is_grandfathered') === '1';
         $providerIds = [
@@ -165,10 +209,10 @@ final class BillingController
         }
 
         $currency = (string)$this->appSettings->get('billing.currency', 'USD');
-        $this->billing->createPlan($code, $name, $price, $currency, $duration, $isActive, $providerIds, $isGrandfathered);
+        $this->billing->createPlan($code, $name, $price, $currency, $duration, $planType, $aiCredits, $isActive, $providerIds, $isGrandfathered);
         $_SESSION['flash']['message'] = 'Plan created.';
 
-        return Response::redirect('/billing');
+        return Response::redirect('/super-admin/billing-plans');
     }
 
     public function updatePlan(Request $request): Response
@@ -177,7 +221,7 @@ final class BillingController
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
         }
 
-        if ((Auth::user()['role'] ?? null) !== 'App Super Admin') {
+        if ((int)(Auth::user()['is_system_admin'] ?? 0) !== 1) {
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
         }
 
@@ -185,6 +229,11 @@ final class BillingController
         $name = trim((string)$request->input('name', ''));
         $price = (int)$request->input('price_cents', 0);
         $duration = trim((string)$request->input('duration', 'monthly'));
+        $planType = trim((string)$request->input('plan_type', 'subscription'));
+        $aiCredits = (int)$request->input('ai_credits', 0);
+        if (!in_array($planType, ['subscription', 'topup'], true)) {
+            $planType = 'subscription';
+        }
         $isActive = $request->input('is_active') === '1';
         $isGrandfathered = $request->input('is_grandfathered') === '1';
         $providerIds = [
@@ -198,13 +247,13 @@ final class BillingController
 
         if ($planId <= 0 || $name === '') {
             $_SESSION['flash']['message'] = 'Plan name is required.';
-            return Response::redirect('/billing');
+            return Response::redirect('/super-admin/billing-plans');
         }
 
-        $this->billing->updatePlan($planId, $name, $price, $duration, $isActive, $providerIds, $isGrandfathered);
+        $this->billing->updatePlan($planId, $name, $price, $duration, $planType, $aiCredits, $isActive, $providerIds, $isGrandfathered);
         $_SESSION['flash']['message'] = 'Plan updated.';
 
-        return Response::redirect('/billing');
+        return Response::redirect('/super-admin/billing-plans');
     }
 
     public function paddleCheckout(Request $request): Response
@@ -233,6 +282,8 @@ final class BillingController
             'subscriptionId' => (int)($checkout['subscription_id'] ?? 0),
             'changeId' => (int)($checkout['change_id'] ?? 0),
             'planId' => (int)($checkout['plan_id'] ?? 0),
+            'purchaseId' => (int)($checkout['purchase_id'] ?? 0),
+            'mode' => (string)($checkout['mode'] ?? 'subscription'),
             'successUrl' => (string)($checkout['success_url'] ?? ''),
             'cancelUrl' => (string)($checkout['cancel_url'] ?? ''),
             'customerEmail' => (string)($checkout['customer_email'] ?? ''),
@@ -342,8 +393,10 @@ final class BillingController
         if ($newPrice === 0 && $trialDays === 0) {
             if ($subscription) {
                 $this->billing->updateSubscriptionPlan((int)$subscription['id'], (int)$plan['id'], 'active', null);
+                $this->billing->grantSubscriptionCreditsIfEligible((int)$subscription['id'], 'active');
             } else {
-                $this->billing->createSubscription($workspaceId, (int)$plan['id'], 'active', null);
+                $subscriptionId = $this->billing->createSubscription($workspaceId, (int)$plan['id'], 'active', null);
+                $this->billing->grantSubscriptionCreditsIfEligible($subscriptionId, 'active');
             }
             $_SESSION['flash']['message'] = 'Plan updated.';
             return Response::redirect('/billing');
@@ -425,6 +478,98 @@ final class BillingController
 
         if (empty($checkout['checkout_url'])) {
             $_SESSION['flash']['message'] = 'Unable to start checkout with the selected provider.';
+            return Response::redirect('/billing');
+        }
+
+        return Response::redirect($checkout['checkout_url']);
+    }
+
+    private function beginTopupCheckout(array $workspace, array $plan, Request $request): Response
+    {
+        $supportedProviders = ['stripe', 'razorpay', 'paypal', 'lemonsqueezy', 'dodo', 'paddle'];
+        $provider = $this->gatewaySelector->selectProviderFor($supportedProviders);
+        if ($provider === null) {
+            $_SESSION['flash']['message'] = 'No payment gateway is available for top-ups.';
+            return Response::redirect('/billing');
+        }
+
+        $planKey = $this->providerPlanKey($provider);
+        $needsPriceId = in_array($provider, ['stripe', 'lemonsqueezy', 'dodo', 'paddle'], true);
+        if ($needsPriceId && $planKey !== null && empty($plan[$planKey])) {
+            $_SESSION['flash']['message'] = 'Selected payment gateway is missing a price id for this top-up.';
+            return Response::redirect('/billing');
+        }
+
+        $workspaceId = (int)($workspace['id'] ?? 0);
+        $credits = (int)($plan['ai_credits'] ?? 0);
+        $amount = (int)($plan['price_cents'] ?? 0);
+        $currency = (string)($plan['currency'] ?? 'USD');
+
+        $purchaseId = $this->billing->createTopupPurchase(
+            $workspaceId,
+            (int)$plan['id'],
+            $credits,
+            $amount,
+            $currency,
+            $provider,
+            null,
+            'initiated'
+        );
+
+        $successUrl = rtrim((string)config('app.url', ''), '/') . '/billing?status=success';
+        $cancelUrl = rtrim((string)config('app.url', ''), '/') . '/billing?status=cancelled';
+        $customerEmail = (string)($request->session('user')['email'] ?? '');
+
+        if ($provider === 'paddle') {
+            $paddleSettings = $this->gatewaySettings->getProviderSettings('paddle');
+            $clientToken = (string)($paddleSettings['client_token'] ?? '');
+            if ($clientToken === '') {
+                $_SESSION['flash']['message'] = 'Paddle client token is missing.';
+                return Response::redirect('/billing');
+            }
+
+            $this->billing->updateTopupPurchase($purchaseId, [
+                'provider' => $provider,
+            ]);
+
+            $_SESSION['paddle_checkout'] = [
+                'purchase_id' => $purchaseId,
+                'plan_id' => (int)$plan['id'],
+                'price_id' => (string)$plan['paddle_price_id'],
+                'success_url' => $successUrl,
+                'cancel_url' => $cancelUrl,
+                'customer_email' => $customerEmail,
+                'mode' => 'topup',
+            ];
+
+            return Response::redirect('/billing/paddle-checkout');
+        }
+
+        try {
+            $checkout = $this->providers[$provider]->createCheckout([
+                'plan' => $plan,
+                'workspace' => $workspace,
+                'customer_email' => $customerEmail,
+                'success_url' => $successUrl,
+                'cancel_url' => $cancelUrl,
+                'purchase_id' => $purchaseId,
+                'mode' => 'payment',
+            ]);
+        } catch (Throwable $e) {
+            $this->billing->recordGatewayEvent(null, $provider, 'failed', 'topup.checkout.failed', $purchaseId);
+            $_SESSION['flash']['message'] = 'Unable to start checkout for this top-up.';
+            return Response::redirect('/billing');
+        }
+
+        $this->billing->recordGatewayEvent(null, $provider, 'pending', 'topup.checkout.initiated', $purchaseId);
+        $this->billing->updateTopupPurchase($purchaseId, [
+            'provider_checkout_id' => $checkout['checkout_id'] ?? null,
+            'provider_customer_id' => $checkout['provider_customer_id'] ?? null,
+            'provider_status' => $checkout['provider_status'] ?? null,
+        ]);
+
+        if (empty($checkout['checkout_url'])) {
+            $_SESSION['flash']['message'] = 'Unable to start checkout for this top-up.';
             return Response::redirect('/billing');
         }
 

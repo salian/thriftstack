@@ -36,12 +36,14 @@ final class LemonSqueezyProvider extends HmacProvider
         \LemonSqueezy\LemonSqueezy::setApiKey($apiKey);
 
         $subscriptionId = (int)($payload['subscription_id'] ?? 0);
+        $purchaseId = (int)($payload['purchase_id'] ?? 0);
         $workspace = $payload['workspace'] ?? [];
         $metadata = [
             'subscription_id' => (string)$subscriptionId,
             'workspace_id' => (string)($workspace['id'] ?? ''),
             'plan_id' => (string)($plan['id'] ?? ''),
             'change_id' => (string)($payload['change_id'] ?? ''),
+            'purchase_id' => $purchaseId > 0 ? (string)$purchaseId : '',
         ];
 
         $response = \LemonSqueezy\LemonSqueezy::createCheckout($storeId, $variantId, [
@@ -79,6 +81,7 @@ final class LemonSqueezyProvider extends HmacProvider
             'subscription_id' => $this->toInt($meta['subscription_id'] ?? null),
             'change_id' => $this->toInt($meta['change_id'] ?? null),
             'target_plan_id' => $this->toInt($meta['plan_id'] ?? null),
+            'purchase_id' => $this->toInt($meta['purchase_id'] ?? null),
             'provider_subscription_id' => isset($attributes['subscription_id']) ? (string)$attributes['subscription_id'] : null,
             'provider_checkout_id' => isset($data['id']) ? (string)$data['id'] : null,
             'provider_customer_id' => isset($attributes['customer_id']) ? (string)$attributes['customer_id'] : null,
@@ -92,6 +95,23 @@ final class LemonSqueezyProvider extends HmacProvider
             'invoice_id' => null,
             'gateway_event_status' => null,
         ];
+
+        if (str_starts_with($eventType, 'order_')) {
+            $amount = $attributes['total'] ?? $attributes['subtotal'] ?? null;
+            if (is_numeric($amount)) {
+                $result['invoice_amount'] = (int)round(((float)$amount) * 100);
+            }
+            $result['invoice_id'] = isset($data['id']) ? (string)$data['id'] : null;
+            if (in_array($eventType, ['order_created', 'order_paid'], true)) {
+                $result['invoice_status'] = 'paid';
+                $result['gateway_event_status'] = 'success';
+                $result['status'] = 'active';
+            }
+            if (str_contains($eventType, 'order_refunded')) {
+                $result['invoice_status'] = 'failed';
+                $result['gateway_event_status'] = 'failed';
+            }
+        }
 
         if (str_contains($eventType, 'payment_failed')) {
             $result['gateway_event_status'] = 'failed';

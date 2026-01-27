@@ -19,10 +19,10 @@ interface BillingProvider
     public function createCheckout(array $payload): array;
 
     /**
-     * Normalize webhook payload into subscription updates.
+     * Normalize webhook payload into subscription updates and optional top-up purchases.
      *
      * @param array $payload
-     * @return array{event_type:string, subscription_id:int|null, change_id:int|null, target_plan_id:int|null, provider_subscription_id:string|null, provider_checkout_id:string|null, provider_customer_id:string|null, provider_status:string|null, status:string|null, current_period_start:string|null, current_period_end:string|null, trial_ends_at:string|null, invoice_amount:int|null, invoice_status:string|null, invoice_id:string|null, gateway_event_status:string|null}
+     * @return array{event_type:string, subscription_id:int|null, change_id:int|null, target_plan_id:int|null, purchase_id:int|null, provider_subscription_id:string|null, provider_checkout_id:string|null, provider_customer_id:string|null, provider_status:string|null, status:string|null, current_period_start:string|null, current_period_end:string|null, trial_ends_at:string|null, invoice_amount:int|null, invoice_status:string|null, invoice_id:string|null, gateway_event_status:string|null}
      */
     public function parseWebhook(array $payload): array;
 }

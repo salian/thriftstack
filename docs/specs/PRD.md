@@ -19,12 +19,12 @@ ThriftStack is a reusable Core PHP starter for logged-in SaaS dashboards on Drea
 ## Core features (planned)
 ### Implemented
 - Auth: signup/login/logout, email verification, password reset.
-- RBAC: App roles/app permissions + workspace roles/workspace permissions.
+- RBAC: System access flags + workspace roles/workspace permissions.
 - Admin panel: user list and audit log.
 - File uploads with secure storage.
 - Workspaces with Workspace Roles and invites.
 - User settings and preferences.
-- Billing: hosted checkout flows with Stripe, Razorpay, PayPal, and Lemon Squeezy.
+- Billing: hosted checkout flows with Stripe, Razorpay, PayPal, and Lemon Squeezy + AI credit top-ups.
 
 ### Planned next
 - Notifications (in-app + email) with immediate and batched delivery.
@@ -37,7 +37,7 @@ ThriftStack is a reusable Core PHP starter for logged-in SaaS dashboards on Drea
 - GitHub Actions deploy for DreamHost releases configured.
 
 ## Roles and permissions scope
-- App roles/permissions are global (super admin + app-wide settings/management).
+- System access flags are global (system admin/staff + app-wide settings/management).
 - Workspace roles/permissions are scoped per workspace (member/admin access inside a workspace).
 
 ## Success metrics

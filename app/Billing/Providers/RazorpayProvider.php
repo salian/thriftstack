@@ -23,6 +23,44 @@ final class RazorpayProvider extends HmacProvider
             throw new RuntimeException('Razorpay keys are not configured.');
         }
 
+        $mode = (string)($payload['mode'] ?? 'subscription');
+        if ($mode === 'payment') {
+            $plan = $payload['plan'] ?? [];
+            $amount = (int)($plan['price_cents'] ?? 0);
+            $currency = (string)($plan['currency'] ?? 'USD');
+            $purchaseId = (int)($payload['purchase_id'] ?? 0);
+            if ($amount <= 0) {
+                throw new RuntimeException('Razorpay amount is missing for this top-up.');
+            }
+
+            $api = new \Razorpay\Api\Api($keyId, $keySecret);
+            $link = $api->paymentLink->create([
+                'amount' => $amount,
+                'currency' => $currency,
+                'description' => (string)($plan['name'] ?? 'Top-up'),
+                'customer' => [
+                    'email' => (string)($payload['customer_email'] ?? ''),
+                ],
+                'notify' => [
+                    'email' => true,
+                ],
+                'notes' => [
+                    'purchase_id' => (string)$purchaseId,
+                    'plan_id' => (string)($plan['id'] ?? ''),
+                ],
+                'callback_url' => (string)($payload['success_url'] ?? ''),
+                'callback_method' => 'get',
+            ]);
+
+            return [
+                'checkout_url' => (string)($link['short_url'] ?? ''),
+                'checkout_id' => (string)($link['id'] ?? ''),
+                'provider_subscription_id' => null,
+                'provider_customer_id' => null,
+                'provider_status' => isset($link['status']) ? (string)$link['status'] : null,
+            ];
+        }
+
         $plan = $payload['plan'] ?? [];
         $planId = (string)($plan['razorpay_plan_id'] ?? '');
         if ($planId === '') {
@@ -30,6 +68,7 @@ final class RazorpayProvider extends HmacProvider
         }
 
         $subscriptionId = (int)($payload['subscription_id'] ?? 0);
+        $purchaseId = (int)($payload['purchase_id'] ?? 0);
         $workspace = $payload['workspace'] ?? [];
         $trialDays = (int)($payload['trial_days'] ?? 0);
         $startAt = $trialDays > 0 ? time() + ($trialDays * 86400) : null;
@@ -44,6 +83,7 @@ final class RazorpayProvider extends HmacProvider
                 'workspace_id' => (string)($workspace['id'] ?? ''),
                 'plan_id' => (string)($plan['id'] ?? ''),
                 'change_id' => (string)($payload['change_id'] ?? ''),
+                'purchase_id' => $purchaseId > 0 ? (string)$purchaseId : '',
             ],
         ];
         if ($startAt !== null) {
@@ -65,16 +105,21 @@ final class RazorpayProvider extends HmacProvider
     {
         $eventType = $this->eventType($payload);
         $subscription = $payload['payload']['subscription']['entity'] ?? [];
+        $paymentLink = $payload['payload']['payment_link']['entity'] ?? [];
         $payment = $payload['payload']['payment']['entity'] ?? [];
         $notes = is_array($subscription['notes'] ?? null) ? $subscription['notes'] : [];
+        if (empty($notes) && is_array($paymentLink['notes'] ?? null)) {
+            $notes = $paymentLink['notes'];
+        }
 
         $result = [
             'event_type' => $eventType,
             'subscription_id' => $this->toInt($notes['subscription_id'] ?? null),
             'change_id' => $this->toInt($notes['change_id'] ?? null),
             'target_plan_id' => $this->toInt($notes['plan_id'] ?? null),
+            'purchase_id' => $this->toInt($notes['purchase_id'] ?? null),
             'provider_subscription_id' => isset($subscription['id']) ? (string)$subscription['id'] : null,
-            'provider_checkout_id' => isset($subscription['id']) ? (string)$subscription['id'] : null,
+            'provider_checkout_id' => isset($subscription['id']) ? (string)$subscription['id'] : (isset($paymentLink['id']) ? (string)$paymentLink['id'] : null),
             'provider_customer_id' => isset($subscription['customer_id']) ? (string)$subscription['customer_id'] : null,
             'provider_status' => isset($subscription['status']) ? (string)$subscription['status'] : null,
             'status' => $this->mapStatus((string)($subscription['status'] ?? '')),
@@ -97,6 +142,21 @@ final class RazorpayProvider extends HmacProvider
         if ($eventType === 'payment.failed') {
             $result['status'] = 'past_due';
             $result['invoice_status'] = 'failed';
+        }
+
+        if (str_contains($eventType, 'payment_link')) {
+            $linkStatus = (string)($paymentLink['status'] ?? '');
+            $result['provider_status'] = $linkStatus !== '' ? $linkStatus : $result['provider_status'];
+            if (str_contains($eventType, 'payment_link.paid')) {
+                $result['gateway_event_status'] = 'success';
+                $result['invoice_status'] = 'paid';
+                $result['status'] = 'active';
+            }
+            if (str_contains($eventType, 'payment_link.failed')) {
+                $result['gateway_event_status'] = 'failed';
+                $result['invoice_status'] = 'failed';
+                $result['status'] = 'past_due';
+            }
         }
 
         return $result;

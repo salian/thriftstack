@@ -36,8 +36,6 @@ $billingController = new BillingController(
 );
 $webhooksController = new WebhooksController($billingService, $billingProviders);
 // Admin controllers need to be defined before any route handlers that use them.
-$rolesController = new RolesController($pdo);
-$permissionsController = new PermissionsController($pdo);
 $workspacePermissionsController = new WorkspacePermissionsController($pdo);
 $paymentGatewaysController = new PaymentGatewaysController($pdo);
 $userRolesController = new UserRolesController($pdo);
@@ -143,6 +141,14 @@ $router
     ->middleware(new RequireWorkspacePermission($pdo, 'billing.manage'));
 
 $router
+    ->post('/billing/topups', static function (Request $request) use ($billingController) {
+        return $billingController->purchaseTopup($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo))
+    ->middleware(new RequireWorkspacePermission($pdo, 'billing.manage'));
+
+$router
     ->get('/billing/paddle-checkout', static function (Request $request) use ($billingController) {
         return $billingController->paddleCheckout($request);
     })
@@ -156,8 +162,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'))
-    ->middleware(new RequirePermission('billing.admin'));
+    ->middleware(new RequireSystemAccess());
 
 $router
     ->post('/billing/plans/update', static function (Request $request) use ($billingController) {
@@ -165,8 +170,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'))
-    ->middleware(new RequirePermission('billing.admin'));
+    ->middleware(new RequireSystemAccess());
 
 $router
     ->get('/super-admin', static function () {
@@ -174,7 +178,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'))
+    ->middleware(new RequireSystemAccess())
     ->setName('super_admin');
 
 $router
@@ -183,27 +187,16 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'))
+    ->middleware(new RequireSystemAccess())
     ->setName('super_admin.analytics');
 
 $router
     ->get('/super-admin/usage', static function (Request $request) use ($pdo) {
-        $rbac = new Rbac($pdo);
-        $roles = $rbac->roles();
-
-        $superAdminCount = 0;
-        $countSuper = $pdo->prepare(
-            'SELECT COUNT(DISTINCT u.id)
-             FROM users u
-             INNER JOIN user_app_roles ur ON ur.user_id = u.id
-             INNER JOIN app_roles r ON r.id = ur.app_role_id
-             WHERE r.name = ?'
-        );
-        $countSuper->execute(['App Super Admin']);
-        $superAdminCount = (int)$countSuper->fetchColumn();
+        $countSuper = $pdo->query('SELECT COUNT(*) FROM users WHERE is_system_admin = 1');
+        $superAdminCount = $countSuper ? (int)$countSuper->fetchColumn() : 0;
 
         $search = trim((string)$request->query('search', ''));
-        $selectedRole = (string)$request->query('role_id', 'all');
+        $selectedAccess = (string)$request->query('system_access', 'all');
         $page = max(1, (int)$request->query('page', 1));
         $limit = 20;
         $offset = ($page - 1) * $limit;
@@ -215,17 +208,18 @@ $router
             $params[] = '%' . $search . '%';
             $params[] = '%' . $search . '%';
         }
-        if ($selectedRole !== '' && $selectedRole !== 'all') {
-            if ($selectedRole === 'unassigned') {
-                $conditions[] = 'ur.app_role_id IS NULL';
-            } else {
-                $conditions[] = 'r.id = ?';
-                $params[] = (int)$selectedRole;
+        if ($selectedAccess !== '' && $selectedAccess !== 'all') {
+            if ($selectedAccess === 'admin') {
+                $conditions[] = 'u.is_system_admin = 1';
+            } elseif ($selectedAccess === 'staff') {
+                $conditions[] = 'u.is_system_staff = 1 AND u.is_system_admin = 0';
+            } elseif ($selectedAccess === 'standard') {
+                $conditions[] = 'u.is_system_admin = 0 AND u.is_system_staff = 0';
             }
         }
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
-        $countSql = 'SELECT COUNT(*) FROM users u LEFT JOIN user_app_roles ur ON ur.user_id = u.id LEFT JOIN app_roles r ON r.id = ur.app_role_id ' . $where;
+        $countSql = 'SELECT COUNT(*) FROM users u ' . $where;
         $countStmt = $pdo->prepare($countSql);
         $countStmt->execute($params);
         $total = (int)$countStmt->fetchColumn();
@@ -233,10 +227,8 @@ $router
         $page = min($page, $totalPages);
         $offset = ($page - 1) * $limit;
 
-        $sql = 'SELECT u.id, u.name, u.email, u.status, r.name AS role_name
+        $sql = 'SELECT u.id, u.name, u.email, u.status, u.is_system_admin, u.is_system_staff
             FROM users u
-            LEFT JOIN user_app_roles ur ON ur.user_id = u.id
-            LEFT JOIN app_roles r ON r.id = ur.app_role_id
             ' . $where . '
             ORDER BY u.name ASC
             LIMIT ' . (int)$limit . ' OFFSET ' . (int)$offset;
@@ -246,10 +238,9 @@ $router
 
         return View::render('admin/usage/index', [
             'title' => 'App Usage',
-            'roles' => $roles,
             'users' => $users,
             'search' => $search,
-            'selectedRole' => $selectedRole,
+            'selectedAccess' => $selectedAccess,
             'page' => $page,
             'total' => $total,
             'totalPages' => $totalPages,
@@ -259,7 +250,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'))
+    ->middleware(new RequireSystemAccess())
     ->setName('super_admin.usage');
 
 $router
@@ -271,8 +262,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'))
-    ->middleware(new RequirePermission('billing.admin'))
+    ->middleware(new RequireSystemAccess())
     ->setName('super_admin.billing_plans');
 
 $router
@@ -281,25 +271,18 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'))
-    ->middleware(new RequirePermission('billing.admin'))
+    ->middleware(new RequireSystemAdmin())
     ->setName('super_admin.payment_gateways');
 
 $router
     ->get('/super-admin/settings', static function () use ($pdo) {
         $rbac = new Rbac($pdo);
-        $roles = $rbac->roles();
-        $permissions = $rbac->permissions();
-        $permissionsByRole = $rbac->permissionsByRole();
         $workspaceRoles = ['Workspace Owner', 'Workspace Admin', 'Workspace Member'];
         $workspacePermissions = $rbac->workspacePermissions();
         $workspacePermissionsByRole = $rbac->workspacePermissionsByRole();
 
         return View::render('admin/site_settings/index', [
             'title' => 'Site Settings',
-            'roles' => $roles,
-            'permissions' => $permissions,
-            'permissionsByRole' => $permissionsByRole,
             'workspaceRoles' => $workspaceRoles,
             'workspacePermissions' => $workspacePermissions,
             'workspacePermissionsByRole' => $workspacePermissionsByRole,
@@ -307,7 +290,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'))
+    ->middleware(new RequireSystemAccess())
     ->setName('super_admin.settings');
 
 $router
@@ -481,32 +464,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequirePermission('users.manage'))
     ->setName('workspace_admin.users');
-
-$router
-    ->post('/super-admin/roles', static function (Request $request) use ($rolesController) {
-        return $rolesController->create($request);
-    })
-    ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'));
-
-$router
-    ->post('/super-admin/roles/permissions', static function (Request $request) use ($rolesController) {
-        return $rolesController->updatePermissions($request);
-    })
-    ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'));
-
-$router
-    ->post('/super-admin/permissions', static function (Request $request) use ($permissionsController) {
-        return $permissionsController->create($request);
-    })
-    ->middleware(new AuthRequired())
-    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'));
 
 $router
     ->post('/super-admin/workspace-permissions', static function (Request $request) use ($workspacePermissionsController) {
@@ -514,7 +472,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'));
+    ->middleware(new RequireSystemAccess());
 
 $router
     ->post('/super-admin/workspace-roles/permissions', static function (Request $request) use ($workspacePermissionsController) {
@@ -522,7 +480,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'));
+    ->middleware(new RequireSystemAccess());
 
 $router
     ->post('/super-admin/payment-gateways/{provider}', static function (Request $request) use ($paymentGatewaysController) {
@@ -531,8 +489,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'))
-    ->middleware(new RequirePermission('billing.admin'));
+    ->middleware(new RequireSystemAdmin());
 
 $router
     ->post('/super-admin/payment-gateways/rules', static function (Request $request) use ($paymentGatewaysController) {
@@ -540,8 +497,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'))
-    ->middleware(new RequirePermission('billing.admin'));
+    ->middleware(new RequireSystemAdmin());
 
 $router
     ->get('/super-admin/user-roles', static function () {
@@ -549,7 +505,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'))
+    ->middleware(new RequireSystemAccess())
     ->setName('super_admin.user_roles');
 
 $router
@@ -558,7 +514,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'));
+    ->middleware(new RequireSystemAdmin());
 
 $router
     ->post('/super-admin/users/status', static function (Request $request) use ($userRolesController) {
@@ -566,7 +522,7 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequireAppRole('App Super Admin'));
+    ->middleware(new RequireSystemAdmin());
 
 $router
     ->get('/workspace-admin/audit', static function (Request $request) use ($auditController) {
@@ -574,7 +530,6 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
-    ->middleware(new RequirePermission('audit.view'))
     ->setName('workspace_admin.audit');
 
 return $router;

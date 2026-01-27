@@ -19,7 +19,9 @@ final class RequireWorkspaceRole
             return Response::redirect('/login');
         }
 
-        if ((Auth::user()['role'] ?? null) === 'App Super Admin' && str_starts_with($request->path(), '/super-admin')) {
+        $isAdmin = (int)(Auth::user()['is_system_admin'] ?? 0) === 1;
+        $isStaff = (int)(Auth::user()['is_system_staff'] ?? 0) === 1;
+        if (($isAdmin || $isStaff) && str_starts_with($request->path(), '/super-admin')) {
             return $next($request);
         }
 

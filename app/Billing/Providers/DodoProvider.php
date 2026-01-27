@@ -74,6 +74,7 @@ final class DodoProvider implements BillingProvider
         }
 
         $subscriptionId = (int)($payload['subscription_id'] ?? 0);
+        $purchaseId = (int)($payload['purchase_id'] ?? 0);
         $workspace = $payload['workspace'] ?? [];
 
         $client = new \Dodopayments\Client(
@@ -87,6 +88,7 @@ final class DodoProvider implements BillingProvider
                 'workspace_id' => (string)($workspace['id'] ?? ''),
                 'plan_id' => (string)($plan['id'] ?? ''),
                 'change_id' => (string)($payload['change_id'] ?? ''),
+                'purchase_id' => $purchaseId > 0 ? (string)$purchaseId : '',
             ],
         ];
 
@@ -142,6 +144,7 @@ final class DodoProvider implements BillingProvider
             'subscription_id' => $subscriptionId,
             'change_id' => $changeId,
             'target_plan_id' => $planId,
+            'purchase_id' => $this->toInt($metadata['purchase_id'] ?? null),
             'provider_subscription_id' => isset($subscriptionData['id']) ? (string)$subscriptionData['id'] : null,
             'provider_checkout_id' => null,
             'provider_customer_id' => isset($subscriptionData['customer_id']) ? (string)$subscriptionData['customer_id'] : null,

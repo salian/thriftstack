@@ -86,6 +86,7 @@ final class PaddleProvider implements BillingProvider
             'subscription_id' => $subscriptionId,
             'change_id' => $changeId,
             'target_plan_id' => $planId,
+            'purchase_id' => $this->toInt($custom['purchase_id'] ?? null),
             'provider_subscription_id' => $providerSubscriptionId ? (string)$providerSubscriptionId : null,
             'provider_checkout_id' => isset($data['id']) ? (string)$data['id'] : null,
             'provider_customer_id' => isset($data['customer_id']) ? (string)$data['customer_id'] : null,

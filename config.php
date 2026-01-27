@@ -30,6 +30,12 @@ $env = static function (string $key, $default = null) {
     return $value;
 };
 
+$buildId = $env('THRIFTSTACK_BUILD_ID', '');
+$appEnv = $env('THRIFTSTACK_APP_ENV', 'local');
+if ($buildId === '' && $appEnv !== 'production' && is_dir(__DIR__ . '/.git') && function_exists('shell_exec')) {
+    $buildId = trim((string)@shell_exec('git describe --always --dirty --tags 2>/dev/null'));
+}
+
 return [
     'app' => [
         'name' => $env('THRIFTSTACK_APP_NAME', 'ThriftStack'),
@@ -38,7 +44,7 @@ return [
         'url' => $env('THRIFTSTACK_APP_URL', 'http://localhost'),
         'timezone' => $env('THRIFTSTACK_APP_TIMEZONE', 'UTC'),
         'key' => $env('THRIFTSTACK_APP_KEY', ''),
-        'build' => $env('THRIFTSTACK_BUILD_ID', ''),
+        'build' => $buildId,
     ],
     'db' => [
         'driver' => $env('THRIFTSTACK_DB_DRIVER', 'mysql'),
