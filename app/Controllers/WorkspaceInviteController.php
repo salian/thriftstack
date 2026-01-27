@@ -26,7 +26,7 @@ final class WorkspaceInviteController
         $userId = (int)($request->session('user')['id'] ?? 0);
         $workspaceId = $this->service->currentWorkspaceId() ?? 0;
         if ($workspaceId <= 0) {
-            return $this->workspaceController->renderIndex($userId, null, 'Select a workspace first.', null);
+            return $this->workspaceController->renderIndex($request, $userId, null, 'Select a workspace first.', null);
         }
 
         $email = trim((string)$request->input('email', ''));
@@ -34,11 +34,11 @@ final class WorkspaceInviteController
         $allowedRoles = ['Workspace Owner', 'Workspace Admin', 'Workspace Member'];
 
         if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return $this->workspaceController->renderIndex($userId, null, 'Valid email is required.', null);
+            return $this->workspaceController->renderIndex($request, $userId, null, 'Valid email is required.', null);
         }
 
         if (!in_array($role, $allowedRoles, true)) {
-            return $this->workspaceController->renderIndex($userId, null, 'Invalid role selected.', null);
+            return $this->workspaceController->renderIndex($request, $userId, null, 'Invalid role selected.', null);
         }
 
         $token = $this->service->createInvite($workspaceId, $email, $role, $userId);
@@ -52,6 +52,7 @@ final class WorkspaceInviteController
         $this->mailer->send($email, $subject, $body);
 
         return $this->workspaceController->renderIndex(
+            $request,
             $userId,
             'Invite sent. Share the invite link if needed.',
             null,
