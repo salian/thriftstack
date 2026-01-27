@@ -25,6 +25,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer
+          coverage: none
+
+      - name: Cache Composer dependencies
+        id: composer-cache
+        run: echo "dir=$(composer config cache-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
       - name: Set release metadata
         run: |
           echo "RELEASE_TS=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
@@ -72,8 +91,12 @@ jobs:
 
       - name: Install Composer dependencies
         run: |
-          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            "cd ${DEPLOY_PATH}/releases/${RELEASE_TS} && composer install --no-dev --optimize-autoloader"
+          composer install --no-dev --optimize-autoloader --prefer-dist
+
+      - name: Rsync vendor
+        run: |
+          rsync -az --delete \
+            ./vendor/ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${DEPLOY_PATH}/releases/${RELEASE_TS}/vendor/"
 
       - name: Write shared env
         run: |
