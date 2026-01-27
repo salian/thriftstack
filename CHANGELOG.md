@@ -121,3 +121,4 @@
 - Ensure subscription provider is updated when switching payment gateways.
 - Document how to add a new billing provider.
 - Add Dodo Payments and Paddle provider integrations with hosted checkout support.
+- Add billing schema update migration to backfill missing plan/subscription columns.
