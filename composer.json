@@ -7,7 +7,7 @@
     "stripe/stripe-php": "^13.0",
     "razorpay/razorpay": "^2.9",
     "paypal/paypal-checkout-sdk": "^1.0",
-    "lemonsqueezy/lemonsqueezy-php": "^1.0",
+    "seisigmasrl/lemonsqueezy-php": "^1.3",
     "paddlehq/paddle-php-sdk": "^1.14"
   },
   "autoload": {
