@@ -15,13 +15,25 @@ $notificationService = new NotificationService($pdo, $config);
 $notificationsController = new NotificationsController($notificationService);
 $analyticsController = new AnalyticsController();
 $billingService = new BillingService($pdo, $config);
-$billingController = new BillingController($billingService, $workspaceService);
+$appSettingsService = new AppSettingsService($pdo);
+$gatewaySettingsService = new PaymentGatewaySettingsService($pdo);
+$gatewaySelector = new BillingGatewaySelector($pdo);
 $billingProviders = [
-    'stripe' => new StripeProvider($config['billing']['providers']['stripe']['webhook_secret'] ?? ''),
-    'razorpay' => new RazorpayProvider($config['billing']['providers']['razorpay']['webhook_secret'] ?? ''),
-    'paypal' => new PayPalProvider($config['billing']['providers']['paypal']['webhook_secret'] ?? ''),
-    'lemonsqueezy' => new LemonSqueezyProvider($config['billing']['providers']['lemonsqueezy']['webhook_secret'] ?? ''),
+    'stripe' => new StripeProvider($gatewaySettingsService),
+    'razorpay' => new RazorpayProvider($gatewaySettingsService),
+    'paypal' => new PayPalProvider($gatewaySettingsService),
+    'lemonsqueezy' => new LemonSqueezyProvider($gatewaySettingsService),
+    'dodo' => new DodoProvider($gatewaySettingsService),
+    'paddle' => new PaddleProvider($gatewaySettingsService),
 ];
+$billingController = new BillingController(
+    $billingService,
+    $workspaceService,
+    $appSettingsService,
+    $gatewaySettingsService,
+    $gatewaySelector,
+    $billingProviders
+);
 $webhooksController = new WebhooksController($billingService, $billingProviders);
 // Admin controllers need to be defined before any route handlers that use them.
 $rolesController = new RolesController($pdo);
@@ -125,6 +137,14 @@ $router
 $router
     ->post('/billing/subscribe', static function (Request $request) use ($billingController) {
         return $billingController->selectPlan($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo))
+    ->middleware(new RequireWorkspacePermission($pdo, 'billing.manage'));
+
+$router
+    ->get('/billing/paddle-checkout', static function (Request $request) use ($billingController) {
+        return $billingController->paddleCheckout($request);
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo))
@@ -508,6 +528,15 @@ $router
     ->post('/super-admin/payment-gateways/{provider}', static function (Request $request) use ($paymentGatewaysController) {
         $provider = (string)($request->param('provider') ?? '');
         return $paymentGatewaysController->save($request, $provider);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
+    ->middleware(new RequireAppRole('App Super Admin'))
+    ->middleware(new RequirePermission('billing.admin'));
+
+$router
+    ->post('/super-admin/payment-gateways/rules', static function (Request $request) use ($paymentGatewaysController) {
+        return $paymentGatewaysController->saveRules($request);
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))

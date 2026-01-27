@@ -10,11 +10,14 @@
 6. Seed dummy data: `php scripts/seed.php`.
 7. Optional: set `THRIFTSTACK_BUILD_ID` to show a build identifier in the footer.
 8. Optional: set `THRIFTSTACK_BILLING_OWNER_ROLES` (comma-separated) to control who can access billing.
-9. Configure webhook secrets if you plan to receive billing events:
-   - `THRIFTSTACK_BILLING_STRIPE_SECRET`
-   - `THRIFTSTACK_BILLING_RAZORPAY_SECRET`
-   - `THRIFTSTACK_BILLING_PAYPAL_SECRET`
-   - `THRIFTSTACK_BILLING_LEMONSQUEEZY_SECRET`
+9. Configure payment gateway credentials in **App Super Admin → Payment Gateways**:
+   - Stripe: publishable key, secret key, webhook secret
+   - Razorpay: key id, key secret, webhook secret
+   - PayPal: client id, client secret, webhook id
+   - Lemon Squeezy: API key, store id, webhook secret
+   - Dodo Payments: API key, webhook secret, environment
+   - Paddle: API key, Paddle.js client token, endpoint secret, environment
+10. To add another payment provider, follow `docs/installation/BILLING_PROVIDERS.md`.
 
 ## DreamHost
 ### GitHub Actions deploy

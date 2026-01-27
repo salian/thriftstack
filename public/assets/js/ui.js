@@ -355,6 +355,13 @@
   const priceInput = modal.querySelector('[data-billing-price]');
   const durationInput = modal.querySelector('[data-billing-duration]');
   const activeInput = modal.querySelector('[data-billing-active]');
+  const grandfatheredInput = modal.querySelector('[data-billing-grandfathered]');
+  const stripeInput = modal.querySelector('[data-billing-stripe]');
+  const razorpayInput = modal.querySelector('[data-billing-razorpay]');
+  const paypalInput = modal.querySelector('[data-billing-paypal]');
+  const lemonsqueezyInput = modal.querySelector('[data-billing-lemonsqueezy]');
+  const dodoInput = modal.querySelector('[data-billing-dodo]');
+  const paddleInput = modal.querySelector('[data-billing-paddle]');
 
   const resetForm = () => {
     if (!form) {
@@ -392,6 +399,27 @@
     }
     if (activeInput) {
       activeInput.checked = true;
+    }
+    if (grandfatheredInput) {
+      grandfatheredInput.checked = false;
+    }
+    if (stripeInput) {
+      stripeInput.value = '';
+    }
+    if (razorpayInput) {
+      razorpayInput.value = '';
+    }
+    if (paypalInput) {
+      paypalInput.value = '';
+    }
+    if (lemonsqueezyInput) {
+      lemonsqueezyInput.value = '';
+    }
+    if (dodoInput) {
+      dodoInput.value = '';
+    }
+    if (paddleInput) {
+      paddleInput.value = '';
     }
   };
 
@@ -437,6 +465,27 @@
     if (activeInput) {
       activeInput.checked = (button.dataset.planActive || '0') === '1';
     }
+    if (grandfatheredInput) {
+      grandfatheredInput.checked = (button.dataset.planGrandfathered || '0') === '1';
+    }
+    if (stripeInput) {
+      stripeInput.value = button.dataset.planStripe || '';
+    }
+    if (razorpayInput) {
+      razorpayInput.value = button.dataset.planRazorpay || '';
+    }
+    if (paypalInput) {
+      paypalInput.value = button.dataset.planPaypal || '';
+    }
+    if (lemonsqueezyInput) {
+      lemonsqueezyInput.value = button.dataset.planLemonsqueezy || '';
+    }
+    if (dodoInput) {
+      dodoInput.value = button.dataset.planDodo || '';
+    }
+    if (paddleInput) {
+      paddleInput.value = button.dataset.planPaddle || '';
+    }
     modal.showModal();
   };
 
@@ -452,6 +501,20 @@
     }
     openForCreate();
   });
+})();
+
+(() => {
+  const banner = document.querySelector('[data-clear-status]');
+  if (!banner) {
+    return;
+  }
+
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has('status')) {
+    return;
+  }
+  url.searchParams.delete('status');
+  window.history.replaceState({}, '', url.toString());
 })();
 
 (() => {

@@ -2,6 +2,16 @@
     <h1>Billing</h1>
     <p>Manage subscriptions, trials, and billing history for your workspace.</p>
 
+    <?php if (($_GET['status'] ?? '') === 'success') : ?>
+        <div class="banner banner-success" data-clear-status>
+            <span>Checkout completed. Your subscription will update shortly.</span>
+        </div>
+    <?php elseif (($_GET['status'] ?? '') === 'cancelled') : ?>
+        <div class="banner banner-warning" data-clear-status>
+            <span>Checkout was cancelled. No changes were applied.</span>
+        </div>
+    <?php endif; ?>
+
     <?php if (empty($workspace)) : ?>
         <div class="card">
             <p>Create a workspace to manage billing.</p>
@@ -16,6 +26,9 @@
                 <?php endif; ?>
                 <?php if (!empty($subscription['current_period_end'])) : ?>
                     <p>Current period ends: <?= e($subscription['current_period_end']) ?></p>
+                <?php endif; ?>
+                <?php if (($subscription['status'] ?? '') === 'pending') : ?>
+                    <p class="muted">Checkout initiated. Complete payment to activate the plan.</p>
                 <?php endif; ?>
             <?php else : ?>
                 <p>No subscription yet. Start a trial or choose a plan.</p>
@@ -37,6 +50,37 @@
             <?php endif; ?>
         </div>
 
+        <?php if (!empty($pendingChanges)) : ?>
+            <div class="card">
+                <h2>Pending changes</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Change</th>
+                            <th>New plan</th>
+                            <th>Effective</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($pendingChanges as $change) : ?>
+                            <?php
+                            $plan = $planIndex[(int)($change['to_plan_id'] ?? 0)] ?? null;
+                            $planName = $plan['name'] ?? 'Unknown';
+                            ?>
+                            <tr>
+                                <td><?= e(ucfirst((string)($change['change_type'] ?? ''))) ?></td>
+                                <td><?= e($planName) ?></td>
+                                <td><?= e((string)($change['effective_at'] ?? '')) ?></td>
+                                <td><?= e(ucfirst((string)($change['status'] ?? 'pending'))) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <p class="muted">Downgrades and cancellations are applied at the end of the billing period.</p>
+            </div>
+        <?php endif; ?>
+
         <div class="card">
             <h2>Plans</h2>
             <?php if (empty($plans)) : ?>
@@ -47,21 +91,27 @@
                         <?php $isCurrent = !empty($subscription) && (int)$subscription['plan_id'] === (int)$plan['id']; ?>
                         <div class="plan-card">
                             <h3><?= e($plan['name']) ?></h3>
-                            <p class="plan-price">$<?= number_format(((int)$plan['price_cents']) / 100, 2) ?></p>
+                            <p class="plan-price">
+                                <?= e($plan['currency'] ?? 'USD') ?>
+                                <?= number_format(((int)$plan['price_cents']) / 100, 2) ?>
+                            </p>
                             <p class="plan-interval"><?= e($plan['duration']) ?></p>
                             <?php if ($isCurrent) : ?>
                                 <span class="badge badge-primary">Current plan</span>
+                                <?php if ((int)($plan['is_active'] ?? 1) !== 1 && (int)($plan['is_grandfathered'] ?? 0) === 1) : ?>
+                                    <span class="badge badge-muted">Grandfathered</span>
+                                <?php endif; ?>
                             <?php else : ?>
                                 <form method="post" action="/billing/subscribe">
                                     <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
                                     <input type="hidden" name="plan_id" value="<?= e((string)$plan['id']) ?>">
-                                    <button type="submit" class="button button-ghost">Select plan</button>
+                                    <button type="submit" class="button button-ghost">Continue with this plan</button>
                                 </form>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <p class="muted">Paid plan activation requires completing payment in the provider dashboard.</p>
+                <p class="muted">Paid plans redirect to hosted checkout based on your active payment gateways.</p>
             <?php endif; ?>
         </div>
 

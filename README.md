@@ -6,11 +6,11 @@ Core PHP 8.5 starter focused on logged-in SaaS dashboards, DreamHost shared host
 - Front controller at `/public/index.php` with a custom router.
 - Auth: signup/login/logout, email verification, password reset, CSRF.
 - Workspaces: multi-workspace memberships with invites and Workspace Roles.
-- RBAC admin: roles, permissions, user role assignments.
+- RBAC admin: app roles/permissions (global) plus workspace roles/permissions (per workspace).
 - Admin panel: users list and audit log.
 - Notifications: in-app history and email digests.
 - Uploads for profile images and attachments in `/storage/uploads`.
-- Billing: plans, subscriptions, and webhook scaffolding for major providers.
+- Billing: plans, hosted checkout, subscriptions, and webhook handling for major providers.
 - Single stylesheet at `/public/assets/css/site.css` with enterprise baseline.
 - GitHub Actions deploy with releases and migrations.
 
@@ -26,6 +26,11 @@ Core PHP 8.5 starter focused on logged-in SaaS dashboards, DreamHost shared host
 
 ## Tests
 Run the minimal test suite: `php tests/run.php`.
+
+## Roles and permissions
+- App roles/permissions control global access (e.g., super admin, billing plans, payment gateways).
+- Workspace roles/permissions control per-workspace access (e.g., workspace admin, billing within a workspace).
+- Use `RequireAppRole`/`RequirePermission` for app scope, and `RequireWorkspaceRole`/`RequireWorkspacePermission` for workspace scope.
 
 ## DreamHost deploy
 See `docs/installation/SETUP_GUIDE.md` for GitHub Actions setup.

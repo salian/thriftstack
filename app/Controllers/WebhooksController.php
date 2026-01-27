@@ -36,6 +36,107 @@ final class WebhooksController
         $eventType = is_array($data) ? $provider->eventType($data) : 'unknown';
         $this->billing->recordWebhookEvent($providerKey, $eventType, $payload);
 
+        if (is_array($data)) {
+            $normalized = $provider->parseWebhook($data);
+            $subscription = null;
+            $subscriptionId = $normalized['subscription_id'] ?? null;
+            if ($subscriptionId) {
+                $subscription = $this->billing->findSubscriptionById((int)$subscriptionId);
+            }
+            if (!$subscription && !empty($normalized['provider_subscription_id'])) {
+                $subscription = $this->billing->findSubscriptionByProviderId($providerKey, (string)$normalized['provider_subscription_id']);
+            }
+            if (!$subscription && !empty($normalized['provider_checkout_id'])) {
+                $subscription = $this->billing->findSubscriptionByCheckoutId($providerKey, (string)$normalized['provider_checkout_id']);
+            }
+
+            if ($subscription) {
+                $update = [];
+                if (!empty($normalized['provider_subscription_id'])) {
+                    $update['provider_subscription_id'] = $normalized['provider_subscription_id'];
+                }
+                if (!empty($normalized['provider_customer_id'])) {
+                    $update['provider_customer_id'] = $normalized['provider_customer_id'];
+                }
+                if (!empty($normalized['provider_checkout_id'])) {
+                    $update['provider_checkout_id'] = $normalized['provider_checkout_id'];
+                }
+                if (!empty($normalized['provider_status'])) {
+                    $update['provider_status'] = $normalized['provider_status'];
+                }
+                if (!empty($normalized['status'])) {
+                    $update['status'] = $normalized['status'];
+                }
+                if (!empty($normalized['current_period_start'])) {
+                    $update['current_period_start'] = $normalized['current_period_start'];
+                }
+                if (!empty($normalized['current_period_end'])) {
+                    $update['current_period_end'] = $normalized['current_period_end'];
+                }
+                if (!empty($normalized['trial_ends_at'])) {
+                    $update['trial_ends_at'] = $normalized['trial_ends_at'];
+                }
+                if (!empty($update)) {
+                    $this->billing->updateSubscriptionProvider((int)$subscription['id'], $update);
+                }
+
+                if (!empty($normalized['invoice_id']) && $normalized['invoice_amount'] !== null) {
+                    $this->billing->recordInvoice(
+                        (int)$subscription['id'],
+                        (int)$normalized['invoice_amount'],
+                        (string)($normalized['invoice_status'] ?? 'paid'),
+                        $providerKey,
+                        (string)$normalized['invoice_id']
+                    );
+                }
+
+                if (!empty($normalized['gateway_event_status'])) {
+                    $this->billing->recordGatewayEvent(
+                        (int)$subscription['id'],
+                        $providerKey,
+                        (string)$normalized['gateway_event_status'],
+                        $eventType
+                    );
+                }
+
+                $changeId = (int)($normalized['change_id'] ?? 0);
+                if ($changeId > 0) {
+                    $change = $this->billing->findSubscriptionChange($changeId);
+                    if ($change && ($change['status'] ?? '') === 'pending') {
+                        $targetPlan = (int)($change['to_plan_id'] ?? 0);
+                        if ($targetPlan > 0 && ($normalized['status'] ?? '') !== 'pending') {
+                            $this->billing->applySubscriptionChange(
+                                (int)$change['id'],
+                                (int)$subscription['id'],
+                                $targetPlan,
+                                $normalized['current_period_end'] ?? null
+                            );
+                        }
+                    }
+                }
+
+                if (($normalized['status'] ?? '') !== 'pending') {
+                    $pending = $this->billing->pendingChangesForSubscription((int)$subscription['id']);
+                    $now = date('Y-m-d H:i:s');
+                    foreach ($pending as $change) {
+                        $effectiveAt = (string)($change['effective_at'] ?? '');
+                        if ($effectiveAt !== '' && $effectiveAt > $now) {
+                            continue;
+                        }
+                        $targetPlan = (int)($change['to_plan_id'] ?? 0);
+                        if ($targetPlan > 0) {
+                            $this->billing->applySubscriptionChange(
+                                (int)$change['id'],
+                                (int)$subscription['id'],
+                                $targetPlan,
+                                $normalized['current_period_end'] ?? null
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
         return new Response('ok', 200, ['Content-Type' => 'text/plain']);
     }
 

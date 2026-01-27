@@ -390,6 +390,10 @@ a:hover {
     margin-bottom: 12px;
 }
 
+h1 {
+    font-weight: 600;
+}
+
 h2 {
     margin: 0;
 }
@@ -401,6 +405,14 @@ h2 {
     border-radius: var(--radius);
     border: 1px solid var(--border);
     box-shadow: var(--shadow);
+}
+
+.card-muted {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: var(--radius);
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
 }
 
 .button {
@@ -477,6 +489,11 @@ h2 {
 .badge-primary {
     background: #e0ecfb;
     color: var(--primary-dark);
+}
+
+.badge-muted {
+    background: rgba(110, 128, 157, 0.12);
+    color: var(--muted);
 }
 
 .muted {

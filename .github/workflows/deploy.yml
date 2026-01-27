@@ -70,6 +70,11 @@ jobs:
             --exclude ".env" \
             ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${DEPLOY_PATH}/releases/${RELEASE_TS}/"
 
+      - name: Install Composer dependencies
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cd ${DEPLOY_PATH}/releases/${RELEASE_TS} && composer install --no-dev --optimize-autoloader"
+
       - name: Write shared env
         run: |
           ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \

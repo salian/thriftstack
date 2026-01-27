@@ -116,3 +116,8 @@
 - Label workspace-related roles as Workspace Roles in UI and docs.
 - Rename workspace role column to `workspace_role` in memberships/invites.
 - Rename Global analytics/usage labels to App analytics/usage.
+- Clarify app vs workspace role/permission scope in docs.
+- Add hosted checkout wiring for Stripe, Razorpay, PayPal, and Lemon Squeezy with pending subscriptions and provider selection rules.
+- Ensure subscription provider is updated when switching payment gateways.
+- Document how to add a new billing provider.
+- Add Dodo Payments and Paddle provider integrations with hosted checkout support.

@@ -70,11 +70,14 @@ final class Seeder
         ];
 
         $planStmt = $this->pdo->prepare(
-            $this->insertIgnore . ' INTO plans (code, name, price_cents, duration, is_active) VALUES (?, ?, ?, ?, ?)'
+            $this->insertIgnore . ' INTO plans (code, name, price_cents, currency, duration, is_active, is_grandfathered, disabled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
         foreach ($plans as [$code, $name, $price, $interval, $active]) {
-            $planStmt->execute([$code, $name, $price, $interval, $active]);
+            $planStmt->execute([$code, $name, $price, 'USD', $interval, $active, 0, null]);
         }
+
+        $this->seedAppSettings($now);
+        $this->seedPaymentGatewaySettings($now);
 
         $adminId = $this->ensureDummyUser($now);
         $this->assignRole($adminId, 'App Super Admin');
@@ -171,6 +174,35 @@ final class Seeder
                 }
                 $stmt->execute([$role, $permissionId]);
             }
+        }
+    }
+
+    private function seedAppSettings(string $now): void
+    {
+        $settings = [
+            ['billing.currency', 'USD'],
+            ['billing.gateway_rule', 'priority'],
+            ['billing.gateway_priority', json_encode(['stripe', 'razorpay', 'paypal', 'lemonsqueezy', 'dodo', 'paddle'])],
+        ];
+
+        $stmt = $this->pdo->prepare(
+            $this->insertIgnore . ' INTO app_settings (setting_key, setting_value, updated_at) VALUES (?, ?, ?)'
+        );
+
+        foreach ($settings as [$key, $value]) {
+            $stmt->execute([$key, $value, $now]);
+        }
+    }
+
+    private function seedPaymentGatewaySettings(string $now): void
+    {
+        $providers = ['stripe', 'razorpay', 'paypal', 'lemonsqueezy', 'dodo', 'paddle'];
+        $stmt = $this->pdo->prepare(
+            $this->insertIgnore . ' INTO payment_gateway_settings (provider, setting_key, setting_value, updated_at) VALUES (?, ?, ?, ?)'
+        );
+
+        foreach ($providers as $provider) {
+            $stmt->execute([$provider, 'enabled', '1', $now]);
         }
     }
 

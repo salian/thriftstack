@@ -3,21 +3,29 @@
 declare(strict_types=1);
 
 require __DIR__ . '/../app/Bootstrap.php';
+if (is_file(__DIR__ . '/../vendor/autoload.php')) {
+    require __DIR__ . '/../vendor/autoload.php';
+}
 require __DIR__ . '/../app/Auth/Auth.php';
 require __DIR__ . '/../app/Auth/Password.php';
 require __DIR__ . '/../app/Auth/Csrf.php';
 require __DIR__ . '/../app/Auth/Rbac.php';
 require __DIR__ . '/../app/Audit/Audit.php';
 require __DIR__ . '/../app/Billing/BillingService.php';
+require __DIR__ . '/../app/Billing/BillingGatewaySelector.php';
+require __DIR__ . '/../app/Billing/PaymentGatewaySettingsService.php';
 require __DIR__ . '/../app/Billing/Providers/BillingProvider.php';
 require __DIR__ . '/../app/Billing/Providers/HmacProvider.php';
 require __DIR__ . '/../app/Billing/Providers/RazorpayProvider.php';
 require __DIR__ . '/../app/Billing/Providers/StripeProvider.php';
 require __DIR__ . '/../app/Billing/Providers/PayPalProvider.php';
 require __DIR__ . '/../app/Billing/Providers/LemonSqueezyProvider.php';
+require __DIR__ . '/../app/Billing/Providers/DodoProvider.php';
+require __DIR__ . '/../app/Billing/Providers/PaddleProvider.php';
 require __DIR__ . '/../app/Workspaces/WorkspaceService.php';
 require __DIR__ . '/../app/Uploads/Uploader.php';
 require __DIR__ . '/../app/Settings/SettingsService.php';
+require __DIR__ . '/../app/Settings/AppSettingsService.php';
 require __DIR__ . '/../app/Notifications/NotificationDispatcher.php';
 require __DIR__ . '/../app/Notifications/NotificationService.php';
 require __DIR__ . '/../app/Database/DB.php';

@@ -44,7 +44,14 @@
                                     data-plan-name="<?= e($plan['name'] ?? '') ?>"
                                     data-plan-price="<?= e((string)($plan['price_cents'] ?? 0)) ?>"
                                     data-plan-duration="<?= e($plan['duration'] ?? '') ?>"
+                                    data-plan-stripe="<?= e($plan['stripe_price_id'] ?? '') ?>"
+                                    data-plan-razorpay="<?= e($plan['razorpay_plan_id'] ?? '') ?>"
+                                    data-plan-paypal="<?= e($plan['paypal_plan_id'] ?? '') ?>"
+                                    data-plan-lemonsqueezy="<?= e($plan['lemonsqueezy_variant_id'] ?? '') ?>"
+                                    data-plan-dodo="<?= e($plan['dodo_price_id'] ?? '') ?>"
+                                    data-plan-paddle="<?= e($plan['paddle_price_id'] ?? '') ?>"
                                     data-plan-active="<?= (int)($plan['is_active'] ?? 0) === 1 ? '1' : '0' ?>"
+                                    data-plan-grandfathered="<?= (int)($plan['is_grandfathered'] ?? 0) === 1 ? '1' : '0' ?>"
                                 >
                                     Edit
                                 </button>
@@ -88,9 +95,37 @@
                     <span>Duration</span>
                     <input type="text" name="duration" value="monthly" required data-billing-duration>
                 </label>
+                <label>
+                    <span>Stripe price ID</span>
+                    <input type="text" name="stripe_price_id" value="" data-billing-stripe>
+                </label>
+                <label>
+                    <span>Razorpay plan ID</span>
+                    <input type="text" name="razorpay_plan_id" value="" data-billing-razorpay>
+                </label>
+                <label>
+                    <span>PayPal plan ID</span>
+                    <input type="text" name="paypal_plan_id" value="" data-billing-paypal>
+                </label>
+                <label>
+                    <span>Lemon Squeezy variant ID</span>
+                    <input type="text" name="lemonsqueezy_variant_id" value="" data-billing-lemonsqueezy>
+                </label>
+                <label>
+                    <span>Dodo price ID</span>
+                    <input type="text" name="dodo_price_id" value="" data-billing-dodo>
+                </label>
+                <label>
+                    <span>Paddle price ID</span>
+                    <input type="text" name="paddle_price_id" value="" data-billing-paddle>
+                </label>
                 <label class="checkbox">
                     <input type="checkbox" name="is_active" value="1" data-billing-active>
                     <span>Active</span>
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" name="is_grandfathered" value="1" data-billing-grandfathered>
+                    <span>Grandfather existing subscribers when disabled</span>
                 </label>
                 <div class="modal-actions">
                     <button type="button" class="button button-ghost" data-modal-close>Cancel</button>

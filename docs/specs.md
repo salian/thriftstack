@@ -90,6 +90,10 @@ Default roles:
   - app permissions grouped by feature/module
   - middleware/guards in routing layer
 - App Super Admin can manage app roles/permissions.
+- Clarify scopes:
+  - App roles/permissions are global (super admin and app-level settings).
+  - Workspace roles/permissions are per-workspace (member/admin access within a workspace).
+  - Use `RequireAppRole`/`RequirePermission` for app scope; `RequireWorkspaceRole`/`RequireWorkspacePermission` for workspace scope.
 
 ---
 

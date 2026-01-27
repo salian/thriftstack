@@ -221,8 +221,17 @@ return static function (PDO $pdo): void {
                 code TEXT NOT NULL UNIQUE,
                 name TEXT NOT NULL,
                 price_cents INTEGER NOT NULL DEFAULT 0,
+                currency TEXT NOT NULL DEFAULT \'USD\',
                 duration TEXT NOT NULL,
-                is_active INTEGER NOT NULL DEFAULT 1
+                is_active INTEGER NOT NULL DEFAULT 1,
+                is_grandfathered INTEGER NOT NULL DEFAULT 0,
+                disabled_at TEXT NULL,
+                stripe_price_id TEXT NULL,
+                razorpay_plan_id TEXT NULL,
+                paypal_plan_id TEXT NULL,
+                lemonsqueezy_variant_id TEXT NULL,
+                dodo_price_id TEXT NULL,
+                paddle_price_id TEXT NULL
             );'
         );
 
@@ -231,9 +240,19 @@ return static function (PDO $pdo): void {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 workspace_id INTEGER NOT NULL,
                 plan_id INTEGER NOT NULL,
+                provider TEXT NULL,
+                provider_customer_id TEXT NULL,
+                provider_subscription_id TEXT NULL,
+                provider_checkout_id TEXT NULL,
+                provider_status TEXT NULL,
+                currency TEXT NOT NULL DEFAULT \'USD\',
+                type TEXT NOT NULL DEFAULT \'recurring\',
                 status TEXT NOT NULL,
                 trial_ends_at TEXT NULL,
+                current_period_start TEXT NULL,
                 current_period_end TEXT NULL,
+                cancel_at_period_end INTEGER NOT NULL DEFAULT 0,
+                canceled_at TEXT NULL,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
                 FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE RESTRICT
@@ -264,6 +283,43 @@ return static function (PDO $pdo): void {
         );
 
         $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS payment_gateway_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                provider TEXT NOT NULL,
+                subscription_id INTEGER NULL,
+                status TEXT NOT NULL,
+                event_type TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );'
+        );
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS subscription_changes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                subscription_id INTEGER NOT NULL,
+                from_plan_id INTEGER NULL,
+                to_plan_id INTEGER NULL,
+                change_type TEXT NOT NULL,
+                status TEXT NOT NULL,
+                effective_at TEXT NULL,
+                provider TEXT NULL,
+                provider_checkout_id TEXT NULL,
+                created_at TEXT NOT NULL,
+                applied_at TEXT NULL,
+                FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE CASCADE
+            );'
+        );
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS app_settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                setting_key TEXT NOT NULL UNIQUE,
+                setting_value TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );'
+        );
+
+        $pdo->exec(
             'CREATE TABLE IF NOT EXISTS payment_gateway_settings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 provider TEXT NOT NULL,
@@ -275,6 +331,9 @@ return static function (PDO $pdo): void {
 
         $pdo->exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_gateway_setting ON payment_gateway_settings (provider, setting_key);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_gateway_provider ON payment_gateway_settings (provider);');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_gateway_events_provider ON payment_gateway_events (provider);');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_gateway_events_status ON payment_gateway_events (status);');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_subscription_changes_subscription ON subscription_changes (subscription_id);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_plans_active ON plans (is_active);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_subscriptions_workspace ON subscriptions (workspace_id);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions (status);');
@@ -493,8 +552,17 @@ return static function (PDO $pdo): void {
             code VARCHAR(60) NOT NULL UNIQUE,
             name VARCHAR(120) NOT NULL,
             price_cents INT NOT NULL DEFAULT 0,
+            currency VARCHAR(10) NOT NULL DEFAULT "USD",
             duration VARCHAR(20) NOT NULL,
             is_active TINYINT(1) NOT NULL DEFAULT 1,
+            is_grandfathered TINYINT(1) NOT NULL DEFAULT 0,
+            disabled_at DATETIME NULL,
+            stripe_price_id VARCHAR(120) NULL,
+            razorpay_plan_id VARCHAR(120) NULL,
+            paypal_plan_id VARCHAR(120) NULL,
+            lemonsqueezy_variant_id VARCHAR(120) NULL,
+            dodo_price_id VARCHAR(120) NULL,
+            paddle_price_id VARCHAR(120) NULL,
             INDEX idx_plans_active (is_active)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
     );
@@ -504,9 +572,19 @@ return static function (PDO $pdo): void {
             id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             workspace_id BIGINT UNSIGNED NOT NULL,
             plan_id BIGINT UNSIGNED NOT NULL,
+            provider VARCHAR(30) NULL,
+            provider_customer_id VARCHAR(120) NULL,
+            provider_subscription_id VARCHAR(120) NULL,
+            provider_checkout_id VARCHAR(120) NULL,
+            provider_status VARCHAR(60) NULL,
+            currency VARCHAR(10) NOT NULL DEFAULT "USD",
+            type VARCHAR(20) NOT NULL DEFAULT "recurring",
             status VARCHAR(30) NOT NULL,
             trial_ends_at DATETIME NULL,
+            current_period_start DATETIME NULL,
             current_period_end DATETIME NULL,
+            cancel_at_period_end TINYINT(1) NOT NULL DEFAULT 0,
+            canceled_at DATETIME NULL,
             created_at DATETIME NOT NULL,
             INDEX idx_subscriptions_workspace (workspace_id),
             INDEX idx_subscriptions_status (status),
@@ -549,6 +627,46 @@ return static function (PDO $pdo): void {
             updated_at DATETIME NOT NULL,
             UNIQUE KEY idx_gateway_setting (provider, setting_key),
             INDEX idx_gateway_provider (provider)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS payment_gateway_events (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            provider VARCHAR(30) NOT NULL,
+            subscription_id BIGINT UNSIGNED NULL,
+            status VARCHAR(40) NOT NULL,
+            event_type VARCHAR(120) NOT NULL,
+            created_at DATETIME NOT NULL,
+            INDEX idx_gateway_events_provider (provider),
+            INDEX idx_gateway_events_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS subscription_changes (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            subscription_id BIGINT UNSIGNED NOT NULL,
+            from_plan_id BIGINT UNSIGNED NULL,
+            to_plan_id BIGINT UNSIGNED NULL,
+            change_type VARCHAR(40) NOT NULL,
+            status VARCHAR(30) NOT NULL,
+            effective_at DATETIME NULL,
+            provider VARCHAR(50) NULL,
+            provider_checkout_id VARCHAR(120) NULL,
+            created_at DATETIME NOT NULL,
+            applied_at DATETIME NULL,
+            INDEX idx_subscription_changes_subscription (subscription_id),
+            FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS app_settings (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            setting_key VARCHAR(120) NOT NULL UNIQUE,
+            setting_value TEXT NOT NULL,
+            updated_at DATETIME NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
     );
 };

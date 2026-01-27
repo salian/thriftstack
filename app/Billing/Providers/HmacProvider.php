@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 abstract class HmacProvider implements BillingProvider
 {
-    protected string $secret;
+    protected PaymentGatewaySettingsService $settings;
 
-    public function __construct(string $secret)
+    public function __construct(PaymentGatewaySettingsService $settings)
     {
-        $this->secret = $secret;
+        $this->settings = $settings;
     }
 
     abstract protected function signatureHeader(): string;
+
+    protected function secretKey(): string
+    {
+        $settings = $this->settings->getProviderSettings($this->name());
+        return (string)($settings['webhook_secret'] ?? '');
+    }
 
     protected function extractSignature(array $headers): ?string
     {
@@ -24,14 +30,10 @@ abstract class HmacProvider implements BillingProvider
         return null;
     }
 
-    protected function expectedSignature(string $payload): string
-    {
-        return hash_hmac('sha256', $payload, $this->secret);
-    }
-
     public function verifySignature(string $payload, array $headers): bool
     {
-        if ($this->secret === '') {
+        $secret = $this->secretKey();
+        if ($secret === '') {
             return false;
         }
         $signature = $this->extractSignature($headers);
@@ -39,7 +41,7 @@ abstract class HmacProvider implements BillingProvider
             return false;
         }
 
-        return hash_equals($this->expectedSignature($payload), $signature);
+        return hash_equals(hash_hmac('sha256', $payload, $secret), $signature);
     }
 
     public function eventType(array $payload): string
