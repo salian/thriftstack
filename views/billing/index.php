@@ -120,7 +120,6 @@
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <p class="muted">Paid plans redirect to hosted checkout based on your active payment gateways.</p>
             <?php endif; ?>
         </div>
 

@@ -37,7 +37,9 @@ final class Seeder
             ['free', 'Free', 0, 'monthly', 'subscription', 10, 1],
             ['trial', 'Trial', 0, 'trial', 'subscription', 10, 1],
             ['pro', 'Pro', 2900, 'monthly', 'subscription', 100, 1],
+            ['pro-yearly', 'Pro (Annual)', 29900, 'yearly', 'subscription', 1200, 1],
             ['business', 'Business', 9900, 'monthly', 'subscription', 350, 1],
+            ['business-yearly', 'Business (Annual)', 99900, 'yearly', 'subscription', 4200, 1],
             ['topup-500', 'AI Credits 500', 500, 'one_time', 'topup', 500, 1],
             ['topup-2000', 'AI Credits 2000', 1800, 'one_time', 'topup', 2000, 1],
         ];

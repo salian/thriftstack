@@ -30,7 +30,7 @@
                 </thead>
                 <tbody>
                     <?php foreach ($plans as $plan) : ?>
-                        <tr>
+                        <tr class="<?= (int)($plan['is_active'] ?? 0) === 1 ? '' : 'is-inactive' ?>">
                             <td><?= e($plan['code'] ?? '') ?></td>
                             <td><?= e($plan['name'] ?? '') ?></td>
                             <td><?= e((string)($plan['price_cents'] ?? 0)) ?></td>

@@ -732,6 +732,10 @@ input[type="file"]::-webkit-file-upload-button:hover {
     margin-top: 16px;
 }
 
+.table tr.is-inactive td {
+    opacity: 0.6;
+}
+
 .table-toolbar {
     margin-bottom: 16px;
     position: relative;
