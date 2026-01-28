@@ -56,13 +56,16 @@
 
     <div class="card">
         <h2>Profile image</h2>
+        <?php if (empty($profileImagesEnabled)) : ?>
+            <p class="muted">Profile images are disabled by your system administrator.</p>
+        <?php endif; ?>
         <form method="post" action="/uploads/profile" enctype="multipart/form-data" class="form">
             <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
             <label>
                 <span>Choose image (JPG, PNG, WebP)</span>
-                <input type="file" name="profile" accept="image/jpeg,image/png,image/webp" required>
+                <input type="file" name="profile" accept="image/jpeg,image/png,image/webp" required <?= empty($profileImagesEnabled) ? 'disabled' : '' ?>>
             </label>
-            <button type="submit" class="button">Upload profile image</button>
+            <button type="submit" class="button" <?= empty($profileImagesEnabled) ? 'disabled' : '' ?>>Upload profile image</button>
         </form>
     </div>
 

@@ -32,21 +32,6 @@
                 <?php endif; ?>
             <?php else : ?>
                 <p>No subscription yet. Start a trial or choose a plan.</p>
-                <?php
-                $trialPlan = null;
-                foreach (($plans ?? []) as $plan) {
-                    if (($plan['code'] ?? '') === 'trial') {
-                        $trialPlan = $plan;
-                        break;
-                    }
-                }
-                ?>
-                <?php if ($trialPlan) : ?>
-                    <form method="post" action="/billing/trial">
-                        <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
-                        <button type="submit" class="button">Start <?= e((string)$trialDays) ?>-day trial</button>
-                    </form>
-                <?php endif; ?>
             <?php endif; ?>
         </div>
 
@@ -92,31 +77,109 @@
             <?php if (empty($plans)) : ?>
                 <p>No plans configured yet.</p>
             <?php else : ?>
+                <?php
+                $planGroups = [];
+                foreach ($plans as $plan) {
+                    if (($plan['plan_type'] ?? 'subscription') !== 'subscription') {
+                        continue;
+                    }
+                    $duration = strtolower((string)($plan['duration'] ?? 'monthly'));
+                    if ($duration === 'trial') {
+                        continue;
+                    }
+                    $intervalKey = in_array($duration, ['yearly', 'annual'], true) ? 'annual' : $duration;
+                    $groupKey = trim((string)($plan['plan_group'] ?? ''));
+                    if ($groupKey === '') {
+                        $groupKey = (string)($plan['code'] ?? $intervalKey);
+                    }
+                    if (!isset($planGroups[$groupKey])) {
+                        $planGroups[$groupKey] = [
+                            'label' => $plan['name'] ?? ucwords(str_replace('-', ' ', $groupKey)),
+                            'plans' => [],
+                        ];
+                    }
+                    if (empty($planGroups[$groupKey]['label'])) {
+                        $planGroups[$groupKey]['label'] = $plan['name'] ?? ucwords(str_replace('-', ' ', $groupKey));
+                    }
+                    $planGroups[$groupKey]['plans'][$intervalKey] = $plan;
+                }
+                uasort($planGroups, static function (array $left, array $right): int {
+                    $leftPlans = $left['plans'] ?? [];
+                    $rightPlans = $right['plans'] ?? [];
+                    $leftPlan = $leftPlans['monthly'] ?? $leftPlans['annual'] ?? null;
+                    $rightPlan = $rightPlans['monthly'] ?? $rightPlans['annual'] ?? null;
+                    $leftPrice = (int)($leftPlan['price_cents'] ?? 0);
+                    $rightPrice = (int)($rightPlan['price_cents'] ?? 0);
+                    return $leftPrice <=> $rightPrice;
+                });
+                ?>
                 <div class="plan-grid">
-                    <?php foreach ($plans as $plan) : ?>
-                        <?php $isCurrent = !empty($subscription) && (int)$subscription['plan_id'] === (int)$plan['id']; ?>
-                        <div class="plan-card">
-                            <h3><?= e($plan['name']) ?></h3>
-                            <p class="plan-price">
-                                <?= e($plan['currency'] ?? 'USD') ?>
-                                <?= number_format(((int)$plan['price_cents']) / 100, 2) ?>
-                            </p>
-                            <p class="plan-interval"><?= e($plan['duration']) ?></p>
-                            <?php if (!empty($plan['ai_credits'])) : ?>
-                                <p class="muted"><?= e((string)$plan['ai_credits']) ?> AI credits included</p>
-                            <?php endif; ?>
-                            <?php if ($isCurrent) : ?>
-                                <span class="badge badge-primary">Current plan</span>
-                                <?php if ((int)($plan['is_active'] ?? 1) !== 1 && (int)($plan['is_grandfathered'] ?? 0) === 1) : ?>
-                                    <span class="badge badge-muted">Grandfathered</span>
+                    <?php foreach ($planGroups as $groupKey => $group) : ?>
+                        <?php
+                        $groupPlans = $group['plans'] ?? [];
+                        $defaultInterval = array_key_first($groupPlans) ?: 'monthly';
+                        if (!empty($subscription)) {
+                            foreach ($groupPlans as $interval => $plan) {
+                                if ((int)$subscription['plan_id'] === (int)$plan['id']) {
+                                    $defaultInterval = $interval;
+                                    break;
+                                }
+                            }
+                        }
+                        $hasToggle = isset($groupPlans['monthly'], $groupPlans['annual']);
+                        ?>
+                        <div class="plan-card" data-plan-card>
+                            <div class="plan-card-header">
+                                <h3><?= e((string)($group['label'] ?? $groupKey)) ?></h3>
+                                <?php if ($hasToggle) : ?>
+                                    <div class="plan-toggle" role="tablist" aria-label="Plan interval">
+                                        <button type="button" class="plan-toggle-button <?= $defaultInterval === 'monthly' ? 'is-active' : '' ?>" data-plan-interval="monthly">Monthly</button>
+                                        <button type="button" class="plan-toggle-button <?= $defaultInterval === 'annual' ? 'is-active' : '' ?>" data-plan-interval="annual">Annual</button>
+                                    </div>
                                 <?php endif; ?>
-                            <?php else : ?>
-                                <form method="post" action="/billing/subscribe">
-                                    <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
-                                    <input type="hidden" name="plan_id" value="<?= e((string)$plan['id']) ?>">
-                                    <button type="submit" class="button button-ghost">Continue with this plan</button>
-                                </form>
-                            <?php endif; ?>
+                            </div>
+                            <?php foreach ($groupPlans as $interval => $plan) : ?>
+                                <?php
+                                $isCurrent = !empty($subscription) && (int)$subscription['plan_id'] === (int)$plan['id'];
+                                $intervalLabel = $interval === 'annual' ? 'Annual' : ucfirst($interval);
+                                ?>
+                                <div class="plan-option <?= $interval === $defaultInterval ? 'is-active' : '' ?>" data-plan-option="<?= e($interval) ?>">
+                                    <p class="plan-price">
+                                        <?= e($plan['currency'] ?? 'USD') ?>
+                                        <?= number_format(((int)$plan['price_cents']) / 100, 2) ?>
+                                    </p>
+                                    <p class="plan-interval"><?= e($intervalLabel) ?></p>
+                                    <?php if (!empty($plan['ai_credits'])) : ?>
+                                        <p class="muted"><?= e((string)$plan['ai_credits']) ?> AI credits included</p>
+                                    <?php endif; ?>
+                                    <?php if ($isCurrent) : ?>
+                                        <span class="badge badge-primary">Current plan</span>
+                                        <?php if ((int)($plan['is_active'] ?? 1) !== 1 && (int)($plan['is_grandfathered'] ?? 0) === 1) : ?>
+                                            <span class="badge badge-muted">Grandfathered</span>
+                                        <?php endif; ?>
+                                    <?php else : ?>
+                                        <?php
+                                        $trialDays = (int)($plan['trial_days'] ?? 0);
+                                        if ($trialDays <= 0) {
+                                            $trialDays = 14;
+                                        }
+                                        ?>
+                                        <?php if (empty($subscription) && (int)($plan['trial_enabled'] ?? 0) === 1) : ?>
+                                            <form method="post" action="/billing/trial">
+                                                <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+                                                <input type="hidden" name="plan_id" value="<?= e((string)$plan['id']) ?>">
+                                                <button type="submit" class="button">Start <?= e((string)$trialDays) ?>-day trial</button>
+                                            </form>
+                                        <?php elseif (($plan['code'] ?? '') === 'free') : ?>
+                                            <form method="post" action="/billing/subscribe">
+                                                <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+                                                <input type="hidden" name="plan_id" value="<?= e((string)$plan['id']) ?>">
+                                                <button type="submit" class="button button-ghost">Continue with this plan</button>
+                                            </form>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>

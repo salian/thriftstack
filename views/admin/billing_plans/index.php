@@ -19,11 +19,14 @@
                 <thead>
                     <tr>
                         <th>Code</th>
+                        <th>Group</th>
                         <th>Name</th>
                         <th>Price (cents)</th>
                         <th>Duration</th>
                         <th>Type</th>
                         <th>AI credits</th>
+                        <th>Trial</th>
+                        <th>Trial days</th>
                         <th>Active</th>
                         <th>Action</th>
                     </tr>
@@ -32,11 +35,14 @@
                     <?php foreach ($plans as $plan) : ?>
                         <tr class="<?= (int)($plan['is_active'] ?? 0) === 1 ? '' : 'is-inactive' ?>">
                             <td><?= e($plan['code'] ?? '') ?></td>
+                            <td><?= e($plan['plan_group'] ?? '') ?></td>
                             <td><?= e($plan['name'] ?? '') ?></td>
                             <td><?= e((string)($plan['price_cents'] ?? 0)) ?></td>
                             <td><?= e($plan['duration'] ?? '') ?></td>
                             <td><?= e($plan['plan_type'] ?? 'subscription') ?></td>
                             <td><?= e((string)($plan['ai_credits'] ?? 0)) ?></td>
+                            <td><?= (int)($plan['trial_enabled'] ?? 0) === 1 ? 'Yes' : 'No' ?></td>
+                            <td><?= e((string)($plan['trial_days'] ?? 0)) ?></td>
                             <td><?= (int)($plan['is_active'] ?? 0) === 1 ? 'Yes' : 'No' ?></td>
                             <td>
                                 <button
@@ -45,11 +51,14 @@
                                     data-billing-open="edit"
                                     data-plan-id="<?= e((string)($plan['id'] ?? '')) ?>"
                                     data-plan-code="<?= e($plan['code'] ?? '') ?>"
+                                    data-plan-group="<?= e($plan['plan_group'] ?? '') ?>"
                                     data-plan-name="<?= e($plan['name'] ?? '') ?>"
                                     data-plan-price="<?= e((string)($plan['price_cents'] ?? 0)) ?>"
                                     data-plan-duration="<?= e($plan['duration'] ?? '') ?>"
                                     data-plan-type="<?= e($plan['plan_type'] ?? 'subscription') ?>"
                                     data-plan-credits="<?= e((string)($plan['ai_credits'] ?? 0)) ?>"
+                                    data-plan-trial-enabled="<?= (int)($plan['trial_enabled'] ?? 0) === 1 ? '1' : '0' ?>"
+                                    data-plan-trial-days="<?= e((string)($plan['trial_days'] ?? 0)) ?>"
                                     data-plan-stripe="<?= e($plan['stripe_price_id'] ?? '') ?>"
                                     data-plan-razorpay="<?= e($plan['razorpay_plan_id'] ?? '') ?>"
                                     data-plan-paypal="<?= e($plan['paypal_plan_id'] ?? '') ?>"
@@ -90,6 +99,10 @@
                     <input type="text" name="code" required data-billing-code-input>
                 </label>
                 <label>
+                    <span>Plan group</span>
+                    <input type="text" name="plan_group" data-billing-group placeholder="e.g. pro">
+                </label>
+                <label>
                     <span>Name</span>
                     <input type="text" name="name" required data-billing-name>
                 </label>
@@ -111,6 +124,14 @@
                 <label>
                     <span>AI credits</span>
                     <input type="number" name="ai_credits" min="0" step="1" value="0" data-billing-credits>
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" name="trial_enabled" value="1" data-billing-trial-enabled>
+                    <span>Enable free trial</span>
+                </label>
+                <label>
+                    <span>Trial duration (days)</span>
+                    <input type="number" name="trial_days" min="0" step="1" value="0" data-billing-trial-days>
                 </label>
                 <label>
                     <span>Stripe price ID</span>

@@ -1,3 +1,17 @@
+<?php
+$settings = new AppSettingsService(DB::connect($GLOBALS['config'] ?? []));
+$companyName = $settings->get('invoice.company_name', 'Your Company');
+$supportEmail = $settings->get('invoice.support_email', 'support@example.com');
+$redactedEmail = str_replace(['@', '.'], [' [at] ', ' [dot] '], $supportEmail ?? 'support@example.com');
+$addressParts = array_filter([
+    $settings->get('invoice.company_address', ''),
+    $settings->get('invoice.company_city', ''),
+    $settings->get('invoice.company_state', ''),
+    $settings->get('invoice.company_postal_code', ''),
+    $settings->get('invoice.company_country', ''),
+]);
+$companyAddress = $addressParts ? implode(', ', $addressParts) : '';
+?>
 <section class="page-section">
     <h1>Terms of Service</h1>
     <p>Effective date: <?= e(date('F j, Y')) ?></p>
@@ -25,5 +39,9 @@
     <p>The service is provided "as is" without warranties of any kind.</p>
 
     <h2>Contact</h2>
-    <p>Email: support@example.com</p>
+    <p>Company: <?= e($companyName ?? 'Your Company') ?></p>
+    <?php if ($companyAddress !== '') : ?>
+        <p>Address: <?= e($companyAddress) ?></p>
+    <?php endif; ?>
+    <p>Email: <?= e($redactedEmail ?? 'support [at] example [dot] com') ?></p>
 </section>

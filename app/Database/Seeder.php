@@ -34,21 +34,20 @@ final class Seeder
         }
 
         $plans = [
-            ['free', 'Free', 0, 'monthly', 'subscription', 10, 1],
-            ['trial', 'Trial', 0, 'trial', 'subscription', 10, 1],
-            ['pro', 'Pro', 2900, 'monthly', 'subscription', 100, 1],
-            ['pro-yearly', 'Pro (Annual)', 29900, 'yearly', 'subscription', 1200, 1],
-            ['business', 'Business', 9900, 'monthly', 'subscription', 350, 1],
-            ['business-yearly', 'Business (Annual)', 99900, 'yearly', 'subscription', 4200, 1],
-            ['topup-500', 'AI Credits 500', 500, 'one_time', 'topup', 500, 1],
-            ['topup-2000', 'AI Credits 2000', 1800, 'one_time', 'topup', 2000, 1],
+            ['free', 'free', 'Forever Free', 0, 'monthly', 'subscription', 10, 0, 0, 1],
+            ['pro', 'pro', 'Pro', 2900, 'monthly', 'subscription', 100, 1, 10, 1],
+            ['pro-annual', 'pro', 'Pro', 29900, 'annual', 'subscription', 1200, 1, 10, 1],
+            ['business', 'business', 'Business', 9900, 'monthly', 'subscription', 350, 1, 10, 1],
+            ['business-annual', 'business', 'Business', 99900, 'annual', 'subscription', 4200, 1, 10, 1],
+            ['topup-500', 'topup', 'AI Credits 500', 500, 'one_time', 'topup', 500, 0, 0, 1],
+            ['topup-2000', 'topup', 'AI Credits 2000', 1800, 'one_time', 'topup', 2000, 0, 0, 1],
         ];
 
         $planStmt = $this->pdo->prepare(
-            $this->insertIgnore . ' INTO plans (code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            $this->insertIgnore . ' INTO plans (code, plan_group, name, price_cents, currency, duration, plan_type, ai_credits, trial_enabled, trial_days, is_active, is_grandfathered, disabled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
-        foreach ($plans as [$code, $name, $price, $interval, $type, $credits, $active]) {
-            $planStmt->execute([$code, $name, $price, 'USD', $interval, $type, $credits, $active, 0, null]);
+        foreach ($plans as [$code, $group, $name, $price, $interval, $type, $credits, $trialEnabled, $trialDays, $active]) {
+            $planStmt->execute([$code, $group, $name, $price, 'USD', $interval, $type, $credits, $trialEnabled, $trialDays, $active, 0, null]);
         }
 
         $this->seedAppSettings($now);
@@ -135,6 +134,7 @@ final class Seeder
             ['billing.currency', 'USD'],
             ['billing.gateway_rule', 'priority'],
             ['billing.gateway_priority', json_encode(['stripe', 'razorpay', 'paypal', 'lemonsqueezy', 'dodo', 'paddle'])],
+            ['profile.images.enabled', '0'],
         ];
 
         $stmt = $this->pdo->prepare(

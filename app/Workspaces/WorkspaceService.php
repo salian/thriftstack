@@ -388,6 +388,40 @@ final class WorkspaceService
 
     public function createInvite(int $workspaceId, string $email, string $role, int $actorId): string
     {
+        $existing = $this->pdo->prepare(
+            'SELECT id, workspace_role AS role, accepted_at FROM workspace_invites WHERE workspace_id = ? AND email = ? LIMIT 1'
+        );
+        $existing->execute([$workspaceId, $email]);
+        $invite = $existing->fetch(PDO::FETCH_ASSOC);
+        if ($invite && empty($invite['accepted_at'])) {
+            $token = bin2hex(random_bytes(32));
+            $tokenHash = hash('sha256', $token);
+            $now = new DateTimeImmutable('now');
+            $expires = $now->modify('+7 days');
+
+            $update = $this->pdo->prepare(
+                'UPDATE workspace_invites
+                 SET token_hash = ?, expires_at = ?, created_at = ?, accepted_at = NULL, workspace_role = ?
+                 WHERE id = ?'
+            );
+            $update->execute([
+                $tokenHash,
+                $expires->format('Y-m-d H:i:s'),
+                $now->format('Y-m-d H:i:s'),
+                $role,
+                (int)$invite['id'],
+            ]);
+
+            $this->audit->log('workspaces.invite.resent', $actorId, [
+                'workspace_id' => $workspaceId,
+                'invite_id' => (int)$invite['id'],
+                'email' => $email,
+                'role' => $role,
+            ]);
+
+            return $token;
+        }
+
         $token = bin2hex(random_bytes(32));
         $tokenHash = hash('sha256', $token);
         $now = new DateTimeImmutable('now');

@@ -116,6 +116,61 @@
     </dialog>
 
     <div class="card">
+        <h2>Invoice setup</h2>
+        <p class="muted">Configure seller details for invoices and receipts.</p>
+        <form method="post" action="/super-admin/invoice-setup" class="form">
+            <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+            <label>
+                <span>Company name</span>
+                <input type="text" name="invoice_company_name" value="<?= e((string)$appSettings->get('invoice.company_name', '')) ?>">
+            </label>
+            <label>
+                <span>Company address</span>
+                <input type="text" name="invoice_company_address" value="<?= e((string)$appSettings->get('invoice.company_address', '')) ?>">
+            </label>
+            <label>
+                <span>City</span>
+                <input type="text" name="invoice_company_city" value="<?= e((string)$appSettings->get('invoice.company_city', '')) ?>">
+            </label>
+            <label>
+                <span>State / region</span>
+                <input type="text" name="invoice_company_state" value="<?= e((string)$appSettings->get('invoice.company_state', '')) ?>">
+            </label>
+            <label>
+                <span>Postal code</span>
+                <input type="text" name="invoice_company_postal_code" value="<?= e((string)$appSettings->get('invoice.company_postal_code', '')) ?>">
+            </label>
+            <label>
+                <span>Country</span>
+                <input type="text" name="invoice_company_country" value="<?= e((string)$appSettings->get('invoice.company_country', '')) ?>">
+            </label>
+            <label>
+                <span>Tax ID / VAT</span>
+                <input type="text" name="invoice_tax_id" value="<?= e((string)$appSettings->get('invoice.tax_id', '')) ?>">
+            </label>
+            <label>
+                <span>Support email</span>
+                <input type="email" name="invoice_support_email" value="<?= e((string)$appSettings->get('invoice.support_email', '')) ?>">
+            </label>
+            <button type="submit" class="button">Save invoice setup</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Profile images</h2>
+        <p class="muted">Allow users to upload profile images and display them in the header.</p>
+        <form method="post" action="/super-admin/profile-images" class="form">
+            <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+            <label class="checkbox">
+                <input type="checkbox" name="profile_images_enabled" value="1"
+                    <?= $appSettings->get('profile.images.enabled', '0') === '1' ? 'checked' : '' ?>>
+                <span>Enable profile images</span>
+            </label>
+            <button type="submit" class="button">Save profile image setting</button>
+        </form>
+    </div>
+
+    <div class="card">
         <h2>Feature flags</h2>
         <p>App-wide enable/disable for sections like Tasks, Reports, and more (coming soon).</p>
     </div>

@@ -70,7 +70,6 @@ final class BillingController
             'pendingChanges' => $pendingChanges,
             'planIndex' => $this->indexPlansById($allPlans),
             'invoices' => $invoices,
-            'trialDays' => $this->billing->trialDays(),
             'topupPurchases' => $topupPurchases,
         ]));
     }
@@ -94,17 +93,27 @@ final class BillingController
             return Response::redirect('/super-admin/billing-plans');
         }
 
-        $trialPlan = $this->billing->findPlanByCode('trial');
-        if (!$trialPlan) {
-            $_SESSION['flash']['message'] = 'Trial plan is not configured yet.';
-            return Response::redirect('/super-admin/billing-plans');
+        $planId = (int)$request->input('plan_id', 0);
+        $plan = $planId > 0 ? $this->billing->findPlan($planId) : null;
+        if (!$plan) {
+            $_SESSION['flash']['message'] = 'Select a valid plan for trial.';
+            return Response::redirect('/billing');
         }
-        if (($trialPlan['plan_type'] ?? 'subscription') !== 'subscription') {
-            $_SESSION['flash']['message'] = 'Trial plan must be a subscription plan.';
+        if (($plan['plan_type'] ?? 'subscription') !== 'subscription') {
+            $_SESSION['flash']['message'] = 'Trials are only available for subscription plans.';
+            return Response::redirect('/billing');
+        }
+        if ((int)($plan['trial_enabled'] ?? 0) !== 1) {
+            $_SESSION['flash']['message'] = 'Trials are not enabled for this plan.';
             return Response::redirect('/billing');
         }
 
-        return $this->beginCheckout($workspace, $trialPlan, $request, $this->billing->trialDays());
+        $trialDays = (int)($plan['trial_days'] ?? 0);
+        if ($trialDays <= 0) {
+            $trialDays = $this->billing->trialDays();
+        }
+
+        return $this->beginCheckout($workspace, $plan, $request, $trialDays);
     }
 
     public function selectPlan(Request $request): Response
@@ -184,6 +193,7 @@ final class BillingController
         }
 
         $code = trim((string)$request->input('code', ''));
+        $planGroup = trim((string)$request->input('plan_group', ''));
         $name = trim((string)$request->input('name', ''));
         $price = (int)$request->input('price_cents', 0);
         $duration = trim((string)$request->input('duration', 'monthly'));
@@ -209,7 +219,14 @@ final class BillingController
         }
 
         $currency = (string)$this->appSettings->get('billing.currency', 'USD');
-        $this->billing->createPlan($code, $name, $price, $currency, $duration, $planType, $aiCredits, $isActive, $providerIds, $isGrandfathered);
+        $trialEnabled = $request->input('trial_enabled') === '1';
+        $trialDays = max(0, (int)$request->input('trial_days', 0));
+        if ($planType !== 'subscription') {
+            $trialEnabled = false;
+            $trialDays = 0;
+        }
+
+        $this->billing->createPlan($code, $planGroup, $name, $price, $currency, $duration, $planType, $aiCredits, $trialEnabled, $trialDays, $isActive, $providerIds, $isGrandfathered);
         $_SESSION['flash']['message'] = 'Plan created.';
 
         return Response::redirect('/super-admin/billing-plans');
@@ -226,6 +243,7 @@ final class BillingController
         }
 
         $planId = (int)$request->input('plan_id', 0);
+        $planGroup = trim((string)$request->input('plan_group', ''));
         $name = trim((string)$request->input('name', ''));
         $price = (int)$request->input('price_cents', 0);
         $duration = trim((string)$request->input('duration', 'monthly'));
@@ -250,7 +268,14 @@ final class BillingController
             return Response::redirect('/super-admin/billing-plans');
         }
 
-        $this->billing->updatePlan($planId, $name, $price, $duration, $planType, $aiCredits, $isActive, $providerIds, $isGrandfathered);
+        $trialEnabled = $request->input('trial_enabled') === '1';
+        $trialDays = max(0, (int)$request->input('trial_days', 0));
+        if ($planType !== 'subscription') {
+            $trialEnabled = false;
+            $trialDays = 0;
+        }
+
+        $this->billing->updatePlan($planId, $planGroup, $name, $price, $duration, $planType, $aiCredits, $trialEnabled, $trialDays, $isActive, $providerIds, $isGrandfathered);
         $_SESSION['flash']['message'] = 'Plan updated.';
 
         return Response::redirect('/super-admin/billing-plans');

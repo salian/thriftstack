@@ -29,6 +29,7 @@
                 $workspaceList = $workspaceService->listForUser((int)(Auth::user()['id'] ?? 0));
                 $currentWorkspaceId = $workspaceService->currentWorkspaceId();
                 $canAccessBilling = false;
+                $canAccessWorkspaceAdmin = false;
                 $hasWorkspaceBillingPermission = false;
                 $workspacePermissionCache = [];
 
@@ -36,6 +37,9 @@
                     $role = (string)($workspace['role'] ?? '');
                     if ($role === '') {
                         continue;
+                    }
+                    if ($workspaceService->isRoleAtLeast($role, 'Workspace Admin')) {
+                        $canAccessWorkspaceAdmin = true;
                     }
                     if (!array_key_exists($role, $workspacePermissionCache)) {
                         $workspacePermissionCache[$role] = $workspaceService->workspacePermissionsForRole($role);
@@ -47,6 +51,8 @@
                 }
 
                 $canAccessBilling = $hasWorkspaceBillingPermission;
+                $hasSystemAccess = (int)(Auth::user()['is_system_admin'] ?? 0) === 1
+                    || (int)(Auth::user()['is_system_staff'] ?? 0) === 1;
                 ?>
                 <div class="sidebar-workspace">
                     <form method="post" action="/teams/switch" class="form-inline">
@@ -79,10 +85,12 @@
                             <i class="fa-solid fa-chart-column sidebar-icon" aria-hidden="true"></i>
                             <span class="sidebar-label">Reports</span>
                         </a>
-                        <a href="/workspace-admin/users" aria-label="Admin" data-tooltip="Admin">
-                            <i class="fa-solid fa-shield-halved sidebar-icon" aria-hidden="true"></i>
-                            <span class="sidebar-label">Admin</span>
-                        </a>
+                        <?php if ($canAccessWorkspaceAdmin || $hasSystemAccess) : ?>
+                            <a href="/workspace-admin/users" aria-label="Admin" data-tooltip="Admin">
+                                <i class="fa-solid fa-shield-halved sidebar-icon" aria-hidden="true"></i>
+                                <span class="sidebar-label">Admin</span>
+                            </a>
+                        <?php endif; ?>
                         <div class="sidebar-divider"></div>
                         <a href="/settings" aria-label="Settings" data-tooltip="Settings">
                             <i class="fa-solid fa-gear sidebar-icon" aria-hidden="true"></i>
@@ -137,10 +145,26 @@
                             if ($initials === '') {
                                 $initials = 'U';
                             }
+                            $settings = new AppSettingsService(DB::connect($GLOBALS['config'] ?? []));
+                            $profileImagesEnabled = $settings->get('profile.images.enabled', '0') === '1';
+                            $profileImageAvailable = false;
+                            if ($profileImagesEnabled) {
+                                $stmt = DB::connect($GLOBALS['config'] ?? [])->prepare(
+                                    'SELECT id FROM uploads WHERE user_id = ? AND type = "profile" ORDER BY created_at DESC LIMIT 1'
+                                );
+                                $stmt->execute([(int)(Auth::user()['id'] ?? 0)]);
+                                $profileImageAvailable = (bool)$stmt->fetchColumn();
+                            }
                             ?>
                             <details class="nav-user-menu">
                                 <summary>
-                                    <span class="avatar"><?= e($initials) ?></span>
+                                    <span class="avatar">
+                                        <?php if ($profileImagesEnabled && $profileImageAvailable) : ?>
+                                            <img src="/profile/image" alt="Profile image">
+                                        <?php else : ?>
+                                            <?= e($initials) ?>
+                                        <?php endif; ?>
+                                    </span>
                                     <span class="nav-user-name"><?= e($userName) ?></span>
                                     <span class="nav-chevron"></span>
                                 </summary>
@@ -152,10 +176,12 @@
                                         <a href="/billing">Billing</a>
                                     <?php endif; ?>
                                     <a href="/profile">Profile</a>
-                                    <?php if ((int)(Auth::user()['is_system_admin'] ?? 0) === 1 || (int)(Auth::user()['is_system_staff'] ?? 0) === 1) : ?>
+                                    <?php if ($canAccessWorkspaceAdmin || $hasSystemAccess) : ?>
                                         <div class="nav-menu-divider"></div>
                                         <a href="/workspace-admin/users">Workspace Admin</a>
-                                        <a href="/super-admin/analytics">System Admin</a>
+                                        <?php if ($hasSystemAccess) : ?>
+                                            <a href="/super-admin/analytics">System Admin</a>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                     <div class="nav-menu-divider"></div>
                                     <form method="post" action="/logout" class="nav-menu-form">
@@ -179,7 +205,8 @@
                 }
                 ?>
                 <?php if (!empty($flash['message'])) : ?>
-                    <div class="alert alert-success flash" data-flash>
+                    <?php $flashType = (string)($flash['type'] ?? 'success'); ?>
+                    <div class="alert <?= $flashType === 'error' ? 'alert-error' : 'alert-success' ?> flash" data-flash>
                         <?= e((string)$flash['message']) ?>
                     </div>
                 <?php endif; ?>

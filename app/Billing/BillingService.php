@@ -16,15 +16,15 @@ final class BillingService
     public function listPlans(bool $includeInactive = false): array
     {
         if ($includeInactive) {
-            $stmt = $this->pdo->query('SELECT id, code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans ORDER BY price_cents ASC');
+            $stmt = $this->pdo->query('SELECT id, code, plan_group, name, price_cents, currency, duration, plan_type, ai_credits, trial_enabled, trial_days, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans ORDER BY plan_group ASC, price_cents ASC');
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         }
 
         $stmt = $this->pdo->prepare(
-            'SELECT id, code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id
+            'SELECT id, code, plan_group, name, price_cents, currency, duration, plan_type, ai_credits, trial_enabled, trial_days, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id
              FROM plans
              WHERE is_active = 1 AND plan_type = "subscription"
-             ORDER BY price_cents ASC'
+             ORDER BY plan_group ASC, price_cents ASC'
         );
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -33,12 +33,12 @@ final class BillingService
     public function listTopupPlans(bool $includeInactive = false): array
     {
         if ($includeInactive) {
-            $stmt = $this->pdo->query('SELECT id, code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans WHERE plan_type = "topup" ORDER BY price_cents ASC');
+            $stmt = $this->pdo->query('SELECT id, code, plan_group, name, price_cents, currency, duration, plan_type, ai_credits, trial_enabled, trial_days, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans WHERE plan_type = "topup" ORDER BY price_cents ASC');
             return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
         }
 
         $stmt = $this->pdo->prepare(
-            'SELECT id, code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id
+            'SELECT id, code, plan_group, name, price_cents, currency, duration, plan_type, ai_credits, trial_enabled, trial_days, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id
              FROM plans
              WHERE is_active = 1 AND plan_type = "topup"
              ORDER BY price_cents ASC'
@@ -340,30 +340,36 @@ final class BillingService
 
     public function createPlan(
         string $code,
+        string $planGroup,
         string $name,
         int $priceCents,
         string $currency,
         string $duration,
         string $planType,
         int $aiCredits,
+        bool $trialEnabled,
+        int $trialDays,
         bool $isActive,
         array $providerIds = [],
         bool $isGrandfathered = false
     ): void
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO plans (code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO plans (code, plan_group, name, price_cents, currency, duration, plan_type, ai_credits, trial_enabled, trial_days, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $disabledAt = $isActive ? null : date('Y-m-d H:i:s');
         $stmt->execute([
             $code,
+            $planGroup !== '' ? $planGroup : null,
             $name,
             $priceCents,
             $currency,
             $duration,
             $planType,
             $aiCredits,
+            $trialEnabled ? 1 : 0,
+            $trialDays,
             $isActive ? 1 : 0,
             $isGrandfathered ? 1 : 0,
             $disabledAt,
@@ -378,11 +384,14 @@ final class BillingService
 
     public function updatePlan(
         int $planId,
+        string $planGroup,
         string $name,
         int $priceCents,
         string $duration,
         string $planType,
         int $aiCredits,
+        bool $trialEnabled,
+        int $trialDays,
         bool $isActive,
         array $providerIds = [],
         bool $isGrandfathered = false
@@ -398,16 +407,19 @@ final class BillingService
 
         $stmt = $this->pdo->prepare(
             'UPDATE plans
-             SET name = ?, price_cents = ?, duration = ?, plan_type = ?, ai_credits = ?, is_active = ?, is_grandfathered = ?, disabled_at = ?,
+             SET plan_group = ?, name = ?, price_cents = ?, duration = ?, plan_type = ?, ai_credits = ?, trial_enabled = ?, trial_days = ?, is_active = ?, is_grandfathered = ?, disabled_at = ?,
                  stripe_price_id = ?, razorpay_plan_id = ?, paypal_plan_id = ?, lemonsqueezy_variant_id = ?, dodo_price_id = ?, paddle_price_id = ?
              WHERE id = ?'
         );
         $stmt->execute([
+            $planGroup !== '' ? $planGroup : null,
             $name,
             $priceCents,
             $duration,
             $planType,
             $aiCredits,
+            $trialEnabled ? 1 : 0,
+            $trialDays,
             $isActive ? 1 : 0,
             $isGrandfathered ? 1 : 0,
             $disabledAt,
@@ -424,7 +436,7 @@ final class BillingService
     public function findPlanByCode(string $code): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans WHERE code = ? LIMIT 1'
+            'SELECT id, code, plan_group, name, price_cents, currency, duration, plan_type, ai_credits, trial_enabled, trial_days, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans WHERE code = ? LIMIT 1'
         );
         $stmt->execute([$code]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -434,7 +446,7 @@ final class BillingService
     public function findPlan(int $planId): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, code, name, price_cents, currency, duration, plan_type, ai_credits, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans WHERE id = ? LIMIT 1'
+            'SELECT id, code, plan_group, name, price_cents, currency, duration, plan_type, ai_credits, trial_enabled, trial_days, is_active, is_grandfathered, disabled_at, stripe_price_id, razorpay_plan_id, paypal_plan_id, lemonsqueezy_variant_id, dodo_price_id, paddle_price_id FROM plans WHERE id = ? LIMIT 1'
         );
         $stmt->execute([$planId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);

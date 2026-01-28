@@ -280,12 +280,14 @@ $router
         $workspaceRoles = ['Workspace Owner', 'Workspace Admin', 'Workspace Member'];
         $workspacePermissions = $rbac->workspacePermissions();
         $workspacePermissionsByRole = $rbac->workspacePermissionsByRole();
+        $appSettings = new AppSettingsService($pdo);
 
         return View::render('admin/site_settings/index', [
             'title' => 'Site Settings',
             'workspaceRoles' => $workspaceRoles,
             'workspacePermissions' => $workspacePermissions,
             'workspacePermissionsByRole' => $workspacePermissionsByRole,
+            'appSettings' => $appSettings,
         ]);
     })
     ->middleware(new AuthRequired())
@@ -324,6 +326,13 @@ $router
 $router
     ->post('/profile/update', static function (Request $request) use ($settingsController) {
         return $settingsController->updateProfile($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo));
+
+$router
+    ->get('/profile/image', static function (Request $request) use ($uploadController) {
+        return $uploadController->profileImage($request);
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo));
@@ -469,6 +478,58 @@ $router
 $router
     ->post('/super-admin/workspace-permissions', static function (Request $request) use ($workspacePermissionsController) {
         return $workspacePermissionsController->create($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
+    ->middleware(new RequireSystemAccess());
+
+$router
+    ->post('/super-admin/invoice-setup', static function (Request $request) use ($pdo) {
+        if (!Csrf::validate($request->input('_token'))) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+        if ((int)(Auth::user()['is_system_admin'] ?? 0) !== 1) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+
+        $settings = new AppSettingsService($pdo);
+        $fields = [
+            'invoice_company_name' => 'invoice.company_name',
+            'invoice_company_address' => 'invoice.company_address',
+            'invoice_company_city' => 'invoice.company_city',
+            'invoice_company_state' => 'invoice.company_state',
+            'invoice_company_postal_code' => 'invoice.company_postal_code',
+            'invoice_company_country' => 'invoice.company_country',
+            'invoice_tax_id' => 'invoice.tax_id',
+            'invoice_support_email' => 'invoice.support_email',
+        ];
+
+        foreach ($fields as $inputKey => $settingKey) {
+            $settings->set($settingKey, trim((string)$request->input($inputKey, '')));
+        }
+
+        $_SESSION['flash']['message'] = 'Invoice setup saved.';
+        return Response::redirect('/super-admin/settings');
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
+    ->middleware(new RequireSystemAccess());
+
+$router
+    ->post('/super-admin/profile-images', static function (Request $request) use ($pdo) {
+        if (!Csrf::validate($request->input('_token'))) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+        if ((int)(Auth::user()['is_system_admin'] ?? 0) !== 1) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+
+        $settings = new AppSettingsService($pdo);
+        $enabled = $request->input('profile_images_enabled') === '1';
+        $settings->set('profile.images.enabled', $enabled ? '1' : '0');
+
+        $_SESSION['flash']['message'] = 'Profile image setting saved.';
+        return Response::redirect('/super-admin/settings');
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))

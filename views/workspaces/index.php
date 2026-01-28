@@ -165,7 +165,7 @@
                                     <th>Workspace Role</th>
                                     <th>Status</th>
                                     <?php if (!empty($canManage)) : ?>
-                                        <th>Update</th>
+                                        <th>Actions</th>
                                     <?php endif; ?>
                                 </tr>
                             </thead>
@@ -181,7 +181,24 @@
                                             <?php endif; ?>
                                         </td>
                                         <td class="<?= $isInvite ? 'is-italic' : '' ?>"><?= e($entry['email'] ?? '') ?></td>
-                                        <td><?= e($entry['role'] ?? '') ?></td>
+                                        <td>
+                                            <?php if (!$isInvite && !empty($canManage)) : ?>
+                                                <form method="post" action="/teams/members/role" class="form-inline">
+                                                    <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+                                                    <input type="hidden" name="member_id" value="<?= e((string)$entry['user_id']) ?>">
+                                                    <input type="hidden" name="return_to" value="<?= e($_SERVER['REQUEST_URI'] ?? '/teams') ?>">
+                                                    <select name="role" data-auto-submit>
+                                                        <?php foreach ($roles as $roleOption) : ?>
+                                                            <option value="<?= e($roleOption) ?>" <?= ($roleOption === ($entry['role'] ?? '')) ? 'selected' : '' ?>>
+                                                                <?= e($roleOption) ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </form>
+                                            <?php else : ?>
+                                                <?= e($entry['role'] ?? '') ?>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><?= e($entry['status'] ?? '') ?></td>
                                         <?php if (!empty($canManage)) : ?>
                                             <td>
@@ -190,20 +207,6 @@
                                                         <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
                                                         <input type="hidden" name="invite_id" value="<?= e((string)$entry['invite_id']) ?>">
                                                         <button type="submit" class="button button-ghost">Resend</button>
-                                                    </form>
-                                                <?php else : ?>
-                                                    <form method="post" action="/teams/members/role" class="form-inline">
-                                                        <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
-                                                        <input type="hidden" name="member_id" value="<?= e((string)$entry['user_id']) ?>">
-                                                        <input type="hidden" name="return_to" value="<?= e($_SERVER['REQUEST_URI'] ?? '/teams') ?>">
-                                                        <select name="role">
-                                                            <?php foreach ($roles as $roleOption) : ?>
-                                                                <option value="<?= e($roleOption) ?>" <?= ($roleOption === ($entry['role'] ?? '')) ? 'selected' : '' ?>>
-                                                                    <?= e($roleOption) ?>
-                                                                </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                        <button type="submit" class="button">Update</button>
                                                     </form>
                                                 <?php endif; ?>
                                             </td>

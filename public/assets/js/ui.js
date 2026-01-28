@@ -161,6 +161,39 @@
 })();
 
 (() => {
+  const cards = document.querySelectorAll('[data-plan-card]');
+  if (!cards.length) {
+    return;
+  }
+
+  cards.forEach((card) => {
+    const buttons = card.querySelectorAll('[data-plan-interval]');
+    if (!buttons.length) {
+      return;
+    }
+    const options = card.querySelectorAll('[data-plan-option]');
+    const setActive = (interval) => {
+      buttons.forEach((button) => {
+        button.classList.toggle('is-active', button.dataset.planInterval === interval);
+      });
+      options.forEach((option) => {
+        option.classList.toggle('is-active', option.dataset.planOption === interval);
+      });
+    };
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const interval = button.dataset.planInterval || 'monthly';
+        setActive(interval);
+      });
+    });
+    const current = card.querySelector('.plan-toggle-button.is-active');
+    if (current) {
+      setActive(current.dataset.planInterval || 'monthly');
+    }
+  });
+})();
+
+(() => {
   const flash = document.querySelector('[data-flash]');
   if (!flash) {
     return;
@@ -351,11 +384,14 @@
   const codeWrap = modal.querySelector('[data-billing-code]');
   const codeInput = modal.querySelector('[data-billing-code-input]');
   const idInput = modal.querySelector('[data-billing-id]');
+  const groupInput = modal.querySelector('[data-billing-group]');
   const nameInput = modal.querySelector('[data-billing-name]');
   const priceInput = modal.querySelector('[data-billing-price]');
   const durationInput = modal.querySelector('[data-billing-duration]');
   const typeInput = modal.querySelector('[data-billing-type]');
   const creditsInput = modal.querySelector('[data-billing-credits]');
+  const trialEnabledInput = modal.querySelector('[data-billing-trial-enabled]');
+  const trialDaysInput = modal.querySelector('[data-billing-trial-days]');
   const activeInput = modal.querySelector('[data-billing-active]');
   const grandfatheredInput = modal.querySelector('[data-billing-grandfathered]');
   const stripeInput = modal.querySelector('[data-billing-stripe]');
@@ -390,6 +426,9 @@
       codeInput.disabled = false;
       codeInput.required = true;
     }
+    if (groupInput) {
+      groupInput.value = '';
+    }
     if (nameInput) {
       nameInput.value = '';
     }
@@ -404,6 +443,12 @@
     }
     if (creditsInput) {
       creditsInput.value = '0';
+    }
+    if (trialEnabledInput) {
+      trialEnabledInput.checked = false;
+    }
+    if (trialDaysInput) {
+      trialDaysInput.value = '0';
     }
     if (activeInput) {
       activeInput.checked = true;
@@ -461,6 +506,9 @@
       codeInput.disabled = true;
       codeInput.required = false;
     }
+    if (groupInput) {
+      groupInput.value = button.dataset.planGroup || '';
+    }
     if (nameInput) {
       nameInput.value = button.dataset.planName || '';
     }
@@ -475,6 +523,12 @@
     }
     if (creditsInput) {
       creditsInput.value = button.dataset.planCredits || '0';
+    }
+    if (trialEnabledInput) {
+      trialEnabledInput.checked = (button.dataset.planTrialEnabled || '0') === '1';
+    }
+    if (trialDaysInput) {
+      trialDaysInput.value = button.dataset.planTrialDays || '0';
     }
     if (activeInput) {
       activeInput.checked = (button.dataset.planActive || '0') === '1';

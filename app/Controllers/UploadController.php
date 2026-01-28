@@ -7,12 +7,14 @@ final class UploadController
     private PDO $pdo;
     private Audit $audit;
     private string $storagePath;
+    private AppSettingsService $appSettings;
 
     public function __construct(PDO $pdo, string $storagePath)
     {
         $this->pdo = $pdo;
         $this->audit = new Audit($pdo);
         $this->storagePath = rtrim($storagePath, '/');
+        $this->appSettings = new AppSettingsService($pdo);
     }
 
     public function show(Request $request): Response
@@ -25,6 +27,11 @@ final class UploadController
     {
         if (!Csrf::validate($request->input('_token'))) {
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+
+        if (!$this->profileImagesEnabled()) {
+            $userId = (int)($request->session('user')['id'] ?? 0);
+            return $this->renderProfile($userId, null, 'Profile images are disabled.', 403);
         }
 
         $userId = (int)($request->session('user')['id'] ?? 0);
@@ -158,6 +165,43 @@ final class UploadController
         return new Response((string)file_get_contents($path), 200, $headers);
     }
 
+    public function profileImage(Request $request): Response
+    {
+        if (!$this->profileImagesEnabled()) {
+            return Response::notFound(View::render('404', ['title' => 'Not Found']));
+        }
+
+        $userId = (int)($request->session('user')['id'] ?? 0);
+        if ($userId <= 0) {
+            return Response::notFound(View::render('404', ['title' => 'Not Found']));
+        }
+
+        $stmt = $this->pdo->prepare(
+            'SELECT path, mime_type
+             FROM uploads
+             WHERE user_id = ? AND type = "profile"
+             ORDER BY created_at DESC
+             LIMIT 1'
+        );
+        $stmt->execute([$userId]);
+        $upload = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$upload) {
+            return Response::notFound(View::render('404', ['title' => 'Not Found']));
+        }
+
+        $path = $this->storagePath . '/uploads/' . $upload['path'];
+        if (!is_file($path)) {
+            return Response::notFound(View::render('404', ['title' => 'Not Found']));
+        }
+
+        $headers = [
+            'Content-Type' => $upload['mime_type'],
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+        ];
+
+        return new Response((string)file_get_contents($path), 200, $headers);
+    }
+
     private function fetchUploads(int $userId): array
     {
         if ($userId <= 0) {
@@ -183,7 +227,13 @@ final class UploadController
             'message' => $message,
             'error' => $error,
             'uploads' => $this->fetchUploads($userId),
+            'profileImagesEnabled' => $this->profileImagesEnabled(),
             'user' => $_SESSION['user'] ?? [],
         ]), $status);
+    }
+
+    private function profileImagesEnabled(): bool
+    {
+        return $this->appSettings->get('profile.images.enabled', '0') === '1';
     }
 }
