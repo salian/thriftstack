@@ -1590,19 +1590,19 @@ input[type="file"]::-webkit-file-upload-button:hover {
 
     .site-header .content-inner,
     .site-footer .content-inner {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
         gap: 12px;
         height: auto;
-        padding: 18px 0;
+        padding: 12px 0;
     }
 
     .nav {
-        width: 100%;
         display: flex;
         justify-content: flex-end;
         gap: 12px;
         padding-right: 8px;
+        margin-left: auto;
     }
 
     .nav a,

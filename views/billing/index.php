@@ -18,6 +18,15 @@
         </div>
     <?php else : ?>
         <div class="card">
+            <div class="tabs" data-tabs>
+                <button type="button" class="tab-button is-active" data-tab-button="current"
+                    aria-selected="true" aria-controls="tab-current">Current</button>
+                <button type="button" class="tab-button" data-tab-button="history"
+                    aria-selected="false" aria-controls="tab-history">History</button>
+            </div>
+            <div class="tab-panels">
+                <div class="tab-panel is-active" data-tab-panel="current" id="tab-current" role="tabpanel">
+        <div class="card-muted">
             <h2>Current subscription</h2>
             <?php if (!empty($subscription)) : ?>
                 <p><strong><?= e($subscription['plan_name'] ?? '') ?></strong> — <?= e(ucfirst((string)($subscription['status'] ?? ''))) ?></p>
@@ -35,14 +44,14 @@
             <?php endif; ?>
         </div>
 
-        <div class="card">
+        <div class="card-muted">
             <h2>AI credit balance</h2>
             <p class="muted">Available credits for this workspace.</p>
             <p class="plan-price"><?= number_format((int)($workspace['ai_credit_balance'] ?? 0)) ?> credits</p>
         </div>
 
         <?php if (!empty($pendingChanges)) : ?>
-            <div class="card">
+            <div class="card-muted">
                 <h2>Pending changes</h2>
                 <table class="table">
                     <thead>
@@ -72,7 +81,7 @@
             </div>
         <?php endif; ?>
 
-        <div class="card">
+        <div class="card-muted">
             <h2>Plans</h2>
             <?php if (empty($plans)) : ?>
                 <p>No plans configured yet.</p>
@@ -186,7 +195,7 @@
             <?php endif; ?>
         </div>
 
-        <div class="card">
+        <div class="card-muted">
             <h2>AI credit top-ups</h2>
             <p class="muted">Purchase extra AI actions as needed.</p>
             <?php if (empty($topupPlans)) : ?>
@@ -238,7 +247,9 @@
             <?php endif; ?>
         </div>
 
-        <div class="card">
+                </div>
+                <div class="tab-panel" data-tab-panel="history" id="tab-history" role="tabpanel" hidden>
+        <div class="card-muted">
             <h2>Invoices</h2>
             <?php if (empty($invoices)) : ?>
                 <p>No invoices yet.</p>
@@ -266,6 +277,9 @@
                     </tbody>
                 </table>
             <?php endif; ?>
+        </div>
+                </div>
+            </div>
         </div>
 
     <?php endif; ?>

@@ -641,6 +641,15 @@
     preferredTab = 'workspaces';
   }
 
+  const updateQuery = (tabName) => {
+    if (!tabName) {
+      return;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tabName);
+    window.history.replaceState({}, '', url.toString());
+  };
+
   containers.forEach((container) => {
     const buttons = Array.from(container.querySelectorAll('[data-tab-button]'));
     if (buttons.length === 0) {
@@ -673,7 +682,11 @@
     };
 
     buttons.forEach((button) => {
-      button.addEventListener('click', () => activate(button));
+      button.addEventListener('click', () => {
+        activate(button);
+        const name = button.getAttribute('data-tab-button');
+        updateQuery(name);
+      });
     });
 
     if (preferredTab) {
