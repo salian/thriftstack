@@ -110,6 +110,7 @@
                     </nav>
                 </div>
             </aside>
+            <div class="sidebar-overlay" data-sidebar-overlay></div>
         <?php endif; ?>
         <div class="content-area">
             <header class="site-header">

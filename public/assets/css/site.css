@@ -88,6 +88,7 @@ a:hover {
 }
 
 
+
 .content-area {
     min-width: 0;
     display: flex;
@@ -1216,6 +1217,10 @@ input[type="file"]::-webkit-file-upload-button:hover {
     z-index: 10;
 }
 
+.sidebar-overlay {
+    display: none;
+}
+
 .sidebar-brand {
     color: var(--brand-mark);
     margin-bottom: 12px;
@@ -1540,13 +1545,46 @@ input[type="file"]::-webkit-file-upload-button:hover {
     }
 
     .sidebar {
-        position: static;
-        min-width: 100%;
-        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: min(84vw, 320px);
         border-left: none;
-        border-right: none;
+        border-right: 1px solid var(--border);
         border-radius: 0;
-        height: auto;
+        transform: translateX(-110%);
+        transition: transform 0.25s ease;
+        z-index: 20;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.2);
+    }
+
+    .page.has-sidebar.sidebar-collapsed .sidebar {
+        transform: translateX(-110%);
+    }
+
+    .page.sidebar-open .sidebar {
+        transform: translateX(0);
+    }
+
+    .page.sidebar-open {
+        overflow: hidden;
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(12, 18, 28, 0.5);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+        z-index: 10;
+    }
+
+    .page.sidebar-open .sidebar-overlay {
+        display: block;
+        opacity: 1;
+        pointer-events: auto;
     }
 
 
@@ -1557,6 +1595,20 @@ input[type="file"]::-webkit-file-upload-button:hover {
         gap: 12px;
         height: auto;
         padding: 18px 0;
+    }
+
+    .nav {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-right: 8px;
+    }
+
+    .nav a,
+    .nav details,
+    .nav form {
+        margin-left: 0;
     }
 
     .footer-content {

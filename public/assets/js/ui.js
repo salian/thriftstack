@@ -1,21 +1,65 @@
 (() => {
   const page = document.querySelector('.page');
   const toggle = document.querySelector('[data-sidebar-toggle]');
+  const overlay = document.querySelector('[data-sidebar-overlay]');
   if (!page || !toggle) {
     return;
   }
 
-  const stored = localStorage.getItem('thriftstack_sidebar');
-  if (stored === 'collapsed') {
-    page.classList.add('sidebar-collapsed');
-    toggle.setAttribute('aria-pressed', 'true');
-  }
+  const media = window.matchMedia('(max-width: 768px)');
+
+  const applyState = () => {
+    if (media.matches) {
+      page.classList.add('sidebar-collapsed');
+      page.classList.remove('sidebar-open');
+      toggle.setAttribute('aria-pressed', 'false');
+      return;
+    }
+    page.classList.remove('sidebar-open');
+    const stored = localStorage.getItem('thriftstack_sidebar');
+    if (stored === 'collapsed') {
+      page.classList.add('sidebar-collapsed');
+      toggle.setAttribute('aria-pressed', 'true');
+    } else {
+      page.classList.remove('sidebar-collapsed');
+      toggle.setAttribute('aria-pressed', 'false');
+    }
+  };
 
   toggle.addEventListener('click', () => {
+    if (media.matches) {
+      const isOpen = page.classList.toggle('sidebar-open');
+      page.classList.toggle('sidebar-collapsed', !isOpen);
+      toggle.setAttribute('aria-pressed', isOpen ? 'true' : 'false');
+      return;
+    }
     const collapsed = page.classList.toggle('sidebar-collapsed');
     toggle.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
     localStorage.setItem('thriftstack_sidebar', collapsed ? 'collapsed' : 'expanded');
   });
+
+  if (overlay) {
+    overlay.addEventListener('click', () => {
+      page.classList.remove('sidebar-open');
+      page.classList.add('sidebar-collapsed');
+      toggle.setAttribute('aria-pressed', 'false');
+    });
+  }
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && page.classList.contains('sidebar-open')) {
+      page.classList.remove('sidebar-open');
+      page.classList.add('sidebar-collapsed');
+      toggle.setAttribute('aria-pressed', 'false');
+    }
+  });
+
+  if (typeof media.addEventListener === 'function') {
+    media.addEventListener('change', applyState);
+  } else if (typeof media.addListener === 'function') {
+    media.addListener(applyState);
+  }
+  applyState();
 })();
 
 (() => {
