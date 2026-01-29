@@ -1174,6 +1174,15 @@ input[type="file"]::-webkit-file-upload-button:hover {
     max-width: none;
 }
 
+.feature-flag {
+    display: grid;
+    gap: 4px;
+}
+
+.feature-flag .muted {
+    margin: 0;
+}
+
 .admin-nav {
     display: inline-flex;
     flex-wrap: wrap;

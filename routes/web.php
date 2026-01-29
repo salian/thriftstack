@@ -516,7 +516,7 @@ $router
     ->middleware(new RequireSystemAccess());
 
 $router
-    ->post('/super-admin/profile-images', static function (Request $request) use ($pdo) {
+    ->post('/super-admin/feature-flags', static function (Request $request) use ($pdo) {
         if (!Csrf::validate($request->input('_token'))) {
             return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
         }
@@ -525,10 +525,10 @@ $router
         }
 
         $settings = new AppSettingsService($pdo);
-        $enabled = $request->input('profile_images_enabled') === '1';
-        $settings->set('profile.images.enabled', $enabled ? '1' : '0');
+        $profileImages = $request->input('profile_images_enabled') === '1';
+        $settings->set('profile.images.enabled', $profileImages ? '1' : '0');
 
-        $_SESSION['flash']['message'] = 'Profile image setting saved.';
+        $_SESSION['flash']['message'] = 'Feature flags saved.';
         return Response::redirect('/super-admin/settings');
     })
     ->middleware(new AuthRequired())

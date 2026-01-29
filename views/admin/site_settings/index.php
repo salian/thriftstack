@@ -17,8 +17,10 @@
         <div class="tab-panels">
             <div class="tab-panel is-active" data-tab-panel="workspace-roles" id="tab-workspace-roles" role="tabpanel">
                 <div class="table-header">
-                    <h3>Workspace roles</h3>
-                    <span class="muted">Manage workspace role permissions.</span>
+                    <div>
+                        <h3>Workspace roles</h3>
+                        <p class="muted">Grant or Revoke permissions to existing Workspace Roles</p>
+                    </div>
                 </div>
                 <table class="table">
                     <thead>
@@ -157,21 +159,19 @@
     </div>
 
     <div class="card">
-        <h2>Profile images</h2>
-        <p class="muted">Allow users to upload profile images and display them in the header.</p>
-        <form method="post" action="/super-admin/profile-images" class="form">
-            <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
-            <label class="checkbox">
-                <input type="checkbox" name="profile_images_enabled" value="1"
-                    <?= $appSettings->get('profile.images.enabled', '0') === '1' ? 'checked' : '' ?>>
-                <span>Enable profile images</span>
-            </label>
-            <button type="submit" class="button">Save profile image setting</button>
-        </form>
-    </div>
-
-    <div class="card">
         <h2>Feature flags</h2>
-        <p>App-wide enable/disable for sections like Tasks, Reports, and more (coming soon).</p>
+        <p class="muted">App-wide enable/disable for sections and capabilities.</p>
+        <form method="post" action="/super-admin/feature-flags" class="form">
+            <input type="hidden" name="_token" value="<?= e(Csrf::token()) ?>">
+            <div class="feature-flag">
+                <label class="checkbox">
+                    <input type="checkbox" name="profile_images_enabled" value="1"
+                        <?= $appSettings->get('profile.images.enabled', '0') === '1' ? 'checked' : '' ?>>
+                    <span>Enable profile images</span>
+                </label>
+                <p class="muted">Allow users to upload profile images and display them in the header.</p>
+            </div>
+            <button type="submit" class="button">Save feature flags</button>
+        </form>
     </div>
 </section>
