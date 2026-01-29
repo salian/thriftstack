@@ -276,6 +276,8 @@ return static function (PDO $pdo): void {
                 source_type TEXT NOT NULL,
                 source_id INTEGER NULL,
                 description TEXT NULL,
+                usage_type TEXT NULL,
+                metadata TEXT NULL,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
             );'
@@ -353,6 +355,19 @@ return static function (PDO $pdo): void {
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_ai_credit_purchases_status ON ai_credit_purchases (status);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_workspace_credit_ledger_workspace ON workspace_credit_ledger (workspace_id);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_workspace_credit_ledger_created ON workspace_credit_ledger (created_at);');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_wcl_workspace_created ON workspace_credit_ledger (workspace_id, created_at);');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_wcl_workspace_usage_created ON workspace_credit_ledger (workspace_id, usage_type, created_at);');
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS workspace_credit_limits (
+                workspace_id INTEGER PRIMARY KEY,
+                daily_limit INTEGER NOT NULL DEFAULT 0,
+                monthly_limit INTEGER NOT NULL DEFAULT 0,
+                alert_threshold_percent INTEGER NOT NULL DEFAULT 80,
+                last_alert_sent_at TEXT NULL,
+                FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+            );'
+        );
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_webhooks_provider ON webhook_events (provider);');
         return;
     }
@@ -628,9 +643,24 @@ return static function (PDO $pdo): void {
             source_type VARCHAR(30) NOT NULL,
             source_id BIGINT UNSIGNED NULL,
             description VARCHAR(255) NULL,
+            usage_type VARCHAR(50) NULL,
+            metadata TEXT NULL,
             created_at DATETIME NOT NULL,
             INDEX idx_workspace_credit_ledger_workspace (workspace_id),
             INDEX idx_workspace_credit_ledger_created (created_at),
+            INDEX idx_wcl_workspace_created (workspace_id, created_at),
+            INDEX idx_wcl_workspace_usage_created (workspace_id, usage_type, created_at),
+            FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS workspace_credit_limits (
+            workspace_id BIGINT UNSIGNED PRIMARY KEY,
+            daily_limit INT NOT NULL DEFAULT 0,
+            monthly_limit INT NOT NULL DEFAULT 0,
+            alert_threshold_percent INT NOT NULL DEFAULT 80,
+            last_alert_sent_at DATETIME NULL,
             FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
     );

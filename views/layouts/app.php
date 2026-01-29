@@ -90,6 +90,10 @@
                                 <i class="fa-solid fa-shield-halved sidebar-icon" aria-hidden="true"></i>
                                 <span class="sidebar-label">Admin</span>
                             </a>
+                            <a href="/workspace-admin/analytics/credits" aria-label="Analytics" data-tooltip="Analytics">
+                                <i class="fa-solid fa-chart-line sidebar-icon" aria-hidden="true"></i>
+                                <span class="sidebar-label">Analytics</span>
+                            </a>
                         <?php endif; ?>
                         <div class="sidebar-divider"></div>
                         <a href="/settings" aria-label="Settings" data-tooltip="Settings">

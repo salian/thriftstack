@@ -135,6 +135,7 @@ final class Seeder
             ['billing.gateway_rule', 'priority'],
             ['billing.gateway_priority', json_encode(['stripe', 'razorpay', 'paypal', 'lemonsqueezy', 'dodo', 'paddle'])],
             ['profile.images.enabled', '0'],
+            ['billing.cost_per_credit', '0'],
         ];
 
         $stmt = $this->pdo->prepare(

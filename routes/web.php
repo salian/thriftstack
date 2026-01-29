@@ -11,6 +11,8 @@ $workspaceController = new WorkspaceController($workspaceService);
 $workspaceInviteController = new WorkspaceInviteController($workspaceService, $workspaceController, $config);
 $settingsService = new SettingsService($pdo);
 $settingsController = new SettingsController($pdo, $settingsService);
+$apiTokensController = new ApiTokensController($pdo);
+$creditLimitsController = new CreditLimitsController($pdo);
 $notificationService = new NotificationService($pdo, $config);
 $notificationsController = new NotificationsController($notificationService);
 $analyticsController = new AnalyticsController();
@@ -35,6 +37,7 @@ $billingController = new BillingController(
     $billingProviders
 );
 $webhooksController = new WebhooksController($billingService, $billingProviders);
+$consumeController = new ConsumeController($pdo);
 // Admin controllers need to be defined before any route handlers that use them.
 $workspacePermissionsController = new WorkspacePermissionsController($pdo);
 $paymentGatewaysController = new PaymentGatewaysController($pdo);
@@ -42,6 +45,8 @@ $userRolesController = new UserRolesController($pdo);
 $usersController = new UsersController($pdo);
 $auditController = new AuditLogController($pdo);
 $uploadController = new UploadController($pdo, __DIR__ . '/../storage');
+$workspaceAnalyticsController = new WorkspaceAnalyticsController($pdo);
+$financialAnalyticsController = new FinancialAnalyticsController($pdo);
 
 $router
     ->get('/', static function (Request $request) use ($config) {
@@ -149,6 +154,20 @@ $router
     ->middleware(new RequireWorkspacePermission($pdo, 'billing.manage'));
 
 $router
+    ->post('/api/credits/consume', static function (Request $request) use ($consumeController) {
+        return $consumeController->consume($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo));
+
+$router
+    ->get('/api/credits/balance', static function (Request $request) use ($consumeController) {
+        return $consumeController->balance($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo));
+
+$router
     ->get('/billing/paddle-checkout', static function (Request $request) use ($billingController) {
         return $billingController->paddleCheckout($request);
     })
@@ -189,6 +208,24 @@ $router
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
     ->middleware(new RequireSystemAccess())
     ->setName('super_admin.analytics');
+
+$router
+    ->get('/super-admin/analytics/financial', static function (Request $request) use ($financialAnalyticsController) {
+        return $financialAnalyticsController->index($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
+    ->middleware(new RequireSystemAdmin())
+    ->setName('super_admin.analytics_financial');
+
+$router
+    ->get('/super-admin/analytics/financial/export', static function (Request $request) use ($financialAnalyticsController) {
+        return $financialAnalyticsController->export($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
+    ->middleware(new RequireSystemAdmin())
+    ->setName('super_admin.analytics_financial_export');
 
 $router
     ->get('/super-admin/usage', static function (Request $request) use ($pdo) {
@@ -344,6 +381,43 @@ $router
     })
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo));
+
+$router
+    ->get('/settings/credit-limits', static function (Request $request) use ($creditLimitsController) {
+        return $creditLimitsController->index($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo))
+    ->middleware(new RequireWorkspacePermission($pdo, 'billing.manage'));
+
+$router
+    ->post('/settings/credit-limits', static function (Request $request) use ($creditLimitsController) {
+        return $creditLimitsController->save($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo))
+    ->middleware(new RequireWorkspacePermission($pdo, 'billing.manage'));
+
+$router
+    ->get('/settings/api-tokens', static function (Request $request) use ($apiTokensController) {
+        return $apiTokensController->index($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'));
+
+$router
+    ->post('/settings/api-tokens', static function (Request $request) use ($apiTokensController) {
+        return $apiTokensController->create($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'));
+
+$router
+    ->post('/settings/api-tokens/revoke', static function (Request $request) use ($apiTokensController) {
+        return $apiTokensController->revoke($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'));
 
 $router
     ->get('/teams', static function (Request $request) use ($workspaceController) {
@@ -592,5 +666,21 @@ $router
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
     ->setName('workspace_admin.audit');
+
+$router
+    ->get('/workspace-admin/analytics/credits', static function (Request $request) use ($workspaceAnalyticsController) {
+        return $workspaceAnalyticsController->credits($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
+    ->setName('workspace_admin.analytics_credits');
+
+$router
+    ->get('/workspace-admin/analytics/credits/export', static function (Request $request) use ($workspaceAnalyticsController) {
+        return $workspaceAnalyticsController->exportCreditsUsage($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
+    ->setName('workspace_admin.analytics_credits_export');
 
 return $router;

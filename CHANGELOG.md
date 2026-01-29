@@ -129,3 +129,17 @@
 - Document how to add a new billing provider.
 - Add Dodo Payments and Paddle provider integrations with hosted checkout support.
 - Add billing schema update migration to backfill missing plan/subscription columns.
+- Add credit consumption API at `POST /api/credits/consume` with atomic balance updates and ledger metadata.
+  - Request: `credits` (int), `usage_type` (string `[a-z0-9._-]`), optional `metadata` (JSON string).
+  - Success: `{"ok":true,"balance_after":120}` (200).
+  - Errors: `invalid_usage_type` (422), `insufficient_credits` (409).
+- Add API tokens with bearer auth middleware, workspace-scoped token CRUD, and settings page UI.
+- Document API Bearer authentication and credit scopes in `docs/api/AUTHENTICATION.md`.
+- Add workspace credit limits with daily/monthly tracking, Redis-backed rate limiter, and alert script.
+- Add credit limits settings page and enforce limits on credit consumption with 429 responses.
+- Add Workspace Admin credits analytics with trend charts, usage breakdown, KPIs, and CSV export.
+- Add Super Admin financial analytics with MRR, top-up revenue, churn, and LTV metrics.
+  - MRR = sum(active subscriptions) with annual plans divided by 12.
+  - Top-up revenue = sum(ai_credit_purchases.amount_cents where status=paid) by month.
+  - Churn rate = cancelled last 30 days / (active + cancelled last 30 days).
+  - LTV = average subscription lifetime (months) × ARPU.
