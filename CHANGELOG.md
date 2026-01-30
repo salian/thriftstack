@@ -143,3 +143,9 @@
   - Top-up revenue = sum(ai_credit_purchases.amount_cents where status=paid) by month.
   - Churn rate = cancelled last 30 days / (active + cancelled last 30 days).
   - LTV = average subscription lifetime (months) × ARPU.
+- Add workspace report preferences with weekly/monthly digest configuration and recipient lists.
+- Add workspace settings storage with JSON payloads for report preferences.
+- Add scheduled workspace digest emails (weekly/monthly) with credit usage, depletion forecasts, top categories, and cost breakdown summaries.
+- Add Super Admin credit analytics with usage segments, heatmaps, usage type trends, anomaly detection, and drill-down table.
+- Add spending velocity alerts for System Admins with configurable thresholds and daily checks.
+- Add Workspace Admin credit analytics with segments, heatmaps, anomaly detection, drill-down, and velocity alerts.

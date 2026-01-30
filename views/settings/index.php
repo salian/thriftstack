@@ -28,4 +28,10 @@
             <button type="submit" class="button">Save preferences</button>
         </form>
     </div>
+
+    <div class="card">
+        <h2>Workspace reports</h2>
+        <p class="muted">Configure weekly or monthly digest emails for workspace owners.</p>
+        <a class="button button-ghost" href="/settings/reports">Manage report preferences</a>
+    </div>
 </section>

@@ -11,13 +11,16 @@ $workspaceController = new WorkspaceController($workspaceService);
 $workspaceInviteController = new WorkspaceInviteController($workspaceService, $workspaceController, $config);
 $settingsService = new SettingsService($pdo);
 $settingsController = new SettingsController($pdo, $settingsService);
+$workspaceSettingsService = new WorkspaceSettingsService($pdo);
+$reportPreferencesController = new ReportPreferencesController($pdo, $workspaceSettingsService, $workspaceService);
 $apiTokensController = new ApiTokensController($pdo);
 $creditLimitsController = new CreditLimitsController($pdo);
 $notificationService = new NotificationService($pdo, $config);
 $notificationsController = new NotificationsController($notificationService);
-$analyticsController = new AnalyticsController();
+$analyticsController = null;
 $billingService = new BillingService($pdo, $config);
 $appSettingsService = new AppSettingsService($pdo);
+$analyticsController = new AnalyticsController($pdo, $appSettingsService);
 $gatewaySettingsService = new PaymentGatewaySettingsService($pdo);
 $gatewaySelector = new BillingGatewaySelector($pdo);
 $billingProviders = [
@@ -45,7 +48,7 @@ $userRolesController = new UserRolesController($pdo);
 $usersController = new UsersController($pdo);
 $auditController = new AuditLogController($pdo);
 $uploadController = new UploadController($pdo, __DIR__ . '/../storage');
-$workspaceAnalyticsController = new WorkspaceAnalyticsController($pdo);
+$workspaceAnalyticsController = new WorkspaceAnalyticsController($pdo, $workspaceSettingsService);
 $financialAnalyticsController = new FinancialAnalyticsController($pdo);
 
 $router
@@ -210,6 +213,27 @@ $router
     ->setName('super_admin.analytics');
 
 $router
+    ->post('/super-admin/analytics/alerts', static function (Request $request) use ($appSettingsService) {
+        if (!Csrf::validate($request->input('_token'))) {
+            return Response::forbidden(View::render('403', ['title' => 'Forbidden']));
+        }
+        $enabled = $request->input('velocity_alert_enabled') === '1';
+        $threshold = (int)$request->input('velocity_threshold_percent', 50);
+        if ($threshold < 10) {
+            $threshold = 10;
+        }
+        if ($threshold > 500) {
+            $threshold = 500;
+        }
+        $appSettingsService->set('analytics.velocity.enabled', $enabled ? '1' : '0');
+        $appSettingsService->set('analytics.velocity.threshold_percent', (string)$threshold);
+        return Response::redirect('/super-admin/analytics');
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
+    ->middleware(new RequireSystemAdmin());
+
+$router
     ->get('/super-admin/analytics/financial', static function (Request $request) use ($financialAnalyticsController) {
         return $financialAnalyticsController->index($request);
     })
@@ -234,6 +258,13 @@ $router
 
         $search = trim((string)$request->query('search', ''));
         $selectedAccess = (string)$request->query('system_access', 'all');
+        $startParam = trim((string)$request->query('start', ''));
+        $endParam = trim((string)$request->query('end', ''));
+        $startDate = $startParam !== '' ? DateTimeImmutable::createFromFormat('Y-m-d', $startParam) : null;
+        $endDate = $endParam !== '' ? DateTimeImmutable::createFromFormat('Y-m-d', $endParam) : null;
+        if ($startDate && $endDate && $startDate > $endDate) {
+            [$startDate, $endDate] = [$endDate, $startDate];
+        }
         $page = max(1, (int)$request->query('page', 1));
         $limit = 20;
         $offset = ($page - 1) * $limit;
@@ -253,6 +284,14 @@ $router
             } elseif ($selectedAccess === 'standard') {
                 $conditions[] = 'u.is_system_admin = 0 AND u.is_system_staff = 0';
             }
+        }
+        if ($startDate) {
+            $conditions[] = 'u.created_at >= ?';
+            $params[] = $startDate->setTime(0, 0, 0)->format('Y-m-d H:i:s');
+        }
+        if ($endDate) {
+            $conditions[] = 'u.created_at <= ?';
+            $params[] = $endDate->setTime(23, 59, 59)->format('Y-m-d H:i:s');
         }
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
@@ -278,6 +317,8 @@ $router
             'users' => $users,
             'search' => $search,
             'selectedAccess' => $selectedAccess,
+            'start' => $startDate ? $startDate->format('Y-m-d') : '',
+            'end' => $endDate ? $endDate->format('Y-m-d') : '',
             'page' => $page,
             'total' => $total,
             'totalPages' => $totalPages,
@@ -359,6 +400,21 @@ $router
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo))
     ->setName('settings');
+
+$router
+    ->get('/settings/reports', static function (Request $request) use ($reportPreferencesController) {
+        return $reportPreferencesController->index($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
+    ->setName('settings.reports');
+
+$router
+    ->post('/settings/reports', static function (Request $request) use ($reportPreferencesController) {
+        return $reportPreferencesController->update($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'));
 
 $router
     ->post('/profile/update', static function (Request $request) use ($settingsController) {
@@ -674,6 +730,13 @@ $router
     ->middleware(new AuthRequired())
     ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'))
     ->setName('workspace_admin.analytics_credits');
+
+$router
+    ->post('/workspace-admin/analytics/credits/alerts', static function (Request $request) use ($workspaceAnalyticsController) {
+        return $workspaceAnalyticsController->updateVelocityAlerts($request);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo, 'Workspace Admin'));
 
 $router
     ->get('/workspace-admin/analytics/credits/export', static function (Request $request) use ($workspaceAnalyticsController) {

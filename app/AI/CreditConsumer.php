@@ -20,7 +20,8 @@ final class CreditConsumer
         int $credits,
         string $usageType,
         ?array $metadata = null,
-        ?string $description = null
+        ?string $description = null,
+        ?int $userId = null
     ): array {
         if ($workspaceId <= 0) {
             return ['ok' => false, 'balance' => 0, 'error' => 'Invalid workspace.'];
@@ -60,11 +61,12 @@ final class CreditConsumer
             $update->execute([$newBalance, $workspaceId]);
 
             $insert = $this->pdo->prepare(
-                'INSERT INTO workspace_credit_ledger (workspace_id, change_type, credits, balance_after, source_type, source_id, description, usage_type, metadata, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                'INSERT INTO workspace_credit_ledger (workspace_id, user_id, change_type, credits, balance_after, source_type, source_id, description, usage_type, metadata, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             );
             $insert->execute([
                 $workspaceId,
+                $userId,
                 'consume',
                 -$credits,
                 $newBalance,

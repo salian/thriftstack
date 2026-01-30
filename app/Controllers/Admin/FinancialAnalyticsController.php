@@ -16,6 +16,7 @@ final class FinancialAnalyticsController
     public function index(Request $request): Response
     {
         [$months, $start, $end] = $this->dateRange($request);
+        [$compareEnabled, $prevStart, $prevEnd] = $this->comparisonRange($request, $start, $end);
         $mrrTrend = [];
         $topupTrend = [];
 
@@ -34,8 +35,25 @@ final class FinancialAnalyticsController
 
         $currentMrr = $this->mrrForPeriod($months[count($months) - 1]['start'], $months[count($months) - 1]['end']);
         $currentTopup = $topupTrend[count($topupTrend) - 1]['topup_cents'] ?? 0;
-        $churnRate = $this->churnRate();
+        $churnRate = $this->churnRateForPeriod($start, $end);
         $ltv = $this->ltvEstimate($currentMrr);
+
+        $comparison = null;
+        if ($compareEnabled && $prevStart && $prevEnd) {
+            $prevMrr = $this->mrrForPeriod($prevStart . ' 00:00:00', $prevEnd . ' 23:59:59');
+            $prevTopup = $this->topupForPeriod($prevStart . ' 00:00:00', $prevEnd . ' 23:59:59');
+            $prevChurn = $this->churnRateForPeriod($prevStart, $prevEnd);
+            $prevLtv = $this->ltvEstimate($prevMrr);
+            $comparison = [
+                'enabled' => true,
+                'prevStart' => $prevStart,
+                'prevEnd' => $prevEnd,
+                'mrr' => $this->metricComparison($currentMrr, $prevMrr),
+                'topup' => $this->metricComparison($currentTopup, $prevTopup),
+                'churn' => $this->metricComparison($churnRate, $prevChurn),
+                'ltv' => $this->metricComparison($ltv, $prevLtv),
+            ];
+        }
 
         return Response::html(View::render('admin/analytics/financial', [
             'title' => 'Financial Analytics',
@@ -47,6 +65,8 @@ final class FinancialAnalyticsController
             'ltv' => $ltv,
             'start' => $start,
             'end' => $end,
+            'comparison' => $comparison,
+            'compareEnabled' => $compareEnabled,
         ]));
     }
 
@@ -110,19 +130,18 @@ final class FinancialAnalyticsController
         return (int)$stmt->fetchColumn();
     }
 
-    private function churnRate(): float
+    private function churnRateForPeriod(string $start, string $end): float
     {
-        $since = (new DateTimeImmutable('now'))->modify('-30 days')->format('Y-m-d H:i:s');
         $cancelledStmt = $this->pdo->prepare(
-            'SELECT COUNT(*) FROM subscriptions WHERE status = "canceled" AND canceled_at >= ?'
+            'SELECT COUNT(*) FROM subscriptions WHERE status = "canceled" AND canceled_at >= ? AND canceled_at <= ?'
         );
-        $cancelledStmt->execute([$since]);
+        $cancelledStmt->execute([$start . ' 00:00:00', $end . ' 23:59:59']);
         $cancelled = (int)$cancelledStmt->fetchColumn();
 
         $activeStmt = $this->pdo->prepare(
-            'SELECT COUNT(*) FROM subscriptions WHERE status = "active"'
+            'SELECT COUNT(*) FROM subscriptions WHERE status = "active" AND created_at <= ?'
         );
-        $activeStmt->execute();
+        $activeStmt->execute([$end . ' 23:59:59']);
         $active = (int)$activeStmt->fetchColumn();
 
         $denominator = $active + $cancelled;
@@ -169,8 +188,8 @@ final class FinancialAnalyticsController
     {
         $startParam = (string)$request->query('start', '');
         $endParam = (string)$request->query('end', '');
-        $end = $endParam !== '' ? DateTimeImmutable::createFromFormat('Y-m', $endParam) : new DateTimeImmutable('first day of this month');
-        $start = $startParam !== '' ? DateTimeImmutable::createFromFormat('Y-m', $startParam) : $end->modify('-11 months');
+        $end = $this->parseDateParam($endParam) ?? new DateTimeImmutable('first day of this month');
+        $start = $this->parseDateParam($startParam) ?? $end->modify('-11 months');
         if (!$end) {
             $end = new DateTimeImmutable('first day of this month');
         }
@@ -188,6 +207,65 @@ final class FinancialAnalyticsController
             $cursor = $cursor->modify('first day of next month');
         }
 
-        return [$months, $start->format('Y-m'), $end->format('Y-m')];
+        return [$months, $start->format('Y-m-d'), $end->format('Y-m-d')];
+    }
+
+    private function parseDateParam(string $value): ?DateTimeImmutable
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+        $date = DateTimeImmutable::createFromFormat('Y-m-d', $value);
+        if ($date instanceof DateTimeImmutable) {
+            return $date;
+        }
+        $date = DateTimeImmutable::createFromFormat('Y-m', $value);
+        return $date instanceof DateTimeImmutable ? $date : null;
+    }
+
+    /**
+     * @return array{0:bool,1:?string,2:?string}
+     */
+    private function comparisonRange(Request $request, string $start, string $end): array
+    {
+        $enabled = $request->query('compare', '') === '1';
+        if (!$enabled) {
+            return [false, null, null];
+        }
+        $prevStart = (string)$request->query('prev_start', '');
+        $prevEnd = (string)$request->query('prev_end', '');
+        if ($prevStart !== '' && $prevEnd !== '') {
+            return [true, $prevStart, $prevEnd];
+        }
+
+        $startDate = DateTimeImmutable::createFromFormat('Y-m-d', $start) ?: new DateTimeImmutable($start);
+        $endDate = DateTimeImmutable::createFromFormat('Y-m-d', $end) ?: new DateTimeImmutable($end);
+        $rangeDays = max(1, (int)$endDate->diff($startDate)->days + 1);
+        $prevEndDate = $startDate->modify('-1 day');
+        $prevStartDate = $prevEndDate->modify('-' . ($rangeDays - 1) . ' days');
+
+        return [true, $prevStartDate->format('Y-m-d'), $prevEndDate->format('Y-m-d')];
+    }
+
+    /**
+     * @param float|int $current
+     * @param float|int $previous
+     * @return array{current:float,previous:float,delta:float,pct:?float,trend:string}
+     */
+    private function metricComparison($current, $previous): array
+    {
+        $currentVal = (float)$current;
+        $previousVal = (float)$previous;
+        $delta = $currentVal - $previousVal;
+        $pct = $previousVal != 0.0 ? ($delta / $previousVal) * 100 : null;
+        $trend = $delta > 0 ? 'up' : ($delta < 0 ? 'down' : 'flat');
+        return [
+            'current' => $currentVal,
+            'previous' => $previousVal,
+            'delta' => $delta,
+            'pct' => $pct !== null ? round($pct, 2) : null,
+            'trend' => $trend,
+        ];
     }
 }

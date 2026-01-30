@@ -149,6 +149,16 @@ return static function (PDO $pdo): void {
         );
 
         $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS workspace_settings (
+                workspace_id INTEGER PRIMARY KEY,
+                settings_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+            );'
+        );
+
+        $pdo->exec(
             'CREATE TABLE IF NOT EXISTS notifications (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -270,6 +280,7 @@ return static function (PDO $pdo): void {
             'CREATE TABLE IF NOT EXISTS workspace_credit_ledger (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 workspace_id INTEGER NOT NULL,
+                user_id INTEGER NULL,
                 change_type TEXT NOT NULL,
                 credits INTEGER NOT NULL,
                 balance_after INTEGER NOT NULL,
@@ -357,6 +368,7 @@ return static function (PDO $pdo): void {
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_workspace_credit_ledger_created ON workspace_credit_ledger (created_at);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_wcl_workspace_created ON workspace_credit_ledger (workspace_id, created_at);');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_wcl_workspace_usage_created ON workspace_credit_ledger (workspace_id, usage_type, created_at);');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_wcl_workspace_user_created ON workspace_credit_ledger (workspace_id, user_id, created_at);');
 
         $pdo->exec(
             'CREATE TABLE IF NOT EXISTS workspace_credit_limits (
@@ -512,6 +524,16 @@ return static function (PDO $pdo): void {
     );
 
     $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS workspace_settings (
+            workspace_id BIGINT UNSIGNED PRIMARY KEY,
+            settings_json TEXT NOT NULL,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
+    );
+
+    $pdo->exec(
         'CREATE TABLE IF NOT EXISTS notifications (
             id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             user_id BIGINT UNSIGNED NOT NULL,
@@ -637,6 +659,7 @@ return static function (PDO $pdo): void {
         'CREATE TABLE IF NOT EXISTS workspace_credit_ledger (
             id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             workspace_id BIGINT UNSIGNED NOT NULL,
+            user_id BIGINT UNSIGNED NULL,
             change_type VARCHAR(30) NOT NULL,
             credits INT NOT NULL,
             balance_after INT NOT NULL,
@@ -650,6 +673,7 @@ return static function (PDO $pdo): void {
             INDEX idx_workspace_credit_ledger_created (created_at),
             INDEX idx_wcl_workspace_created (workspace_id, created_at),
             INDEX idx_wcl_workspace_usage_created (workspace_id, usage_type, created_at),
+            INDEX idx_wcl_workspace_user_created (workspace_id, user_id, created_at),
             FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;'
     );

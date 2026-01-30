@@ -74,7 +74,12 @@ final class ConsumeController
             }
         }
 
-        $result = $this->consumer->consume($workspaceId, $credits, $usageType, $metadata);
+        $actorId = $userId > 0 ? $userId : null;
+        if ($actorId === null && is_array($metadata) && isset($metadata['user_id'])) {
+            $actorId = (int)$metadata['user_id'];
+        }
+
+        $result = $this->consumer->consume($workspaceId, $credits, $usageType, $metadata, null, $actorId);
         if (!$result['ok']) {
             $code = $result['error'] === 'Insufficient credits.' ? 'insufficient_credits' : 'consume_failed';
             return $this->json(
