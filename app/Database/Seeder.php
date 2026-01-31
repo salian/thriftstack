@@ -56,6 +56,11 @@ final class Seeder
         $adminId = $this->ensureDummyUser($now);
         $this->grantSystemAccess($adminId);
         $this->seedWorkspaceRolePermissions();
+        $workspaceId = $this->ensureSeedWorkspace($adminId, $now);
+        $this->ensureMembership($adminId, $workspaceId, 'Workspace Owner', $now);
+
+        $memberId = $this->ensureMemberUser($now);
+        $this->ensureMembership($memberId, $workspaceId, 'Workspace Member', $now);
     }
 
     private function ensureDummyUser(string $now): int
@@ -87,6 +92,90 @@ final class Seeder
         ]);
 
         return (int)$this->pdo->lastInsertId();
+    }
+
+    private function ensureMemberUser(string $now): int
+    {
+        $email = 'member@workware.in';
+        $stmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
+        $stmt->execute([$email]);
+        $existing = $stmt->fetchColumn();
+
+        if ($existing) {
+            return (int)$existing;
+        }
+
+        $hash = password_hash('MemberPass123', PASSWORD_BCRYPT);
+        $insert = $this->pdo->prepare(
+            'INSERT INTO users (name, email, password_hash, email_verified_at, status, is_system_admin, is_system_staff, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+        $insert->execute([
+            'Member User',
+            $email,
+            $hash,
+            $now,
+            'active',
+            0,
+            0,
+            $now,
+            $now,
+        ]);
+
+        return (int)$this->pdo->lastInsertId();
+    }
+
+    private function ensureSeedWorkspace(int $adminId, string $now): int
+    {
+        $stmt = $this->pdo->prepare('SELECT id FROM workspaces WHERE created_by = ? LIMIT 1');
+        $stmt->execute([$adminId]);
+        $existing = $stmt->fetchColumn();
+
+        if ($existing) {
+            return (int)$existing;
+        }
+
+        $name = $this->defaultWorkspaceName($this->fetchUserName($adminId));
+        $insert = $this->pdo->prepare(
+            'INSERT INTO workspaces (name, created_by, created_at) VALUES (?, ?, ?)'
+        );
+        $insert->execute([$name, $adminId, $now]);
+
+        return (int)$this->pdo->lastInsertId();
+    }
+
+    private function ensureMembership(int $userId, int $workspaceId, string $role, string $now): void
+    {
+        $stmt = $this->pdo->prepare(
+            $this->insertIgnore . ' INTO workspace_memberships (user_id, workspace_id, workspace_role, created_at) VALUES (?, ?, ?, ?)'
+        );
+        $stmt->execute([$userId, $workspaceId, $role, $now]);
+    }
+
+    private function fetchUserName(int $userId): string
+    {
+        $stmt = $this->pdo->prepare('SELECT name FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $name = $stmt->fetchColumn();
+
+        return $name ? (string)$name : '';
+    }
+
+    private function defaultWorkspaceName(string $userName): string
+    {
+        $userName = trim($userName);
+        if ($userName === '') {
+            return 'My Workspace';
+        }
+
+        $first = $userName;
+        $spacePos = strpos($userName, ' ');
+        if ($spacePos !== false) {
+            $first = substr($userName, 0, $spacePos);
+        }
+        $first = substr($first, 0, 10);
+
+        return $first . "'s Workspace";
     }
 
     private function grantSystemAccess(int $userId): void

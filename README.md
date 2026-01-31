@@ -27,6 +27,11 @@ Core PHP 8.5 starter focused on logged-in SaaS dashboards, DreamHost shared host
 ## Tests
 Run the minimal test suite: `php tests/run.php`.
 
+### Playwright (local E2E)
+1. Install deps: `npm install` and `npx playwright install`.
+2. Run: `npm run test:e2e`.
+3. See `docs/testing/PLAYWRIGHT.md` for options.
+
 ## Roles and permissions
 - System access uses user flags: `is_system_admin` and `is_system_staff`.
 - Workspace roles/permissions control per-workspace access (e.g., workspace admin, billing within a workspace).

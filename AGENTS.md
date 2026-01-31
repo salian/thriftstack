@@ -23,6 +23,7 @@ Maintain a reusable Core PHP 8.5 starter for DreamHost shared hosting with predi
 
 ## Change hygiene
 - Add or update tests for every feature.
+- Add or update Playwright E2E tests for user-facing features.
 - Append user-facing changes to `CHANGELOG.md`.
 - Keep docs in `/docs` aligned with code changes.
 
@@ -35,7 +36,7 @@ Maintain a reusable Core PHP 8.5 starter for DreamHost shared hosting with predi
 2. Add controller under `app/Controllers` and keep actions small.
 3. Add view(s) under `views/` and escape output with `e()`.
 4. Add DB tables/migrations in `app/Database/Migrations` if needed.
-5. Add tests in `tests/` and update `CHANGELOG.md`.
+5. Add tests in `tests/` (including Playwright E2E for user-facing flows) and update `CHANGELOG.md`.
 
 ## Never do these
 - Do not introduce a framework or add heavy dependencies.

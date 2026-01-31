@@ -17,7 +17,7 @@
 2. Add a controller in `app/Controllers` and keep logic minimal.
 3. Add views under `views/` and escape with `e()`.
 4. Add migrations in `app/Database/Migrations` if data changes.
-5. Add tests under `tests/` and update `CHANGELOG.md`.
+5. Add tests under `tests/` (including Playwright E2E for user-facing flows) and update `CHANGELOG.md`.
 
 ## Never do these
 - Don’t introduce frameworks or heavy dependencies.
