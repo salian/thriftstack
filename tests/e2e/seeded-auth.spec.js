@@ -23,6 +23,22 @@ test('seeded user can access dashboard', async ({ page }) => {
   await expect(page.getByText(seedEmail)).toBeVisible();
 });
 
+test('seeded user can access tasks via sidebar', async ({ page }) => {
+  await loginWithSeedUser(page);
+  await page.getByRole('link', { name: 'Tasks' }).click();
+
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tasks');
+  await expect(page.getByText('My Tasks')).toBeVisible();
+});
+
+test('seeded user can access reports via sidebar', async ({ page }) => {
+  await loginWithSeedUser(page);
+  await page.getByRole('link', { name: 'Reports' }).click();
+
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Reports');
+  await expect(page.getByText('Latest report')).toBeVisible();
+});
+
 test('seeded user can access teams', async ({ page }) => {
   await loginWithSeedUser(page);
   await page.waitForLoadState('networkidle');

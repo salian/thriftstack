@@ -124,6 +124,22 @@ $router
     ->setName('dashboard');
 
 $router
+    ->get('/tasks', static function (Request $request) {
+        return View::render('tasks', ['title' => 'Tasks']);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo))
+    ->setName('tasks');
+
+$router
+    ->get('/reports', static function (Request $request) {
+        return View::render('reports', ['title' => 'Reports']);
+    })
+    ->middleware(new AuthRequired())
+    ->middleware(new RequireWorkspaceRole($pdo))
+    ->setName('reports');
+
+$router
     ->get('/billing', static function (Request $request) use ($billingController) {
         return $billingController->index($request);
     })
