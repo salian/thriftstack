@@ -7,6 +7,7 @@
 - Add seeded auth Playwright E2E flows for logged-in routes and logout.
 - Switch Playwright E2E coverage to click-based navigation flows with member role checks.
 - Add Tasks and Reports placeholder pages with sidebar navigation coverage.
+- Remove the public home page and redirect `/` to `/dashboard`.
 - Add config bootstrap, env loading, and secure session defaults.
 - Add custom router, middleware stubs, and view renderer.
 - Add PDO DB helper, migrations runner, and seed data scripts.

@@ -53,7 +53,7 @@ $financialAnalyticsController = new FinancialAnalyticsController($pdo);
 
 $router
     ->get('/', static function (Request $request) use ($config) {
-        return View::render('home', ['title' => $config['app']['name'] ?? 'ThriftStack']);
+        return Response::redirect('/dashboard');
     })
     ->setName('home');
 

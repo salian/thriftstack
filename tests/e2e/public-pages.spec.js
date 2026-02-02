@@ -1,12 +1,12 @@
 const { test, expect } = require('@playwright/test');
 
-test('home page renders', async ({ page }) => {
+test('root redirects to login for signed-out users', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Welcome to');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Login');
 });
 
-test('support page is reachable from the footer', async ({ page }) => {
+test('support page is reachable from the footer when signed out', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: 'Support' }).click();
 
